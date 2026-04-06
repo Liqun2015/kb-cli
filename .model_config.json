@@ -1,0 +1,54 @@
+{
+  "version": "1.0",
+  "default_model": "deepseek-ustc",
+  "models": [
+    {
+      "id": "deepseek-ustc",
+      "name": "DeepSeek USTC",
+      "url": "http://scc.ustc.edu.cn/portal/api/ask",
+      "api_key_source": "env",
+      "api_key_env": "DEEPSEEK_API_USTC",
+      "api_key_value": null,
+      "model_name": "deepseek-chat",
+      "description": "默认 DeepSeek 模型（USTC 代理）",
+      "created_at": "2026-04-05T11:23:44.622299500Z",
+      "enabled": true
+    },
+    {
+      "id": "deepseek-official",
+      "name": "DeepSeek Official",
+      "url": "https://api.deepseek.com",
+      "api_key_source": "env",
+      "api_key_env": "DEEPSEEK_API_KEY",
+      "api_key_value": null,
+      "model_name": "deepseek-chat",
+      "description": "DeepSeek 官方 API",
+      "created_at": "2026-04-05T11:23:44.622299500Z",
+      "enabled": true
+    },
+    {
+      "id": "kimi-k2.5",
+      "name": "Kimi K2.5",
+      "url": "https://api.moonshot.cn/v1",
+      "api_key_source": "env",
+      "api_key_env": "KIMI-k2.5",
+      "api_key_value": null,
+      "model_name": "moonshot-v1-8k",
+      "description": "月之暗面 Kimi 模型",
+      "created_at": "2026-04-05T11:23:44.622299500Z",
+      "enabled": true
+    },
+    {
+      "id": "glm5",
+      "name": "GLM-5",
+      "url": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+      "api_key_source": "env",
+      "api_key_env": "GLM5",
+      "api_key_value": null,
+      "model_name": "glm-4",
+      "description": "智谱 GLM-5 模型",
+      "created_at": "2026-04-05T11:23:44.622299500Z",
+      "enabled": true
+    }
+  ]
+}
