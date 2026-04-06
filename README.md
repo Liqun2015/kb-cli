@@ -85,7 +85,7 @@ Open your knowledge base folder in Obsidian to start organizing.
 
 ```bash
 # Clone
-git clone https://github.com/your-username/kb-cli.git
+git clone https://github.com/liqun2015/kb-cli.git
 cd kb-cli
 
 # Build
