@@ -40,8 +40,8 @@ impl std::error::Error for ModelConfigError {
     }
 }
 
-/// source of API Key 
-// #[derive(Debug, Clone, Serialize, Deserialize)]
+/// source of API Key
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ApiKeySource {
     Env,

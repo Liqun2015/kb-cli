@@ -3,9 +3,9 @@ use anyhow::Result;
 
 use crate::commands::model_config::ModelManager;
 
-/// Bash 模式的模型管理命令
+/// Model management commands for Bash mode
 
-/// 列出所有配置的模型
+/// List all configured models
 pub fn execute_list_models() -> Result<()> {
     match ModelManager::new() {
         Ok(manager) => {
@@ -62,7 +62,7 @@ pub fn execute_list_models() -> Result<()> {
     Ok(())
 }
 
-/// 显示当前模型详情
+/// Show current model details
 pub fn execute_show_model() -> Result<()> {
     match ModelManager::new() {
         Ok(manager) => {
@@ -105,7 +105,7 @@ pub fn execute_show_model() -> Result<()> {
     Ok(())
 }
 
-/// 添加新模型（非交互式）
+/// Add new model (non-interactive)
 #[derive(Args, Clone, Default)]
 pub struct ModelArgs {
     #[arg(short = 'i', long = "id")]
@@ -132,7 +132,7 @@ pub struct ModelArgs {
 
 pub fn execute_add_model(args: ModelArgs) -> Result<()> {
     let id = args.id.unwrap_or_else(|| {
-        // 从 name 生成 id（如果未提供）
+        // Generate id from name if not provided
         args.name.as_ref()
             .map(|n| n.to_lowercase().replace(' ', "-"))
             .unwrap_or_else(|| "custom-model".to_string())
@@ -149,13 +149,13 @@ pub fn execute_add_model(args: ModelArgs) -> Result<()> {
         }
     };
 
-    // 判断 API Key 来源
+    // Determine API Key source
     let api_key_source = if args.api_key_env.is_some() {
         crate::commands::model_config::ApiKeySource::Env
     } else if args.api_key_value.is_some() {
         crate::commands::model_config::ApiKeySource::Direct
     } else {
-        crate::commands::model_config::ApiKeySource::Env  // 默认使用环境变量
+        crate::commands::model_config::ApiKeySource::Env  // Default to environment variable
     };
 
     let entry = crate::commands::model_config::ModelEntry {
@@ -193,7 +193,7 @@ pub fn execute_add_model(args: ModelArgs) -> Result<()> {
     Ok(())
 }
 
-/// 切换模型
+/// Switch model
 pub fn execute_switch_model(id: &str) -> Result<()> {
     let mut manager = match ModelManager::new() {
         Ok(m) => m,
@@ -228,7 +228,7 @@ pub fn execute_switch_model(id: &str) -> Result<()> {
     Ok(())
 }
 
-/// 删除模型
+/// Delete model
 pub fn execute_delete_model(id: &str) -> Result<()> {
     let mut manager = match ModelManager::new() {
         Ok(m) => m,
@@ -238,7 +238,7 @@ pub fn execute_delete_model(id: &str) -> Result<()> {
         }
     };
 
-    // 获取当前模型信息（用于确认）
+    // Get current model info for confirmation
     #[allow(unused_variables)]
     let old_default = manager.get_current_model().map(|m| m.id.clone());
 
@@ -249,7 +249,7 @@ pub fn execute_delete_model(id: &str) -> Result<()> {
             } else {
                 println!("Model '{}' deleted.", id);
 
-                // 检查默认模型是否改变
+                // Check if default model changed
                 if let Some(new_default) = manager.get_current_model() {
                     println!("Default model switched to: {} ({})", new_default.id, new_default.name);
                 }
@@ -268,7 +268,7 @@ pub fn execute_delete_model(id: &str) -> Result<()> {
     Ok(())
 }
 
-/// 验证模型（可选实现）
+/// Validate model (optional implementation)
 pub fn execute_validate_model(id: Option<&str>) -> Result<()> {
     let manager = match ModelManager::new() {
         Ok(m) => m,
@@ -280,10 +280,10 @@ pub fn execute_validate_model(id: Option<&str>) -> Result<()> {
 
     let models = manager.list_models();
     let model = if let Some(id) = id {
-        // 验证指定模型
+        // Validate specified model
         models.iter().find(|m| m.id == id).map(|r| *r)
     } else {
-        // 验证当前模型
+        // Validate current model
         manager.get_current_model()
     };
 

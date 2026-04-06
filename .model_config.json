@@ -10,8 +10,8 @@
       "api_key_env": "DEEPSEEK_API_USTC",
       "api_key_value": null,
       "model_name": "deepseek-chat",
-      "description": "default DeepSeek ( Version at USTC )",
-      "created_at": "2026-04-05T11:23:44.622299500Z",
+      "description": "Default DeepSeek ( at USTC )",
+      "created_at": "2026-04-06T12:19:17.883691500Z",
       "enabled": true
     },
     {
@@ -23,7 +23,7 @@
       "api_key_value": null,
       "model_name": "deepseek-chat",
       "description": "DeepSeek Official API",
-      "created_at": "2026-04-05T11:23:44.622299500Z",
+      "created_at": "2026-04-06T12:19:17.883691500Z",
       "enabled": true
     },
     {
@@ -34,8 +34,8 @@
       "api_key_env": "KIMI-k2.5",
       "api_key_value": null,
       "model_name": "moonshot-v1-8k",
-      "description": "Moonshot Kimi",
-      "created_at": "2026-04-05T11:23:44.622299500Z",
+      "description": "Moonshot Kimi model",
+      "created_at": "2026-04-06T12:19:17.883691500Z",
       "enabled": true
     },
     {
@@ -46,8 +46,8 @@
       "api_key_env": "GLM5",
       "api_key_value": null,
       "model_name": "glm-4",
-      "description": "Zhipu GLM-5",
-      "created_at": "2026-04-05T11:23:44.622299500Z",
+      "description": "Zhipu GLM-5 model",
+      "created_at": "2026-04-06T12:19:17.883691500Z",
       "enabled": true
     }
   ]

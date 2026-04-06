@@ -1,7 +1,7 @@
-/// 用户意图类型
+/// User intent types
 #[derive(Debug, Clone, PartialEq)]
 pub enum Intent {
-    // 直接操作命令（无需 LLM）
+    // Direct commands (no LLM required)
     Help,
     Exit,
     Clear,
@@ -14,14 +14,14 @@ pub enum Intent {
     ExtractMetadata,
     BuildWiki,
 
-    // 需要 LLM 的命令
+    // Commands requiring LLM
     AskQuestion,
     SummarizePapers,
     SummarizeNotes,
     ExplainConcept,
     GenerateOutline,
 
-    // === 模型管理命令（新增）===
+    // === Model Management Commands ===
     ListModel,
     ShowModel,
     AddModel,
@@ -30,36 +30,36 @@ pub enum Intent {
     ValidateModel,
 }
 
-/// 关键词模式定义
+/// Keyword pattern definitions
 pub struct KeywordPattern;
 
 impl KeywordPattern {
-    /// 返回所有关键词模式（正则表达式, 对应意图）
+    /// Returns all keyword patterns (regex, corresponding intent)
     pub fn all() -> Vec<(&'static str, Intent)> {
         vec![
-            // 退出命令
+            // Exit commands
             (r"^(exit|quit|q|bye)$", Intent::Exit),
             (r"^(quit|exit|bye)\s+", Intent::Exit),
 
-            // 帮助命令
+            // Help commands
             (r"^(help|h|\?)$", Intent::Help),
             (r"^(help|h|\?)\s+", Intent::Help),
 
-            // 清屏命令
+            // Clear screen commands
             (r"^(clear|cls)$", Intent::Clear),
             (r"^(clear|cls)\s+", Intent::Clear),
 
-            // 列出论文
+            // List papers
             (r"^list\s+(papers|paper|pdf|pdfs)$", Intent::ListPapers),
             (r"^papers$", Intent::ListPapers),
             (r"^show\s+(papers|paper|pdf|pdfs)$", Intent::ListPapers),
 
-            // 列出笔记
+            // List notes
             (r"^list\s+(notes|note|docs|documents)$", Intent::ListNotes),
             (r"^notes$", Intent::ListNotes),
             (r"^show\s+(notes|note|docs|documents)$", Intent::ListNotes),
 
-            // 搜索论文
+            // Search papers
             (r"^search\s+", Intent::SearchPapers),
             (r"^find\s+", Intent::SearchPapers),
             (r"^grep\s+", Intent::SearchPapers),
@@ -67,35 +67,35 @@ impl KeywordPattern {
             (r"^search\s+papers?\s+", Intent::SearchPapers),
             (r"^find\s+papers?\s+", Intent::SearchPapers),
 
-            // 搜索笔记
+            // Search notes
             (r"^search\s+notes?\s+", Intent::SearchNotes),
             (r"^find\s+notes?\s+", Intent::SearchNotes),
 
-            // 设置知识库路径
+            // Set knowledge base path
             (r"^set\s+kb\s+", Intent::SetKnowledgeBase),
             (r"^change\s+kb\s+", Intent::SetKnowledgeBase),
             (r"^set\s+knowledge(-|\s)?base\s+", Intent::SetKnowledgeBase),
             (r"^cd\s+", Intent::SetKnowledgeBase),
 
-            // 初始化
+            // Initialize
             (r"^init$", Intent::Initialize),
             (r"^init\s+", Intent::Initialize),
             (r"^initialize$", Intent::Initialize),
 
-            // 提取元数据
+            // Extract metadata
             (r"^extract-metadata$", Intent::ExtractMetadata),
             (r"^extract\s+metadata$", Intent::ExtractMetadata),
             (r"^extract\s+meta$", Intent::ExtractMetadata),
             (r"^extract$", Intent::ExtractMetadata),
 
-            // 构建 Wiki
+            // Build Wiki
             (r"^build-wiki$", Intent::BuildWiki),
             (r"^build\s+wiki$", Intent::BuildWiki),
             (r"^generate\s+wiki$", Intent::BuildWiki),
             (r"^update\s+wiki$", Intent::BuildWiki),
             (r"^rebuild\s+wiki$", Intent::BuildWiki),
 
-            // 提问（需要 LLM）
+            // Ask a question (requires LLM)
             (r"^ask\s+", Intent::AskQuestion),
             (r"^question\s+", Intent::AskQuestion),
             (r"^tell\s+me\s+about\s+", Intent::AskQuestion),
@@ -109,7 +109,7 @@ impl KeywordPattern {
             (r"^describe\s+", Intent::AskQuestion),
             (r"^compare\s+", Intent::AskQuestion),
 
-            // 总结论文（需要 LLM）
+            // Summarize papers (requires LLM)
             (r"^summarize\s+papers?$", Intent::SummarizePapers),
             (r"^summarise\s+papers?$", Intent::SummarizePapers),
             (r"^summary\s+papers?$", Intent::SummarizePapers),
@@ -117,7 +117,7 @@ impl KeywordPattern {
             (r"^papers?\s+summary$", Intent::SummarizePapers),
             (r"^papers?\s+summar(y|ise)$", Intent::SummarizePapers),
 
-            // 总结笔记（需要 LLM）
+            // Summarize notes (requires LLM)
             (r"^summarize\s+notes?$", Intent::SummarizeNotes),
             (r"^summarise\s+notes?$", Intent::SummarizeNotes),
             (r"^summary\s+notes?$", Intent::SummarizeNotes),
@@ -125,17 +125,17 @@ impl KeywordPattern {
             (r"^notes?\s+summary$", Intent::SummarizeNotes),
             (r"^notes?\s+summar(y|ise)$", Intent::SummarizeNotes),
 
-            // 解释概念（需要 LLM）
+            // Explain concept (requires LLM)
             (r"^explain\s+concept\s+", Intent::ExplainConcept),
             (r"^what\s+(is|are)\s+", Intent::ExplainConcept),
             (r"^define\s+", Intent::ExplainConcept),
 
-            // 生成大纲（需要 LLM）
+            // Generate outline (requires LLM)
             (r"^generate\s+outline", Intent::GenerateOutline),
             (r"^create\s+outline", Intent::GenerateOutline),
             (r"^outline\s+", Intent::GenerateOutline),
 
-            // === 模型管理命令（新增）===
+            // === Model Management Commands ===
             (r"^list\s+models?", Intent::ListModel),
             (r"^models?$", Intent::ListModel),
             (r"^show\s+models?", Intent::ListModel),
@@ -155,36 +155,36 @@ impl KeywordPattern {
         ]
     }
 
-    /// 获取意图的友好描述
+    /// Get friendly description for intent
     pub fn description(intent: &Intent) -> &'static str {
         match intent {
-            Intent::Help => "显示帮助信息",
-            Intent::Exit => "退出 REPL",
-            Intent::Clear => "清屏",
-            Intent::ListPapers => "列出所有论文",
-            Intent::ListNotes => "列出所有笔记",
-            Intent::SearchPapers => "搜索论文",
-            Intent::SearchNotes => "搜索笔记",
-            Intent::SetKnowledgeBase => "设置知识库路径",
-            Intent::Initialize => "初始化知识库",
-            Intent::ExtractMetadata => "提取论文元数据",
-            Intent::BuildWiki => "构建 Wiki 页面",
-            Intent::AskQuestion => "提问（需要 LLM）",
-            Intent::SummarizePapers => "总结论文（需要 LLM）",
-            Intent::SummarizeNotes => "总结笔记（需要 LLM）",
-            Intent::ExplainConcept => "解释概念（需要 LLM）",
-            Intent::GenerateOutline => "生成大纲（需要 LLM）",
-            // === 模型管理（新增）===
-            Intent::ListModel => "列出所有配置的模型",
-            Intent::ShowModel => "显示当前模型详情",
-            Intent::AddModel => "添加新模型",
-            Intent::SwitchModel => "切换到指定模型",
-            Intent::DeleteModel => "删除指定模型",
-            Intent::ValidateModel => "验证模型配置",
+            Intent::Help => "Show help information",
+            Intent::Exit => "Exit REPL",
+            Intent::Clear => "Clear screen",
+            Intent::ListPapers => "List all papers",
+            Intent::ListNotes => "List all notes",
+            Intent::SearchPapers => "Search papers",
+            Intent::SearchNotes => "Search notes",
+            Intent::SetKnowledgeBase => "Set knowledge base path",
+            Intent::Initialize => "Initialize knowledge base",
+            Intent::ExtractMetadata => "Extract paper metadata",
+            Intent::BuildWiki => "Build Wiki pages",
+            Intent::AskQuestion => "Ask a question (requires LLM)",
+            Intent::SummarizePapers => "Summarize papers (requires LLM)",
+            Intent::SummarizeNotes => "Summarize notes (requires LLM)",
+            Intent::ExplainConcept => "Explain concept (requires LLM)",
+            Intent::GenerateOutline => "Generate outline (requires LLM)",
+            // === Model Management ===
+            Intent::ListModel => "List all configured models",
+            Intent::ShowModel => "Show current model details",
+            Intent::AddModel => "Add new model",
+            Intent::SwitchModel => "Switch to specified model",
+            Intent::DeleteModel => "Delete specified model",
+            Intent::ValidateModel => "Validate model configuration",
         }
     }
 
-    /// 判断意图是否需要 LLM
+    /// Check if intent requires LLM
     pub fn is_llm_required(intent: &Intent) -> bool {
         matches!(
             intent,
@@ -203,8 +203,8 @@ mod tests {
 
     #[test]
     fn test_description() {
-        assert_eq!(KeywordPattern::description(&Intent::Help), "显示帮助信息");
-        assert_eq!(KeywordPattern::description(&Intent::Exit), "退出 REPL");
+        assert_eq!(KeywordPattern::description(&Intent::Help), "Show help information");
+        assert_eq!(KeywordPattern::description(&Intent::Exit), "Exit REPL");
     }
 
     #[test]

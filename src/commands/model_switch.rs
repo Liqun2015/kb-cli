@@ -5,14 +5,14 @@ use serde_json;
 
 use super::model_config::ModelManager;
 
-/// 默认模型配置（向后兼容）
+/// Default model configuration (backward compatibility)
 const DEFAULT_MODEL_URL: &str = "http://scc.ustc.edu.cn/portal/api/ask";
 const DEFAULT_API_KEY_ENV: &str = "DEEPSEEK_API_USTC";
 const DEFAULT_OUTPUT_FILE: &str = ".model_switch_output.json";
 const DEFAULT_INPUT_FILE: &str = ".model_switch_input.json";
 
-/// Model-Switch 桥接模块
-/// 负责与 model-switch 工具交互，检查状态并读取/写入 LLM 响应
+/// Model-Switch bridge module
+/// Handles interaction with model-switch tool, checking status and reading/writing LLM responses
 
 #[derive(serde::Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -29,16 +29,16 @@ struct ModelSwitchInput {
     timestamp: String,
 }
 
-/// 检查 model-switch 输出文件是否存在且可读
+/// Check if model-switch output file exists and is readable
 pub fn is_available() -> bool {
     PathBuf::from(DEFAULT_OUTPUT_FILE).exists()
 }
 
-/// 向 model-switch 写入输入（触发 LLM 请求）
+/// Write input to model-switch (triggers LLM request)
 pub fn write_input(question: &str) -> Result<()> {
     let manager = ModelManager::new()?;
 
-    // 获取当前模型信息并添加到上下文
+    // Get current model info and add to context
     let context_opt = if let Some(model) = manager.get_current_model() {
         Some(serde_json::json!({
             "model_id": model.id,
@@ -60,25 +60,25 @@ pub fn write_input(question: &str) -> Result<()> {
     Ok(())
 }
 
-/// 从 model-switch 读取输出（获取 LLM 响应）
+/// Read output from model-switch (get LLM response)
 pub fn read_output() -> Result<Option<String>> {
     let output_path = PathBuf::from(DEFAULT_OUTPUT_FILE);
 
-    // 检查输出文件是否存在
+    // Check if output file exists
     if !output_path.exists() {
         return Ok(None);
     }
 
-    // 读取输出文件
+    // Read output file
     match fs::read_to_string(&output_path) {
         Ok(content) => {
             match serde_json::from_str::<ModelSwitchOutput>(&content) {
                 Ok(output) => {
-                    // 检查是否有错误
+                    // Check for errors
                     if let Some(error) = output.error {
                         return Ok(Some(format!("[Error] {}", error)));
                     }
-                    // 返回响应
+                    // Return response
                     Ok(output.response)
                 }
                 Err(e) => {
@@ -94,10 +94,10 @@ pub fn read_output() -> Result<Option<String>> {
     }
 }
 
-/// 获取 LLM 响应（完整流程）
-/// 1. 写入输入文件
-/// 2. 等待 model-switch 处理（由外部处理）
-/// 3. 读取输出文件
+/// Get LLM response (complete workflow)
+/// 1. Write input file
+/// 2. Wait for model-switch processing (handled externally)
+/// 3. Read output file
 pub fn get_llm_response(question: &str, auto_write: bool) -> Result<String> {
     if auto_write {
         write_input(question)?;
@@ -106,7 +106,7 @@ pub fn get_llm_response(question: &str, auto_write: bool) -> Result<String> {
     match read_output()? {
         Some(response) => Ok(response),
         None => {
-            // model-switch 未运行或无输出
+            // model-switch not running or no output
             let manager = ModelManager::new();
 
             let mut message = "Model-switch is not running or no response available.\n\
@@ -142,32 +142,32 @@ pub fn get_llm_response(question: &str, auto_write: bool) -> Result<String> {
     }
 }
 
-/// 获取当前模型 URL（集成 ModelManager）
+/// Get current model URL (integrated with ModelManager)
 pub fn get_current_model_url() -> Result<String> {
     match ModelManager::new() {
         Ok(manager) => Ok(manager.get_model_url()),
         Err(_) => {
-            // 回退到硬编码默认值
+            // Fallback to hardcoded default
             Ok(DEFAULT_MODEL_URL.to_string())
         }
     }
 }
 
-/// 获取当前模型 API Key（集成 ModelManager）
+/// Get current model API Key (integrated with ModelManager)
 pub fn get_current_api_key() -> Result<String> {
     match ModelManager::new() {
         Ok(manager) => manager.get_api_key(),
         Err(_) => {
-            // 回退到环境变量
+            // Fallback to environment variable
             std::env::var(DEFAULT_API_KEY_ENV)
                 .map_err(|_| anyhow::anyhow!("API key not found in config or environment"))
         }
     }
 }
 
-/// 检查 API Key 配置（保留向后兼容）
+/// Check API Key configuration (backward compatibility)
 pub fn check_api_key() -> bool {
-    // 优先检查配置文件
+    // Check config file first
     if let Ok(manager) = ModelManager::new() {
         if let Some(model) = manager.get_current_model() {
             match &model.api_key_source {
@@ -183,26 +183,26 @@ pub fn check_api_key() -> bool {
         }
     }
 
-    // 回退到环境变量
+    // Fallback to environment variable
     std::env::var(DEFAULT_API_KEY_ENV).is_ok()
 }
 
-/// 获取默认模型 URL（保留向后兼容）
+/// Get default model URL (backward compatibility)
 pub fn get_default_model_url() -> &'static str {
     DEFAULT_MODEL_URL
 }
 
-/// 获取 API Key 环境变量名（保留向后兼容）
+/// Get API Key environment variable name (backward compatibility)
 pub fn get_api_key_env() -> &'static str {
     DEFAULT_API_KEY_ENV
 }
 
-/// 获取输入文件路径
+/// Get input file path
 pub fn get_input_file() -> &'static str {
     DEFAULT_INPUT_FILE
 }
 
-/// 获取输出文件路径
+/// Get output file path
 pub fn get_output_file() -> &'static str {
     DEFAULT_OUTPUT_FILE
 }

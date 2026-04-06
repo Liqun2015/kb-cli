@@ -7,7 +7,7 @@ use crate::commands::model_switch;
 use crate::commands::model_config::ModelManager;
 use crate::intent::{IntentParser, Intent};
 
-/// REPL 交互主循环
+/// Main REPL interactive loop
 pub fn execute() -> Result<()> {
     let kb_path = get_kb_path(None);
     let parser = IntentParser::new();
@@ -21,22 +21,22 @@ pub fn execute() -> Result<()> {
     std::io::stdout().flush();
 
     loop {
-        // 显示提示符
+        // Display prompt
         print!("kb> ");
         std::io::stdout().flush()?;
 
-        // 读取用户输入
+        // Read user input
         let mut input = String::new();
         stdin.read_line(&mut input)?;
 
         let input = input.trim();
 
-        // 空输入，继续
+        // Empty input, continue
         if input.is_empty() {
             continue;
         }
 
-        // 意图解析
+        // Parse intent
         if let Some(intent) = parser.parse(input) {
             execute_intent(&kb_path, &parser, &intent, input)?;
         } else {
@@ -46,73 +46,73 @@ pub fn execute() -> Result<()> {
     }
 }
 
-/// 执行识别到的意图
+/// Execute the identified intent
 fn execute_intent(kb_path: &PathBuf, parser: &IntentParser, intent: &Intent, input: &str) -> Result<()> {
     match intent {
-        // 退出
+        // Exit
         Intent::Exit => {
             println!("Goodbye!");
             std::process::exit(0);
         }
 
-        // 帮助
+        // Help
         Intent::Help => {
             print_help();
         }
 
-        // 清屏
+        // Clear screen
         Intent::Clear => {
             print_clear();
         }
 
-        // 列出论文
+        // List papers
         Intent::ListPapers => {
             list_papers(kb_path);
         }
 
-        // 列出笔记
+        // List notes
         Intent::ListNotes => {
             list_notes(kb_path);
         }
 
-        // 搜索论文
+        // Search papers
         Intent::SearchPapers => {
             if let Some(query) = parser.extract_query(input, intent) {
                 search_papers(kb_path, &query);
             }
         }
 
-        // 搜索笔记
+        // Search notes
         Intent::SearchNotes => {
             if let Some(query) = parser.extract_query(input, intent) {
                 search_notes(kb_path, &query);
             } else {
-                search_papers(kb_path, &input); // 默认搜索论文
+                search_papers(kb_path, &input); // Default to searching papers
             }
         }
 
-        // 设置知识库
+        // Set knowledge base
         Intent::SetKnowledgeBase => {
             println!("Feature not implemented yet: 'set kb'");
             println!("Current KB: {}", kb_path.display());
         }
 
-        // 初始化
+        // Initialize
         Intent::Initialize => {
             println!("Run 'cli init' in bash mode to initialize knowledge base.");
         }
 
-        // 提取元数据
+        // Extract metadata
         Intent::ExtractMetadata => {
             println!("Run 'cli extract-metadata' in bash mode to extract metadata.");
         }
 
-        // 构建 Wiki
+        // Build Wiki
         Intent::BuildWiki => {
             println!("Run 'cli build-wiki' in bash mode to build wiki pages.");
         }
 
-        // 需要 LLM 的命令
+        // Commands requiring LLM
         Intent::AskQuestion => {
             if let Some(question) = parser.extract_query(input, intent) {
                 ask_question(&question);
@@ -141,7 +141,7 @@ fn execute_intent(kb_path: &PathBuf, parser: &IntentParser, intent: &Intent, inp
             println!("Outline generation feature coming soon.");
         }
 
-        // === 模型管理命令（新增）===
+        // === Model Management Commands ===
         Intent::ListModel => {
             list_models();
         }
@@ -216,7 +216,7 @@ fn print_help() {
 }
 
 fn print_clear() {
-    // 清屏（简单实现）
+    // Clear screen (simple implementation)
     print!("\x1B[2J\x1B[2J\x1B[2J"); // VT100 clear screen sequence
     std::io::stdout().flush().ok();
 }
@@ -370,7 +370,7 @@ fn search_notes(kb_path: &PathBuf, query: &str) {
 fn ask_question(question: &str) {
     println!("\nQuestion: '{}'", question);
 
-    // 检查 model-switch 是否可用
+    // Check if model-switch is available
     if !model_switch::is_available() {
         println!("\nModel-switch output file not found.");
         println!("\nTo use LLM features:");
@@ -383,7 +383,7 @@ fn ask_question(question: &str) {
         return;
     }
 
-    // 尝试读取 LLM 响应
+    // Try to read LLM response
     match model_switch::get_llm_response(question, true) {
         Ok(response) => {
             println!("\nResponse:");
@@ -445,7 +445,7 @@ fn explain_concept(concept: &str) {
     }
 }
 
-// === 模型管理函数（新增）===
+// === Model Management Functions ===
 
 fn list_models() {
     match ModelManager::new() {

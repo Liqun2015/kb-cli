@@ -5,18 +5,18 @@ pub use keywords::Intent;
 use regex::Regex;
 use crate::intent::keywords::KeywordPattern;
 
-/// 意图解析器
-/// 根据用户输入识别其意图（直接命令 vs LLM 需求）
+/// Intent parser
+/// Identifies user intent from input (direct commands vs LLM requirements)
 pub struct IntentParser {
     patterns: Vec<(Regex, Intent)>,
 }
 
 impl IntentParser {
-    /// 创建新的意图解析器
+    /// Create new intent parser
     pub fn new() -> Self {
         let mut patterns = Vec::new();
 
-        // 构建正则表达式模式
+        // Build regex patterns
         for (pattern_str, intent) in KeywordPattern::all() {
             match Regex::new(pattern_str) {
                 Ok(regex) => patterns.push((regex, intent)),
@@ -29,7 +29,7 @@ impl IntentParser {
         IntentParser { patterns }
     }
 
-    /// 解析用户输入，返回识别到的意图
+    /// Parse user input, return identified intent
     pub fn parse(&self, input: &str) -> Option<Intent> {
         let input_lower = input.to_lowercase();
 
@@ -42,7 +42,7 @@ impl IntentParser {
         None
     }
 
-    /// 判断是否需要 LLM
+    /// Check if LLM is required
     pub fn requires_llm(&self, intent: &Intent) -> bool {
         matches!(
             intent,
@@ -50,11 +50,11 @@ impl IntentParser {
         )
     }
 
-    /// 提取搜索查询词
+    /// Extract search query
     pub fn extract_query(&self, input: &str, intent: &Intent) -> Option<String> {
         match intent {
             Intent::SearchPapers | Intent::SearchNotes => {
-                // 处理各种搜索模式
+                // Handle various search patterns
                 let patterns = ["search ", "find ", "grep ", "lookup ", "search papers ", "search notes "];
                 for pattern in &patterns {
                     if let Some(query) = input.strip_prefix(pattern) {
@@ -67,7 +67,7 @@ impl IntentParser {
                 None
             }
             Intent::AskQuestion | Intent::ExplainConcept => {
-                // 处理各种提问模式
+                // Handle various question patterns
                 let patterns = [
                     "ask ", "question ", "tell me about ", "explain ", "what is ", "how do ", "how does ",
                     "how to ", "how can ", "how would ", "how should ", "why ", "when ", "which ", "define ", "describe "
@@ -86,7 +86,7 @@ impl IntentParser {
         }
     }
 
-    /// 提取模型 ID（用于 switch/delete/validate 命令）
+    /// Extract model ID (for switch/delete/validate commands)
     pub fn extract_model_id(&self, input: &str, intent: &Intent) -> Option<String> {
         match intent {
             Intent::SwitchModel | Intent::DeleteModel | Intent::ValidateModel => {
