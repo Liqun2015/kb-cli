@@ -1,7 +1,7 @@
 # kb-cli
 
-> A command-line interface for creation as well as management of JSON knowledge bases in accordance with Obsidian,
-> designed for both AI agents and researchers.
+> A command-line interface to a JSON knowledge base(kb) for the convenience of AI agents, 
+> as inspired by what Andrej Karpathy did with Obsidian.
 
 ## For AI Agents
 
