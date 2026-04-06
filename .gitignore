@@ -4,8 +4,6 @@
 *.pdb
 
 # Runtime
-.model_switch_input.json
-.model_switch_output.json
 .env
 .env.local
 

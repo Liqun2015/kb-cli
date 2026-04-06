@@ -4,11 +4,11 @@ use anyhow::{anyhow, Result};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-/// 配置文件路径
+/// filepath to model settings
 const CONFIG_FILE: &str = ".model_config.json";
 const CONFIG_VERSION: &str = "1.0";
 
-/// 模型配置错误类型
+/// errors for model setup
 #[derive(Debug)]
 pub enum ModelConfigError {
     FileNotFound,
@@ -40,15 +40,15 @@ impl std::error::Error for ModelConfigError {
     }
 }
 
-/// API Key 来源
-#[derive(Debug, Clone, Serialize, Deserialize)]
+/// source of API Key 
+// #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ApiKeySource {
     Env,
     Direct,
 }
 
-/// 模型条目
+/// model items
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelEntry {
     pub id: String,
@@ -63,7 +63,7 @@ pub struct ModelEntry {
     pub enabled: bool,
 }
 
-/// 模型配置
+/// model settings
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ModelConfig {
     pub version: String,
@@ -71,26 +71,26 @@ pub struct ModelConfig {
     pub models: Vec<ModelEntry>,
 }
 
-/// 模型管理器
+/// model management
 pub struct ModelManager {
     config_path: PathBuf,
     pub config: ModelConfig,
 }
 
 impl ModelManager {
-    /// 创建或加载模型配置
+    /// creation or load model settings
     pub fn new() -> Result<Self> {
         let config_path = PathBuf::from(CONFIG_FILE);
 
         if config_path.exists() {
             Self::from_path(config_path)
         } else {
-            // 创建默认配置
+            // creating default settings
             Self::create_default()
         }
     }
 
-    /// 从指定路径加载配置
+    /// load settings from designated path
     pub fn from_path(path: PathBuf) -> Result<Self> {
         let content = fs::read_to_string(&path)
             .map_err(|e| ModelConfigError::InvalidJson(e.to_string()))?;
@@ -98,7 +98,7 @@ impl ModelManager {
         let config: ModelConfig = serde_json::from_str(&content)
             .map_err(|e| ModelConfigError::InvalidJson(e.to_string()))?;
 
-        // 验证配置结构
+        // verfication of setting configure
         if config.version != CONFIG_VERSION {
             return Err(anyhow!("Unsupported config version: {}", config.version));
         }
@@ -107,7 +107,7 @@ impl ModelManager {
             return Err(anyhow!("No models configured"));
         }
 
-        // 验证默认模型存在
+        // verifying the presence of default model
         let default_exists = config.models.iter().any(|m| m.id == config.default_model);
         if !default_exists {
             return Err(anyhow!("Default model '{}' not found in models list", config.default_model));
@@ -116,21 +116,21 @@ impl ModelManager {
         Ok(ModelManager { config_path: path, config })
     }
 
-    /// 保存配置到磁盘
+    /// save the settings
     pub fn save(&self) -> Result<()> {
         let json = serde_json::to_string_pretty(&self.config)?;
         fs::write(&self.config_path, json)?;
         Ok(())
     }
 
-    /// 添加新模型
+    /// add a model
     pub fn add_model(&mut self, entry: ModelEntry) -> Result<()> {
-        // 检查 ID 是否重复
+        // check whether the ID has been used?
         if self.config.models.iter().any(|m| m.id == entry.id) {
             return Err(ModelConfigError::DuplicateModelId(entry.id).into());
         }
 
-        // 验证 URL
+        // verfiying the URL
         if !entry.url.starts_with("http://") && !entry.url.starts_with("https://") {
             return Err(ModelConfigError::InvalidUrl(entry.url).into());
         }
@@ -139,7 +139,7 @@ impl ModelManager {
         Ok(())
     }
 
-    /// 删除模型
+    /// delete a model
     pub fn delete_model(&mut self, id: &str) -> Result<()> {
         let initial_len = self.config.models.len();
 
@@ -149,7 +149,7 @@ impl ModelManager {
             return Err(ModelConfigError::ModelNotFound(id.to_string()).into());
         }
 
-        // 如果删除的是默认模型，切换到第一个可用模型
+        // If deleting a default model, it turns to the first available model
         if self.config.default_model == id {
             if let Some(first_model) = self.config.models.first() {
                 self.config.default_model = first_model.id.clone();
@@ -159,19 +159,19 @@ impl ModelManager {
         Ok(())
     }
 
-    /// 获取所有模型
+    /// fetch all of models
     pub fn list_models(&self) -> Vec<&ModelEntry> {
         self.config.models.iter().collect()
     }
 
-    /// 获取当前（默认）模型
+    /// fetch the current(default) model
     pub fn get_current_model(&self) -> Option<&ModelEntry> {
         self.config.models.iter().find(|m| m.id == self.config.default_model)
     }
 
-    /// 切换到指定模型
+    /// switch to a designated model
     pub fn switch_model(&mut self, id: &str) -> Result<()> {
-        // 检查模型是否存在
+        // check if it exists
         if !self.config.models.iter().any(|m| m.id == id) {
             return Err(ModelConfigError::ModelNotFound(id.to_string()).into());
         }
@@ -180,17 +180,17 @@ impl ModelManager {
         Ok(())
     }
 
-    /// 获取当前模型的 URL
+    /// fetch the URL of current model 
     pub fn get_model_url(&self) -> String {
         if let Some(model) = self.get_current_model() {
             model.url.clone()
         } else {
-            // 回退到默认 USTC URL
+            // return to the default USTC URL
             "http://scc.ustc.edu.cn/portal/api/ask".to_string()
         }
     }
 
-    /// 获取当前模型的 API Key
+    /// fetch the current model's API Key
     pub fn get_api_key(&self) -> Result<String> {
         if let Some(model) = self.get_current_model() {
             match model.api_key_source {
@@ -214,7 +214,7 @@ impl ModelManager {
         }
     }
 
-    /// 创建默认配置（包含 4 个预配置模型）
+    /// creating the default settings ( for the four preset models) 
     fn create_default() -> Result<Self> {
         let config_path = PathBuf::from(CONFIG_FILE);
 
@@ -229,7 +229,7 @@ impl ModelManager {
                 api_key_env: Some("DEEPSEEK_API_USTC".to_string()),
                 api_key_value: None,
                 model_name: Some("deepseek-chat".to_string()),
-                description: Some("默认 DeepSeek 模型（USTC 代理）".to_string()),
+                description: Some("Default DeepSeek ( at USTC )".to_string()),
                 created_at: now,
                 enabled: true,
             },
@@ -241,7 +241,7 @@ impl ModelManager {
                 api_key_env: Some("DEEPSEEK_API_KEY".to_string()),
                 api_key_value: None,
                 model_name: Some("deepseek-chat".to_string()),
-                description: Some("DeepSeek 官方 API".to_string()),
+                description: Some("DeepSeek Official API".to_string()),
                 created_at: now,
                 enabled: true,
             },
@@ -253,7 +253,7 @@ impl ModelManager {
                 api_key_env: Some("KIMI-k2.5".to_string()),
                 api_key_value: None,
                 model_name: Some("moonshot-v1-8k".to_string()),
-                description: Some("月之暗面 Kimi 模型".to_string()),
+                description: Some("Moonshot Kimi model".to_string()),
                 created_at: now,
                 enabled: true,
             },
@@ -265,7 +265,7 @@ impl ModelManager {
                 api_key_env: Some("GLM5".to_string()),
                 api_key_value: None,
                 model_name: Some("glm-4".to_string()),
-                description: Some("智谱 GLM-5 模型".to_string()),
+                description: Some("Zhipu GLM-5 model".to_string()),
                 created_at: now,
                 enabled: true,
             },
@@ -277,7 +277,7 @@ impl ModelManager {
             models,
         };
 
-        // 保存默认配置
+        // save default settings
         let manager = ModelManager { config_path, config };
         manager.save()?;
 

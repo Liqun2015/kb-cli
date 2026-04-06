@@ -10,7 +10,7 @@
       "api_key_env": "DEEPSEEK_API_USTC",
       "api_key_value": null,
       "model_name": "deepseek-chat",
-      "description": "默认 DeepSeek 模型（USTC 代理）",
+      "description": "default DeepSeek ( Version at USTC )",
       "created_at": "2026-04-05T11:23:44.622299500Z",
       "enabled": true
     },
@@ -22,7 +22,7 @@
       "api_key_env": "DEEPSEEK_API_KEY",
       "api_key_value": null,
       "model_name": "deepseek-chat",
-      "description": "DeepSeek 官方 API",
+      "description": "DeepSeek Official API",
       "created_at": "2026-04-05T11:23:44.622299500Z",
       "enabled": true
     },
@@ -34,7 +34,7 @@
       "api_key_env": "KIMI-k2.5",
       "api_key_value": null,
       "model_name": "moonshot-v1-8k",
-      "description": "月之暗面 Kimi 模型",
+      "description": "Moonshot Kimi",
       "created_at": "2026-04-05T11:23:44.622299500Z",
       "enabled": true
     },
@@ -46,7 +46,7 @@
       "api_key_env": "GLM5",
       "api_key_value": null,
       "model_name": "glm-4",
-      "description": "智谱 GLM-5 模型",
+      "description": "Zhipu GLM-5",
       "created_at": "2026-04-05T11:23:44.622299500Z",
       "enabled": true
     }
