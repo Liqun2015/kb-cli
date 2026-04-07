@@ -1,16 +1,16 @@
 # kb-cli
 
-> A command-line interface to JSON knowledge bases (kbs) for the pipeline of AI agents, 
-> which Andrej Karpathy has built with LLM for Obsidian.
+> A command-line interface between AI agents and knowledge bases, 
+> which are designed by Andrej Karpathy for LLMs to maintain inside Obsidian.
 
 ## For AI Agents
 
-`kb-cli` provides a standardized CLI interface for AI agents to access and manage JSON knowledge bases.
+`kb-cli` provides a standardized CLI interface for AI agents to access and manage Karpathy's bases(kb) of knowledge .
 
 ### Quick Start
 
 ```bash
-# Initialize a knowledge base
+# Initialize a Karpathy knowledge base
 kb --kb-path /path/to/kb init
 
 # Add a paper
