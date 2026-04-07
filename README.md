@@ -1,7 +1,7 @@
 # kb-cli
 
-> A command-line interface between AI agents and knowledge bases, 
-> which are designed by Andrej Karpathy for LLMs to maintain inside Obsidian.
+> A command-line interface between AI agents and the JSON knowledge base as 
+> proposed by Andrej Karpathy for LLMs to maintain inside Obsidian.
 
 ## For AI Agents
 
