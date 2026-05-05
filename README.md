@@ -2,22 +2,19 @@
 
 > A small Rust CLI for building and maintaining a local Markdown knowledge base.
 >
-> Current version: `v0.1.2`
+> Current version: `v0.1.4`
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: put source materials in `raw/`, generate Markdown pages under `wiki/`, and use Obsidian as the reading/editing frontend.
 
 ## Current Scope
 
-This version is intentionally conservative. It provides a reliable local scaffold and a few file-based operations. It does **not** yet provide full RAG, vector search, JSON agent output, or a networked agent API.
+This version provides a conservative, file-based local knowledge-base scaffold. It now includes a cross-platform bootstrap workflow, but it still does **not** provide full RAG, vector search, JSON agent output, or a networked agent API.
 
 ## Installation
 
 ```bash
-# Build
 cargo build --release
-
-# Install locally
-cargo install --path .
+cargo install --path . --force
 ```
 
 The binary name is:
@@ -26,34 +23,97 @@ The binary name is:
 kb
 ```
 
-## Quick Start
+## Cross-Platform Quick Start
+
+Turn an existing literature folder into an LLM Wiki in one command:
 
 ```bash
-# Initialize the default KnowledgeBase directory
-kb init
-
-# Re-create missing bootstrap directories/files when needed
-kb init --force
-
-# Extract metadata from PDFs in KnowledgeBase/raw/papers/
-kb extract-metadata
-
-# Overwrite existing metadata
-kb extract-metadata --force
-
-# Build Markdown wiki pages and indexes
-kb build-wiki
-
-# Enter interactive REPL mode
-kb repl
+kb --kb-path /path/to/your/literature-folder bootstrap --copy
 ```
 
-Use a custom knowledge-base path with:
+Windows example:
+
+```powershell
+kb --kb-path "D:\github\LLM-wiki\quantum" bootstrap --copy
+```
+
+macOS/Linux example:
 
 ```bash
-kb --kb-path /path/to/KnowledgeBase init
-kb --kb-path /path/to/KnowledgeBase extract-metadata
-kb --kb-path /path/to/KnowledgeBase build-wiki
+kb --kb-path "$HOME/github/LLM-wiki/quantum" bootstrap --copy
+```
+
+The bootstrap command runs:
+
+```text
+init -> ingest -> extract-metadata -> build-wiki
+```
+
+By default, `bootstrap` uses safe copy mode unless `--move` is explicitly provided.
+
+## Manual Workflow
+
+```bash
+# 1. Create the local knowledge-base directory structure
+kb --kb-path /path/to/kb init
+
+# 2. Organize root-level source files into raw/ subfolders
+kb --kb-path /path/to/kb ingest --copy
+
+# 3. Extract metadata from PDFs under raw/papers/
+kb --kb-path /path/to/kb extract-metadata
+
+# 4. Generate Markdown wiki pages and indexes
+kb --kb-path /path/to/kb build-wiki
+```
+
+Useful ingest modes:
+
+```bash
+# Safest: copy files into raw/
+kb --kb-path /path/to/kb ingest --copy
+
+# Move files into raw/
+kb --kb-path /path/to/kb ingest --move
+
+# Include subfolders while skipping raw/wiki/.git/.obsidian/target/etc.
+kb --kb-path /path/to/kb ingest --copy --recursive
+
+# Preview planned actions without copying or moving
+kb --kb-path /path/to/kb ingest --copy --dry-run
+```
+
+Useful bootstrap modes:
+
+```bash
+kb --kb-path /path/to/kb bootstrap --copy
+kb --kb-path /path/to/kb bootstrap --move
+kb --kb-path /path/to/kb bootstrap --copy --recursive
+kb --kb-path /path/to/kb bootstrap --copy --dry-run
+kb --kb-path /path/to/kb bootstrap --copy --force-metadata
+```
+
+## Windows Helper Script
+
+Windows users can also use the bundled wrapper script:
+
+```bat
+scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum"
+```
+
+This script now delegates the real work to the cross-platform Rust command:
+
+```bat
+kb --kb-path <target> bootstrap --copy
+```
+
+Useful options:
+
+```bat
+scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --move
+scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --recursive
+scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --dry-run
+scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" "D:\github\LLM-wiki\kb-cli"
 ```
 
 ## Knowledge Base Layout
@@ -65,7 +125,9 @@ KnowledgeBase/
 │   ├── notes/        # Notes and documents
 │   ├── images/       # Images and figures
 │   ├── datasets/     # Data sets
-│   └── repos/        # Code repositories
+│   ├── archives/     # Compressed source archives
+│   ├── repos/        # Code/repository-like source files
+│   └── other/        # Other source materials
 ├── wiki/
 │   ├── papers/       # Generated paper pages
 │   ├── notes/        # Generated note pages
@@ -73,6 +135,8 @@ KnowledgeBase/
 │   ├── topics/       # Topic pages
 │   └── indexes/      # Navigation indexes
 ├── outputs/          # Generated answers and reports
+├── processing/       # Intermediate processing files
+├── references/       # Templates and reference materials
 └── logs/             # Metadata and logs
 ```
 
@@ -81,6 +145,8 @@ KnowledgeBase/
 | Command | Status | Purpose |
 |---|---:|---|
 | `kb init [--force]` | implemented | Create the local knowledge-base structure. |
+| `kb ingest [--copy\|--move] [--recursive] [--dry-run]` | implemented | Organize source files into `raw/` subfolders. |
+| `kb bootstrap [--copy\|--move]` | implemented | Run `init + ingest + extract-metadata + build-wiki`. |
 | `kb extract-metadata [--force]` | implemented | Extract basic metadata from PDFs under `raw/papers/`. |
 | `kb build-wiki` | implemented | Generate Markdown paper/note pages and index pages. |
 | `kb repl` | implemented | Start a simple interactive shell. |
@@ -90,6 +156,26 @@ KnowledgeBase/
 | `kb switch-model <id>` | implemented | Switch the active model. |
 | `kb delete-model <id>` | implemented | Delete a model configuration. |
 | `kb validate-model [id]` | implemented | Check local model configuration fields. |
+
+## File Classification Used by `ingest`
+
+```text
+.pdf                         -> raw/papers
+.md/.markdown/.txt/.docx     -> raw/notes
+.png/.jpg/.jpeg/.svg/etc.    -> raw/images
+.csv/.xlsx/.json/.xml/etc.   -> raw/datasets
+.zip/.rar/.7z/.tar/.gz/etc.  -> raw/archives
+.rs/.py/.js/.ts/.go/etc.     -> raw/repos
+other ordinary files         -> raw/other
+```
+
+`ingest --recursive` skips generated/project folders such as:
+
+```text
+raw, wiki, processing, references, outputs, logs, .git, .obsidian, target, node_modules
+```
+
+It also skips common executable/script/config files such as `.bat`, `.cmd`, `.ps1`, `.sh`, `.exe`, `.dll`, `README.md`, `Cargo.toml`, and `.gitignore`.
 
 ## Model Configuration
 
@@ -116,7 +202,7 @@ Each new REPL LLM request writes a `request_id` to `.model_switch_input.json`; m
 
 ## Notes for Future Agents
 
-`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, or full RAG exists in `v0.1.2`.
+`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, or full RAG exists in `v0.1.4`.
 
 ## License
 

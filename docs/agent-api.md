@@ -1,108 +1,70 @@
-# Agent API Notes
+# Agent/API Boundary Notes
 
-This document describes the **current v0.1.2 boundary** for agents using `kb-cli`.
+This document records what `kb-cli v0.1.4` actually supports. It is intentionally conservative.
 
-## Current Command Pattern
+## Implemented CLI commands
 
-```bash
-kb [OPTIONS] <COMMAND> [ARGS]
-```
+| Command | Purpose |
+|---|---|
+| `kb init [--force]` | Create the local knowledge-base directory structure. |
+| `kb ingest [--copy\|--move] [--recursive] [--dry-run]` | Organize source files into `raw/` subfolders. |
+| `kb bootstrap [--copy\|--move]` | Run `init + ingest + extract-metadata + build-wiki`. |
+| `kb extract-metadata [--force]` | Extract PDF metadata from `raw/papers/`. |
+| `kb build-wiki` | Generate Markdown wiki pages and indexes. |
+| `kb repl` | Start a simple interactive shell. |
+| `kb list-models` | List configured LLM models. |
+| `kb show-model` | Show the active model configuration. |
+| `kb add-model ...` | Add a model configuration. |
+| `kb switch-model <id>` | Switch the active model. |
+| `kb delete-model <id>` | Delete a model configuration. |
+| `kb validate-model [id]` | Validate local model configuration fields. |
 
-Important option:
+## Cross-platform bootstrap
 
-| Option | Description | Example |
-|---|---|---|
-| `--kb-path <path>` | Specify the knowledge-base directory. | `kb --kb-path /user/KnowledgeBase init` |
-
-## Implemented Commands
-
-```bash
-kb init [--force]
-kb extract-metadata [--force]
-kb build-wiki
-kb repl
-kb list-models
-kb show-model
-kb add-model [OPTIONS]
-kb switch-model <id>
-kb delete-model <id>
-kb validate-model [id]
-```
-
-## Not Implemented Yet
-
-The following are design goals, **not current v0.1.2 features**:
+The recommended machine-facing one-command workflow is now:
 
 ```bash
-kb --format json ...
-kb add-paper ...
-kb search ...
-kb list-papers
-kb list-notes
-kb --use-llm search ...
+kb --kb-path /path/to/kb bootstrap --copy
 ```
 
-Agents should not depend on those commands until they are explicitly implemented.
+This is cross-platform because the workflow is implemented inside the Rust CLI, not inside a Windows-only batch file.
 
-## Stable Local Workflow
+## Current non-goals
 
-1. Put PDFs into `KnowledgeBase/raw/papers/`.
-2. Put notes/documents into `KnowledgeBase/raw/notes/`.
-3. Run:
-
-```bash
-kb --kb-path KnowledgeBase extract-metadata
-kb --kb-path KnowledgeBase build-wiki
-```
-
-4. Read generated Markdown under:
+Do not assume the following exist in `v0.1.4`:
 
 ```text
-KnowledgeBase/wiki/
-KnowledgeBase/wiki/indexes/
+--format json
+vector search
+full RAG
+semantic retrieval
+add-paper
+list-papers
+list-notes
+networked agent API
+long-running background daemon
 ```
 
-## Model-Switch Bridge
+## Safety behavior
 
-The REPL can write file-based LLM requests:
+`ingest` and `bootstrap` default to copy mode unless `--move` is explicitly provided. Recursive mode skips generated/project folders such as:
 
 ```text
-.model_switch_input.json
+raw, wiki, processing, references, outputs, logs, .git, .obsidian, target, node_modules
 ```
 
-Each request contains:
+For automation, prefer running a dry run first:
 
-```json
-{
-  "request_id": "kb-...",
-  "prompt": "...",
-  "context": "...",
-  "timestamp": "..."
-}
+```bash
+kb --kb-path /path/to/kb bootstrap --copy --dry-run
 ```
 
-An external model-switch process may respond by writing:
+Then run the real command:
 
-```text
-.model_switch_output.json
+```bash
+kb --kb-path /path/to/kb bootstrap --copy
 ```
 
-Recommended response shape:
+## Output style
 
-```json
-{
-  "request_id": "same request_id from input",
-  "response": "...",
-  "model": "optional model name",
-  "error": null
-}
-```
-
-The CLI ignores or warns about responses without a matching `request_id` to avoid stale answers.
-
-## Agent Safety Rules for This Version
-
-- Prefer `kb --help` and command-specific `--help` before assuming a command exists.
-- Treat stdout as human-readable text, not stable JSON.
-- Do not assume vector search, RAG, or network calls.
-- Do not write source files into `KnowledgeBase/`; keep the Rust tool and the data directory separate.
+The current output is human-readable text. It is not a stable JSON API. Future versions may add a dedicated machine-readable output mode, but agents must not rely on that in `v0.1.4`.

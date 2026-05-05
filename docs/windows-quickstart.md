@@ -1,0 +1,72 @@
+# Windows Quick Start
+
+`v0.1.4` moves the real quick-start workflow into the cross-platform Rust CLI. The Windows batch file is now only a friendly wrapper around:
+
+```powershell
+kb --kb-path <target> bootstrap --copy
+```
+
+## Recommended direct command
+
+After installing `kb`:
+
+```powershell
+cd D:\github\LLM-wiki\kb-cli
+cargo install --path . --force
+```
+
+Build a wiki from an existing folder:
+
+```powershell
+kb --kb-path "D:\github\LLM-wiki\quantum" bootstrap --copy
+```
+
+This will:
+
+```text
+1. initialize the folder as a knowledge base
+2. copy root-level source files into raw\ subfolders
+3. extract PDF metadata
+4. generate wiki markdown pages
+```
+
+## Using the batch helper
+
+From the project root:
+
+```powershell
+scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum"
+```
+
+The helper will install `kb` if needed, then run `kb bootstrap`.
+
+## Useful flags
+
+```powershell
+scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --copy
+scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --move
+scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --recursive
+scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --dry-run
+scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --force-metadata
+```
+
+## Safety notes
+
+- `--copy` is the default and safest mode.
+- `--move` reorganizes files into `raw\` and should be used only when you intend to change the folder layout.
+- `--dry-run` previews actions without copying or moving files.
+- The recursive mode skips managed folders such as `raw`, `wiki`, `processing`, `references`, `outputs`, `logs`, `.git`, `.obsidian`, and `target`.
+
+## Output
+
+Open this folder in Obsidian:
+
+```text
+D:\github\LLM-wiki\quantum
+```
+
+The generated home page is:
+
+```text
+D:\github\LLM-wiki\quantum\wiki\Home.md
+```

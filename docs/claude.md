@@ -1,123 +1,115 @@
-# CLAUDE.md
+# claude.md — Development Guardrails for kb-cli
 
-## Project
+## Current version
 
-`kb-cli`
+`kb-cli v0.1.4`
 
-## Current Version Target
+## Core goal
 
-`v0.1.2` is a warning-cleanup release built on `v0.1.1`. Its purpose is to keep behavior unchanged while making `cargo check` cleaner and preserving the command/document/template consistency already established in `v0.1.1`.
+This project is a small Rust CLI for a local Karpathy-style Markdown knowledge base. It should remain simple, file-based, and easy to inspect.
 
-## Project Positioning
+## v0.1.4 design decision
 
-This is a local-first Rust CLI for maintaining a Karpathy-style Markdown knowledge base:
-
-- Source materials live in `KnowledgeBase/raw/`.
-- Generated or curated Markdown pages live in `KnowledgeBase/wiki/`.
-- Obsidian is the preferred reading and editing frontend.
-- The Rust project and the `KnowledgeBase/` data directory must remain separate.
-
-Recommended layout:
-
-```text
-workspace/
-├─ kb-cli/              # Rust tool project
-└─ KnowledgeBase/       # User data managed by the tool
-```
-
-## Implemented v0.1.2 Commands
-
-Only these commands should be treated as implemented:
+The Windows batch quick-start was useful, but the real workflow must be cross-platform. Therefore the core onboarding workflow now lives in Rust:
 
 ```bash
-kb init [--force]
-kb extract-metadata [--force]
-kb build-wiki
-kb repl
-kb list-models
-kb show-model
-kb add-model [OPTIONS]
-kb switch-model <id>
-kb delete-model <id>
-kb validate-model [id]
+kb bootstrap --copy
 ```
 
-## Not Implemented Yet
-
-Do not claim or document these as working features until code exists and has been checked:
-
-```bash
-kb add-paper
-kb search
-kb list-papers
-kb list-notes
-kb --format json ...
-kb --use-llm search ...
-```
-
-The REPL contains simple interactive list/search helpers, but they are not top-level bash subcommands.
-
-## Strict Development Rules
-
-1. Keep the binary command name as `kb`.
-2. Keep the default knowledge-base directory name as `KnowledgeBase`.
-3. Keep note input under `raw/notes` using lowercase `notes`.
-4. Do not reintroduce `raw/Notes`.
-5. Do not reintroduce `cli`, `cli.exe`, or `cli_mini_rust` as user-facing command names.
-6. Do not hard-code domain-specific examples such as droplet microfluidics into generic wiki templates.
-7. Do not introduce vector databases, RAG, embeddings, network calls, or large frameworks in v0.1.x consistency patches.
-8. Do not store real API keys in the repository.
-9. Keep `.model_config.json`, `.model_switch_input.json`, and `.model_switch_output.json` out of Git.
-10. Prefer small, reviewable changes over sweeping refactors.
-
-## Model Configuration Rules
-
-- `.model_config.example.json` may be committed.
-- `.model_config.json` is local runtime state and must remain ignored.
-- Environment variable names should be shell-friendly, for example `KIMI_K2_5_API_KEY`, not `KIMI-k2.5`.
-
-## Model-Switch Bridge Rules
-
-The file bridge must avoid stale outputs.
-
-Current expected request file:
+This command runs:
 
 ```text
-.model_switch_input.json
+init -> ingest -> extract-metadata -> build-wiki
 ```
 
-Current expected output file:
+The Windows script `scripts/build_llm_wiki.bat` should remain only a wrapper around `kb bootstrap`.
+
+## Implemented commands
 
 ```text
-.model_switch_output.json
+init
+ingest
+bootstrap
+extract-metadata
+build-wiki
+repl
+list-models
+show-model
+add-model
+switch-model
+delete-model
+validate-model
 ```
 
-Each request must contain `request_id`. A response should include the same `request_id`. If no matching response exists, the CLI should report that the request was written instead of pretending that an answer is available.
+## Do not invent undocumented features
 
-## Before Coding
+Do not claim or implement large new systems unless explicitly requested. In particular, do not add:
 
-For any new task, first produce a short plan with:
-
-```markdown
-## Task Understanding
-## Files Affected
-## What Will Change
-## What Will Not Change
-## Verification Plan
+```text
+full RAG
+vector database
+embedding pipeline
+SQLite/Postgres storage
+network server
+web UI
+JSON agent API
+background daemon
+cloud sync
 ```
 
-Do not start large implementation work before the plan is accepted.
+## Safety rules for ingest/bootstrap
 
-## Verification Checklist
+- `init` must not move files.
+- `ingest` must not default to destructive behavior.
+- `bootstrap` must be safe by default.
+- `--copy` is the safe path.
+- `--move` is allowed only when explicitly provided.
+- `--dry-run` should remain available for inspection.
+- Recursive ingest must skip generated/project directories:
 
-After any patch, check at minimum:
-
-```bash
-cargo fmt
-cargo check
-kb --help
-kb init --help
-kb extract-metadata --help
+```text
+raw
+wiki
+processing
+references
+outputs
+logs
+.git
+.obsidian
+target
+node_modules
 ```
 
-If the current environment cannot run Cargo, say so plainly and perform static checks instead.
+## File classification boundary
+
+Keep classification simple and extension-based:
+
+```text
+PDF -> raw/papers
+notes/documents -> raw/notes
+images -> raw/images
+data files -> raw/datasets
+archives -> raw/archives
+code-like files -> raw/repos
+other -> raw/other
+```
+
+Do not add content classification, OCR, PDF parsing beyond metadata, or LLM-based sorting in this version line.
+
+## Documentation rule
+
+README and docs must describe only implemented behavior. Do not list future commands such as `add-paper`, `search`, `list-papers`, or `--format json` unless they are actually implemented.
+
+## Versioning rule
+
+Small compatible improvements should increment the patch version:
+
+```text
+0.1.4 -> 0.1.5
+```
+
+Feature clusters can increment the minor version later:
+
+```text
+0.1.x -> 0.2.0
+```

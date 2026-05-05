@@ -5,11 +5,9 @@ use anyhow::Result;
 /// Get the knowledge base path based on command line argument
 pub fn get_kb_path(custom_kb: Option<&Path>) -> PathBuf {
     if let Some(path) = custom_kb {
-        // If path exists, use it directly
-        if path.exists() {
+        if path.is_absolute() || path.exists() {
             return path.to_path_buf();
         }
-        // If path is just a name, treat as relative to current directory
         return std::env::current_dir().unwrap().join(path);
     }
 
@@ -37,14 +35,12 @@ pub fn get_kb_path(custom_kb: Option<&Path>) -> PathBuf {
 pub fn execute(custom_kb: Option<&Path>, force: bool) -> Result<()> {
     let kb_path = get_kb_path(custom_kb);
 
-    println!("Initializing KnowledgeBase at: {}", kb_path.display());
+    println!("Initializing or ensuring KnowledgeBase at: {}", kb_path.display());
 
-    // Check if already exists
-    if kb_path.exists() && !force {
-        println!("KnowledgeBase already exists. Use --force to re-initialize.");
+    if kb_path.exists() {
+        println!("KnowledgeBase path already exists. Ensuring directory structure...");
         println!("Current directories:");
         list_existing_dirs(&kb_path);
-        return Ok(());
     }
 
     // Define directory structure
@@ -53,7 +49,9 @@ pub fn execute(custom_kb: Option<&Path>, force: bool) -> Result<()> {
         "raw/notes",
         "raw/images",
         "raw/datasets",
+        "raw/archives",
         "raw/repos",
+        "raw/other",
         "wiki/papers",
         "wiki/notes",
         "wiki/concepts",
@@ -63,6 +61,8 @@ pub fn execute(custom_kb: Option<&Path>, force: bool) -> Result<()> {
         "outputs/reports",
         "outputs/slides",
         "outputs/figures",
+        "processing",
+        "references",
         "logs",
     ];
 
@@ -101,7 +101,7 @@ pub fn execute(custom_kb: Option<&Path>, force: bool) -> Result<()> {
 }
 
 fn list_existing_dirs(kb_path: &Path) {
-    let dirs_to_check = vec!["raw", "wiki", "outputs", "logs", ".obsidian"];
+    let dirs_to_check = vec!["raw", "wiki", "outputs", "processing", "references", "logs", ".obsidian"];
     for dir in dirs_to_check {
         let path = kb_path.join(dir);
         if path.exists() {
@@ -166,7 +166,9 @@ This is your local knowledge base managed by `kb-cli`.
 │   ├── notes/        # Notes and documents
 │   ├── images/       # Images and figures
 │   ├── datasets/     # Data sets
-│   └── repos/        # Code repositories
+│   ├── archives/     # Compressed source archives
+│   ├── repos/        # Code repositories
+│   └── other/        # Other source materials
 ├── wiki/             # Markdown Wiki pages
 │   ├── papers/       # Paper summaries
 │   ├── notes/        # Note pages
@@ -174,39 +176,31 @@ This is your local knowledge base managed by `kb-cli`.
 │   ├── topics/       # Thematic collections
 │   └── indexes/      # Navigation indexes
 ├── outputs/          # Generated outputs
-├── logs/            # Logs and metadata
+├── processing/       # Intermediate processing files
+├── references/       # Templates and reference materials
+├── logs/             # Logs and metadata
 └── .obsidian/        # Obsidian configuration
 ```
 
 ## Commands
 
 ```bash
-cd kb-cli
+# One-command cross-platform bootstrap
+kb --kb-path /path/to/this/folder bootstrap --copy
 
-# Initialize or re-initialize
-cargo run -- init [-k <path>] [--force]
-
-# Build wiki pages
-cargo run -- build-wiki [-k <path>]
-
-# Extract paper metadata
-cargo run -- extract-metadata [-k <path>]
+# Manual workflow
+kb --kb-path /path/to/this/folder init
+kb --kb-path /path/to/this/folder ingest --copy
+kb --kb-path /path/to/this/folder extract-metadata
+kb --kb-path /path/to/this/folder build-wiki
 ```
 
-## Usage with Custom Path
+## Safety Notes
 
-To use a custom knowledge base location:
-
-```bash
-# Use different directory name
-cargo run -- init -k MyKnowledgeBase
-
-# Use absolute path
-cargo run -- init -k /path/to/my/kb
-
-# Re-initialize existing
-cargo run -- init --force
-```
+- `ingest --copy` copies source files into `raw/` and is safest.
+- `ingest --move` moves source files into `raw/` and should be used intentionally.
+- `ingest --dry-run` previews actions without changing files.
+- `ingest --recursive` scans subfolders while skipping managed directories such as `raw`, `wiki`, `.git`, `.obsidian`, and `target`.
 
 ## Obsidian
 

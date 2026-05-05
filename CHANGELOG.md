@@ -2,6 +2,37 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.1.4] - 2026-05-05
+
+### Added
+- Added cross-platform `kb ingest` command for organizing source files into `raw/` subfolders.
+- Added cross-platform `kb bootstrap` command for running `init + ingest + extract-metadata + build-wiki` in one workflow.
+- Added safe default copy behavior for ingest/bootstrap, with explicit `--move` for destructive reorganization.
+- Added `--recursive` and `--dry-run` support to ingest/bootstrap.
+- Added `raw/archives`, `raw/other`, `processing`, and `references` to the initialized knowledge-base structure.
+- Added `docs/cross-platform-quickstart.md`.
+
+### Changed
+- Refactored `scripts/build_llm_wiki.bat` into a Windows wrapper around the cross-platform Rust `kb bootstrap` command.
+- Updated README, Windows quick-start, agent-boundary notes, and Claude guardrails for the new cross-platform workflow.
+- Improved custom path resolution for absolute non-existing target paths.
+
+### Notes
+- This release keeps the project file-based and does not introduce RAG, vector search, a database, or a JSON agent API.
+
+## [0.1.3] - 2026-05-05
+
+### Added
+- Added `scripts/build_llm_wiki.bat` as a Windows quick-start helper for turning an existing literature folder into an LLM Wiki.
+- The helper can initialize a custom knowledge-base path, organize source files into `raw/` subfolders, extract PDF metadata, and build the wiki in one run.
+- Added optional helper flags: `--copy`, `--recursive`, `--force-init`, `--no-install`, and `--no-pause`.
+
+### Documentation
+- Added README instructions for the Windows one-command quick-start workflow.
+
+### Notes
+- This release does not change the core Rust CLI behavior. It adds an onboarding script around existing `kb` commands.
+
 ## [0.1.2] - 2026-05-05
 
 ### Fixed
