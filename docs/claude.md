@@ -2,7 +2,7 @@
 
 ## Current version
 
-`kb-cli v0.2.0`
+`kb-cli v0.3.0`
 
 ## Core goal
 
@@ -16,9 +16,17 @@ wiki/   AI-maintained Markdown encyclopedia
 rules/  schema/contract layer that constrains AI maintenance behavior
 ```
 
-## v0.2.0 design decision
+## v0.3.0 design decision
 
-This release establishes the rule/schema layer. `kb init` must generate:
+This release establishes manifest tracking. `kb status` must scan `raw/` and maintain:
+
+```text
+processing/manifest.json
+```
+
+The manifest is the bridge between the source-material layer and future AI compile operations. It should track raw files by relative path, source kind, size, content hash, status, first-seen timestamp, and last-seen timestamp.
+
+The rule/schema layer added in v0.2.0 remains required. `kb init` must still generate:
 
 ```text
 rules/LLM_WIKI_SCHEMA.md
@@ -28,8 +36,6 @@ rules/QUERY_POLICY.md
 rules/LINT_POLICY.md
 ```
 
-These files are not decorative. They are the operating contract for future AI agents that compile, query, or lint the Wiki.
-
 ## Implemented commands
 
 ```text
@@ -38,6 +44,7 @@ ingest
 bootstrap
 extract-metadata
 build-wiki
+status
 repl
 list-models
 show-model
@@ -63,7 +70,7 @@ background daemon
 cloud sync
 ```
 
-Future commands such as `compile`, `query`, and `lint` are planned but not implemented in v0.2.0.
+Future commands such as `compile`, `query`, and `lint` are planned but not implemented in v0.3.0. `status` is implemented and may refresh `processing/manifest.json`.
 
 ## Safety rules for init/ingest/bootstrap
 
@@ -107,16 +114,24 @@ other -> raw/other
 
 Do not add content classification, OCR, PDF parsing beyond metadata, or LLM-based sorting in this version line.
 
+## Manifest rules
+
+- `processing/manifest.json` is generated metadata; it describes `raw/` but must not alter raw files.
+- The manifest should remain plain JSON and human-inspectable.
+- Use stable relative paths with `/` separators.
+- Use content hashes to detect changed raw files.
+- Do not treat the manifest as a database or introduce SQLite in this version line.
+
 ## Documentation rule
 
 README and docs must describe only implemented behavior. Do not list future commands as available unless they are actually implemented.
 
 ## Versioning rule
 
-Schema-layer work is v0.2.x. Small compatible improvements should increment the patch version:
+Manifest/status work is v0.3.x. Small compatible improvements should increment the patch version:
 
 ```text
-0.2.0 -> 0.2.1
+0.3.0 -> 0.3.1
 ```
 
-The next major implementation phase should be manifest/status tracking, likely v0.3.0.
+The next major implementation phase should be AI compile planning, likely v0.4.0.

@@ -1,6 +1,6 @@
 # Agent/API Boundary Notes
 
-This document records what `kb-cli v0.2.0` actually supports. It is intentionally conservative.
+This document records what `kb-cli v0.3.0` actually supports. It is intentionally conservative.
 
 ## Implemented CLI commands
 
@@ -11,6 +11,7 @@ This document records what `kb-cli v0.2.0` actually supports. It is intentionall
 | `kb bootstrap [--copy\|--move]` | Run `init + ingest + extract-metadata + build-wiki`. |
 | `kb extract-metadata [--force]` | Extract PDF metadata from `raw/papers/`. |
 | `kb build-wiki` | Generate Markdown wiki pages and indexes. |
+| `kb status [--dry-run]` | Refresh `processing/manifest.json` and print raw-file status. |
 | `kb repl` | Start a simple interactive shell. |
 | `kb list-models` | List configured LLM models. |
 | `kb show-model` | Show the active model configuration. |
@@ -51,9 +52,27 @@ kb --kb-path /path/to/kb bootstrap --copy
 
 This is cross-platform because the workflow is implemented inside the Rust CLI, not inside a Windows-only batch file.
 
+
+## Manifest / Status
+
+`kb status` is implemented in v0.3.0:
+
+```bash
+kb --kb-path /path/to/kb status
+kb --kb-path /path/to/kb status --dry-run
+```
+
+Current behavior:
+- Scans files under `raw/`.
+- Writes `processing/manifest.json` unless `--dry-run` is used.
+- Tracks relative path, source kind, extension, size, content hash, status, first-seen timestamp, last-seen timestamp, and reserved `wiki_pages`.
+- Prints human-readable summary output.
+
+The manifest is not a stable external API yet; treat it as a local project file that future commands may evolve carefully.
+
 ## Current non-goals
 
-Do not assume the following exist in `v0.2.0`:
+Do not assume the following exist in `v0.3.0`:
 
 ```text
 --format json
@@ -92,4 +111,4 @@ kb --kb-path /path/to/kb bootstrap --copy
 
 ## Output style
 
-The current output is human-readable text. It is not a stable JSON API. Future versions may add a dedicated machine-readable output mode, but agents must not rely on that in `v0.2.0`.
+The current output is human-readable text. It is not a stable JSON API. Future versions may add a dedicated machine-readable output mode, but agents must not rely on that in `v0.3.0`.

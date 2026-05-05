@@ -1,6 +1,6 @@
 # Windows Quick Start
 
-`v0.2.0` keeps the real quick-start workflow inside the cross-platform Rust CLI. The Windows batch file is only a friendly wrapper around:
+`v0.3.0` keeps the real quick-start workflow inside the cross-platform Rust CLI. The Windows batch file is only a friendly wrapper around:
 
 ```powershell
 kb --kb-path <target> bootstrap --copy
@@ -29,6 +29,7 @@ This will:
 3. copy root-level source files into raw\ subfolders
 4. extract PDF metadata
 5. generate wiki markdown pages
+6. refresh processing\manifest.json
 ```
 
 ## Using the batch helper
@@ -70,6 +71,12 @@ The generated home page is:
 
 ```text
 D:\github\LLM-wiki\quantum\wiki\Home.md
+```
+
+Manifest file:
+
+```text
+D:\github\LLM-wiki\quantum\processing\manifest.json
 ```
 
 ## Rules layer

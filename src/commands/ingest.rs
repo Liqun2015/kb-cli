@@ -206,6 +206,15 @@ pub fn execute(custom_kb: Option<&Path>, args: &IngestArgs) -> Result<()> {
     }
 
     summary.print(args.dry_run);
+
+    if args.dry_run {
+        println!("
+Dry run: manifest not refreshed.");
+    } else {
+        let manifest_summary = crate::commands::manifest::refresh_for_path(&kb_path, false)?;
+        crate::commands::manifest::print_summary(&manifest_summary, false);
+    }
+
     Ok(())
 }
 

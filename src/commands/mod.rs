@@ -2,6 +2,7 @@ pub mod build_wiki;
 pub mod extract_metadata;
 pub mod init;
 pub mod ingest;
+pub mod manifest;
 pub mod model;
 pub mod model_config;
 pub mod model_switch;

@@ -42,6 +42,12 @@ This runs:
 init -> ingest -> extract-metadata -> build-wiki
 ```
 
+It also refreshes:
+
+```text
+processing/manifest.json
+```
+
 `init` also creates the generated rules layer:
 
 ```text
@@ -81,9 +87,22 @@ kb --kb-path /path/to/literature-folder init
 kb --kb-path /path/to/literature-folder ingest --copy
 kb --kb-path /path/to/literature-folder extract-metadata
 kb --kb-path /path/to/literature-folder build-wiki
+kb --kb-path /path/to/literature-folder status
 ```
 
-## 7. Open in Obsidian
+## 7. Inspect manifest status
+
+```bash
+kb --kb-path /path/to/literature-folder status
+```
+
+The manifest is written to:
+
+```text
+/path/to/literature-folder/processing/manifest.json
+```
+
+## 8. Open in Obsidian
 
 Open the target folder itself, not only `wiki/`:
 
@@ -97,7 +116,7 @@ The home page will be generated at:
 /path/to/literature-folder/wiki/Home.md
 ```
 
-## 8. Review the rules layer
+## 9. Review the rules layer
 
 Before asking an AI agent to maintain the Wiki, open:
 

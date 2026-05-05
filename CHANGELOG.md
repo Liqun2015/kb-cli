@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-05-05
+
+### Added
+- Added `kb status` for scanning `raw/` and refreshing `processing/manifest.json`.
+- Added manifest entries with relative path, source kind, extension, file size, content hash, status, first-seen timestamp, last-seen timestamp, and future wiki page links.
+- Added `processing/proposals/` as the future review area for AI-generated edit proposals.
+- Added automatic manifest refresh after non-dry-run `kb ingest` and as part of `kb bootstrap` workflows.
+
+### Changed
+- Updated README and documentation to describe the manifest stage and the new `kb status` command.
+- Updated generated knowledge-base README text to include `processing/manifest.json`.
+
+### Notes
+- This release still does not introduce LLM compilation, query, lint, vector search, RAG, a database, or a JSON agent API. It creates the tracking layer needed for future `kb compile --new` behavior.
+
 ## [0.2.0] - 2026-05-05
 
 ### Added
