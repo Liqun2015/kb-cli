@@ -1,5 +1,6 @@
 use std::fs;
 use std::path::Path;
+
 use anyhow::Result;
 
 #[derive(Debug, serde::Deserialize)]
@@ -17,7 +18,7 @@ pub fn execute(custom_kb: Option<&Path>) -> Result<()> {
 
     println!("Building Wiki from: {}", kb_path.display());
 
-    // Create wiki directories if they don't exist
+    // Create wiki directories if they don't exist.
     let wiki_dirs = vec![
         "wiki/papers",
         "wiki/notes",
@@ -32,7 +33,7 @@ pub fn execute(custom_kb: Option<&Path>) -> Result<()> {
         }
     }
 
-    // 1. Build paper pages from metadata
+    // 1. Build paper pages from metadata.
     let metadata_path = kb_path.join("logs/papers_metadata.json");
     if metadata_path.exists() {
         let metadata_content = fs::read_to_string(&metadata_path)?;
@@ -44,16 +45,15 @@ pub fn execute(custom_kb: Option<&Path>) -> Result<()> {
         }
         println!("Generated {} paper pages", papers.len());
 
-        // Generate papers index
         generate_papers_index(&kb_path, &papers)?;
     } else {
-        println!("No metadata found. Run 'extract-metadata' first.");
+        println!("No metadata found. Run 'kb extract-metadata' first.");
     }
 
-    // 2. Build note pages from Notes directory
+    // 2. Build note pages from raw/notes.
     build_note_pages(&kb_path)?;
 
-    // 3. Generate indexes
+    // 3. Generate indexes.
     generate_concepts_index(&kb_path)?;
     generate_notes_index(&kb_path)?;
     generate_topics_index(&kb_path)?;
@@ -64,15 +64,25 @@ pub fn execute(custom_kb: Option<&Path>) -> Result<()> {
 }
 
 fn generate_paper_page(kb_path: &Path, paper: &PaperMetadata) -> Result<()> {
-    let title = paper.title.as_ref().map(|t| t.as_str()).unwrap_or("Untitled");
-    let safe_title = sanitize_filename(title);
+    let title = paper
+        .title
+        .as_ref()
+        .map(|t| t.trim())
+        .filter(|t| !t.is_empty())
+        .unwrap_or_else(|| filename_stem(&paper.filename));
+    let page_stem = paper_page_stem(paper);
 
     let authors = paper.author.as_ref().map(|a| a.as_str()).unwrap_or("Unknown");
+    let subject = paper.subject.as_ref().map(|s| s.as_str()).unwrap_or("N/A");
     let pages = paper.pages;
-    let doi = paper.doi.as_ref().map(|d| format!("DOI: [{}](https://doi.org/{})", d, d))
-        .unwrap_or_else(|| "".to_string());
+    let doi = paper
+        .doi
+        .as_ref()
+        .map(|d| format!("DOI: [{}](https://doi.org/{})", d, d))
+        .unwrap_or_else(|| "N/A".to_string());
 
-    let content = format!(r#"# {title}
+    let content = format!(
+        r#"# {title}
 
 ## Metadata
 
@@ -80,45 +90,44 @@ fn generate_paper_page(kb_path: &Path, paper: &PaperMetadata) -> Result<()> {
 |-------|-------|
 | File | [{filename}](../../raw/papers/{filename}) |
 | Authors | {authors} |
+| Subject | {subject} |
 | Pages | {pages} |
 | DOI | {doi} |
 
 ## Abstract
 
-*To be filled*
+*To be filled from the paper or user notes.*
 
 ## Key Points
 
-- Point 1
-- Point 2
-- Point 3
+- *To be filled*
 
-## Related
+## Related Concepts
 
-[[Droplet Generation]]
-[[Microfluidics]]
+- [[Concept Placeholder]]
 
-## Notes
+## Reading Notes
 
-*Add your reading notes here*
+*Add your reading notes here.*
 "#,
         title = title,
-        filename = paper.filename,
+        filename = paper.filename.as_str(),
         authors = authors,
+        subject = subject,
         pages = pages,
-        doi = if !doi.is_empty() { &doi } else { "N/A" }
+        doi = doi,
     );
 
-    let output_path = kb_path.join(format!("wiki/papers/{}.md", safe_title));
+    let output_path = kb_path.join(format!("wiki/papers/{}.md", page_stem));
     fs::write(&output_path, content)?;
     Ok(())
 }
 
 fn build_note_pages(kb_path: &Path) -> Result<()> {
-    let notes_dir = kb_path.join("raw/Notes");
+    let notes_dir = kb_path.join("raw/notes");
 
     if !notes_dir.exists() {
-        println!("\nNotes directory not found, skipping...");
+        println!("\nraw/notes directory not found, skipping notes...");
         return Ok(());
     }
 
@@ -131,12 +140,14 @@ fn build_note_pages(kb_path: &Path) -> Result<()> {
         .filter(|e| e.file_type().is_file())
     {
         let path = entry.path();
-        let filename = path.file_name()
+        let filename = path
+            .file_name()
             .and_then(|s| s.to_str())
             .unwrap_or("Unknown")
             .to_string();
 
-        let content = format!(r#"# {filename}
+        let content = format!(
+            r#"# {filename}
 
 ## File Info
 
@@ -148,27 +159,29 @@ fn build_note_pages(kb_path: &Path) -> Result<()> {
 
 ## Description
 
-*To be filled*
+*To be filled.*
 
 ## Notes
 
-*Add your notes here*
+*Add your notes here.*
 "#,
-        filename = filename,
-        rel_path = path.strip_prefix(&notes_dir)
-            .unwrap_or(path)
-            .to_str()
-            .unwrap_or(""),
-        file_type = path.extension()
-            .and_then(|s| s.to_str())
-            .unwrap_or("")
-            .to_string(),
-        size = format_size(fs::metadata(&path).ok().map(|m| m.len()).unwrap_or(0)),
-    );
+            filename = filename,
+            rel_path = path
+                .strip_prefix(&notes_dir)
+                .unwrap_or(path)
+                .to_str()
+                .unwrap_or(""),
+            file_type = path
+                .extension()
+                .and_then(|s| s.to_str())
+                .unwrap_or("")
+                .to_string(),
+            size = format_size(fs::metadata(&path).ok().map(|m| m.len()).unwrap_or(0)),
+        );
 
-    let output_path = kb_path.join(format!("wiki/notes/{}.md", sanitize_filename(&filename)));
-    fs::write(&output_path, content)?;
-    note_count += 1;
+        let output_path = kb_path.join(format!("wiki/notes/{}.md", sanitize_filename(&filename)));
+        fs::write(&output_path, content)?;
+        note_count += 1;
     }
 
     println!("Generated {} note pages", note_count);
@@ -181,9 +194,14 @@ fn generate_papers_index(kb_path: &Path, papers: &[PaperMetadata]) -> Result<()>
     content.push_str("## All Papers\n\n");
 
     for paper in papers {
-        let title = paper.title.as_ref().map(|t| t.as_str()).unwrap_or("Untitled");
-        let safe_title = sanitize_filename(title);
-        content.push_str(&format!("- [[{}]] - {}\n", safe_title, paper.filename));
+        let title = paper
+            .title
+            .as_ref()
+            .map(|t| t.trim())
+            .filter(|t| !t.is_empty())
+            .unwrap_or_else(|| filename_stem(&paper.filename));
+        let page_stem = paper_page_stem(paper);
+        content.push_str(&format!("- [[{}|{}]] - {}\n", page_stem, title, paper.filename.as_str()));
     }
 
     let output_path = kb_path.join("wiki/indexes/papers_index.md");
@@ -195,48 +213,25 @@ fn generate_papers_index(kb_path: &Path, papers: &[PaperMetadata]) -> Result<()>
 fn generate_concepts_index(kb_path: &Path) -> Result<()> {
     let content = r#"# Concepts Index
 
-Overview of key concepts in droplet microfluidics.
+This page is a neutral starting point for concepts compiled from local source materials.
 
 ## Core Concepts
 
-### Droplet Generation
-- [[Droplet Generation]]
-- [[T-Junction]]
-- [[Flow Focusing]]
+- [[Concept Placeholder]]
 
-### Fundamentals
-- [[Microfluidics]]
-- [[Emulsion]]
-- [[Surface Tension]]
+## Candidate Concepts
 
-## Fluid Dynamics
-- Capillary Number
-- Reynolds Number
-- Viscosity Ratio
-- Shear Flow
+Add candidate concept pages here as papers, notes, and other materials are processed.
 
-## Device Types
-- [[Lab on a Chip]]
-- Digital Microfluidics
-- Continuous Flow Microfluidics
+## Maintenance Notes
 
-## Applications
-- [[Single-Cell Analysis]]
-- [[Digital PCR]]
-- High-Throughput Screening
-- Nanoparticle Synthesis
-- Drug Delivery
-- Microdroplet applications
-
-## Materials
-- PDMS
-- Glass
-- Thermoplastics
-- Hydrogels
+- Keep concept names short and stable.
+- Prefer one concept per page.
+- Link each concept back to supporting papers or notes.
 
 ---
 
-*This index will be updated as new concepts are added*
+*This index is generated by `kb build-wiki` and can be edited manually.*
 "#;
 
     let output_path = kb_path.join("wiki/indexes/concepts_index.md");
@@ -245,69 +240,34 @@ Overview of key concepts in droplet microfluidics.
 }
 
 fn generate_notes_index(kb_path: &Path) -> Result<()> {
-    // Get note count
     let notes_dir = kb_path.join("wiki/notes");
-    let note_count = fs::read_dir(&notes_dir)
-        .map(|entries| entries.filter_map(|e| e.ok()).count())
-        .unwrap_or(0);
+    let mut note_names = Vec::new();
 
-    let content = format!(r#"# Notes Index
+    if let Ok(entries) = fs::read_dir(&notes_dir) {
+        for entry in entries.filter_map(|e| e.ok()) {
+            let path = entry.path();
+            if path.extension().and_then(|s| s.to_str()) == Some("md") {
+                if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+                    note_names.push(stem.to_string());
+                }
+            }
+        }
+    }
 
-Collection of notes and reference materials in knowledge base.
+    note_names.sort();
 
-## Notes Summary
+    let mut content = String::from("# Notes Index\n\n");
+    content.push_str("Collection of note pages generated from `raw/notes/`.\n\n");
+    content.push_str(&format!("Total notes: {}\n\n", note_names.len()));
+    content.push_str("## All Notes\n\n");
 
-Total notes: {}
-
-## Notes by Type
-
-### Presentations
-- 20102010年Miller-液滴生成闭环控制始祖_pptm.md
-- 20172017年赵远锦综述_pptx.md
-- Droplet 技术应用的现状和趋势_pptx.md
-- 单细胞包裹改_ppt.md
-
-### Documents
-- Controllable geometry-mediated droplet fission using "off-the-shelf" capillary microfluidics device_doc.md
-- Drag-induced Breakup Mechanism for Droplet Generation in Dripping within Flow Focusing Microfluidics.md
-- Microdroplets： a sea of applications_doc.md
-- T-Junction_Ren_docx.md
-- 液滴形成及操控方式概述_txt.md
-
-### Code
-- patch_real_droplet_ellipse_c.md
-- ilove_cpp.md
-- ustc_cpp.md
-
-### Images
-- Image007.tif.md
-- Image008.tif.md
-- Image013.tif.md
-- Image014.tif.md
-
-### Archives
-- 2020国自然申请_zip.md
-
-## Key Topics Covered
-
-1. **Droplet Generation**
-   - T-junction mechanisms
-   - Flow focusing configurations
-   - Closed-loop control (Miller 2010)
-   - Regime analysis
-
-2. **Applications**
-   - Single-cell encapsulation
-   - Digital PCR
-   - Microdroplet applications
-
-3. **Review Materials**
-   - 2017 comprehensive review by Zhao Yuanjin
-
----
-
-*Notes are organized from raw materials in KnowledgeBase/raw/Notes/*
-"#, note_count);
+    if note_names.is_empty() {
+        content.push_str("No note pages generated yet. Add files to `raw/notes/` and run `kb build-wiki`.\n");
+    } else {
+        for name in note_names {
+            content.push_str(&format!("- [[{}]]\n", name));
+        }
+    }
 
     let output_path = kb_path.join("wiki/indexes/notes_index.md");
     fs::write(&output_path, content)?;
@@ -317,57 +277,21 @@ Total notes: {}
 fn generate_topics_index(kb_path: &Path) -> Result<()> {
     let content = r#"# Topics Index
 
-Organized topics for deeper exploration of droplet microfluidics.
+Topics are higher-level collections that group papers, notes, and concepts.
 
-## Research Topics
+## Candidate Topics
 
-### Droplet Generation
-- [[Droplet Microfluidics Overview]]
-- Passive vs Active Methods
-- Regime Analysis
-- Scaling Laws
+- [[Topic Placeholder]]
 
-### Device Design
-- Geometry Optimization
-- Surface Treatments
-- Multi-phase Systems
-- 3D vs 2D Designs
+## Suggested Workflow
 
-### Applications
-- [[Single-Cell Analysis]]
-- [[Digital PCR]]
-- High-Throughput Screening
-- Nanoparticle Synthesis
-- Drug Delivery
-- Microdroplet applications
-
-## Thematic Collections
-
-### Historical Development
-- Early droplet generation methods
-- Evolution of device designs
-- Key breakthrough papers
-
-### Current Trends
-- AI and Machine Learning Integration
-- In-situ Analysis Techniques
-- Multi-material Systems
-
-### Emerging Areas
-- Acoustic Manipulation
-- Magnetic Control
-- Optofluidics
-
-## Cross-Cutting Topics
-
-- Surface Chemistry
-- Interfacial Phenomena
-- Transport Processes
-- Scale-up Strategies
+1. Create a topic page only after several source materials point to the same theme.
+2. Link the topic page to related papers, notes, and concepts.
+3. Keep open questions and next actions on the topic page.
 
 ---
 
-*Topics will be expanded based on research needs and literature analysis.*
+*Topics will be expanded based on the user's materials and research needs.*
 "#;
 
     let output_path = kb_path.join("wiki/indexes/topics_index.md");
@@ -390,37 +314,48 @@ fn generate_main_index(kb_path: &Path) -> Result<()> {
         .unwrap_or(0);
     let total_md = papers_count + notes_count + concepts_count + topics_count + 4; // +4 for indexes
 
-    let content = format!(r#"# Knowledge Base
+    let content = format!(
+        r#"# Knowledge Base
 
-Welcome to droplets microfluidics knowledge base.
+Welcome to your local Markdown knowledge base.
 
 ## Overview
 
-This knowledge base follows the Karpathy approach to local knowledge management:
-- Original materials are stored in `raw/`
-- Wiki pages are in `wiki/` as Markdown files
-- Obsidian can be used for visualization and linking
+This knowledge base follows the Karpathy-style local knowledge workflow:
+- Original materials are stored in `raw/`.
+- Wiki pages are generated under `wiki/` as Markdown files.
+- Obsidian can be used for reading, editing, backlinks, and graph views.
 
 ## Running the CLI
 
-### Direct commands (no LLM):
-- `cli init` - Initialize knowledge base
-- `cli extract-metadata` - Extract PDF metadata
-- `cli build-wiki` - Build wiki pages
-- `cli list papers` - List all papers
-- `cli list notes` - List all notes
-- `cli search <query>` - Search for papers/notes
+### Direct commands
 
-### REPL mode (requires LLM integration):
-- `cli repl` - Enter interactive mode
-  - `kb> help` - Show available commands
-  - `kb> ask <question>` - Ask a question (requires model-switch)
-  - `kb> exit` - Exit REPL
+```bash
+kb init                    # Initialize knowledge base
+kb init --force            # Re-create bootstrap structure
+kb extract-metadata        # Extract PDF metadata
+kb extract-metadata --force # Overwrite existing metadata
+kb build-wiki              # Build wiki pages
+kb repl                    # Enter interactive mode
+```
+
+### REPL mode
+
+```bash
+kb repl
+
+kb> help                   # Show available commands
+kb> ask <question>          # Write a model-switch request
+kb> list papers             # List paper pages
+kb> list notes              # List note pages
+kb> search <query>          # Search paper/note page names
+kb> exit                    # Exit
+```
 
 ## Indexes
 
-- [[Papers Index]] - {} papers with metadata
-- [[Notes Index]] - {} notes and reference materials
+- [[Papers Index]] - {papers} papers with metadata
+- [[Notes Index]] - {notes} notes and reference materials
 - [[Concepts Index]] - Core concepts and definitions
 - [[Topics Index]] - Thematic collections
 - [[Main Index]] - This page
@@ -437,57 +372,28 @@ This knowledge base follows the Karpathy approach to local knowledge management:
 
 ## Directory Structure
 
-```
+```text
 KnowledgeBase/
 ├── raw/
-│   ├── papers/          # Original PDF papers
-│   ├── Notes/           # Notes and reference materials
-│   ├── images/             # Images and figures
-│   ├── datasets/           # Data sets
+│   ├── papers/            # Original PDF papers
+│   ├── notes/             # Notes and reference materials
+│   ├── images/            # Images and figures
+│   ├── datasets/          # Data sets
 │   └── repos/             # Code repositories
-└── wiki/
-    ├── papers/          # Paper wiki pages
-    ├── notes/           # Note wiki pages
-    ├── concepts/        # Concept pages
-    ├── topics/         # Topic pages
-    └── indexes/        # Navigation pages
+├── wiki/
+│   ├── papers/            # Paper wiki pages
+│   ├── notes/             # Note wiki pages
+│   ├── concepts/          # Concept pages
+│   ├── topics/            # Topic pages
+│   └── indexes/           # Navigation pages
+├── outputs/               # Generated answers and reports
 └── logs/
-    └── papers_metadata.json  # Extracted paper metadata
-```
-
-## Usage
-
-### Bash Mode Commands
-
-```bash
-./cli.exe init                    # Initialize knowledge base
-./cli.exe extract-metadata        # Extract PDF metadata
-./cli.exe build-wiki             # Build wiki pages
-./cli.exe list papers            # List papers
-./cli.exe list notes             # List notes
-./cli.exe search <query>        # Search for papers/notes
-```
-
-### REPL Mode Commands
-
-```bash
-./cli.exe repl                    # Enter interactive mode
-
-kb> help                    # Show available commands
-kb> ask "什么是 T-junction?"   # Ask a question (requires model-switch)
-kb> list papers | head -10    # List papers (first 10)
-kb> search "flow focusing"     # Search for papers
-kb> exit                    # Exit
+    └── papers_metadata.json
 ```
 
 ### Model-Switch Integration
 
-The CLI integrates with model-switch for LLM capabilities. When model-switch is running, it will write responses to `.model_switch_output.json`.
-
-**Default Model Configuration:**
-- Model URL: http://scc.ustc.edu.cn/portal/api/ask
-- API Key: DEEPSEEK_API_USTC
-- Unit: USTC
+The REPL writes LLM requests to `.model_switch_input.json`. External model-switch tooling may write responses to `.model_switch_output.json` with the same `request_id`.
 
 ---
 
@@ -507,22 +413,59 @@ The CLI integrates with model-switch for LLM capabilities. When model-switch is 
     Ok(())
 }
 
+fn paper_page_stem(paper: &PaperMetadata) -> String {
+    let title = paper
+        .title
+        .as_ref()
+        .map(|t| t.trim())
+        .filter(|t| !t.is_empty())
+        .unwrap_or_else(|| filename_stem(&paper.filename));
+    let title_stem = sanitize_filename(title);
+    if title_stem.is_empty() || title_stem == "Untitled" {
+        sanitize_filename(filename_stem(&paper.filename))
+    } else {
+        title_stem
+    }
+}
+
+fn filename_stem(filename: &str) -> &str {
+    Path::new(filename)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or(filename)
+}
+
 fn sanitize_filename(name: &str) -> String {
     let mut result = String::new();
+    let mut previous_was_separator = false;
+
     for c in name.chars() {
-        if c.is_alphanumeric() || c == ' ' || c == '-' || c == '_' {
+        if c.is_alphanumeric() || c == '-' || c == '_' {
             result.push(c);
-        } else if c.is_whitespace() {
+            previous_was_separator = false;
+        } else if c.is_whitespace() || c == '.' {
+            if !previous_was_separator && !result.is_empty() {
+                result.push('_');
+                previous_was_separator = true;
+            }
+        } else if !previous_was_separator && !result.is_empty() {
             result.push('_');
-        } else {
-            result.push('_');
+            previous_was_separator = true;
         }
     }
-    // Limit length
+
+    let mut result = result.trim_matches('_').to_string();
     if result.len() > 100 {
         result.truncate(100);
+        result = result.trim_matches('_').to_string();
     }
-    result.trim().to_string()
+
+    if result.is_empty() {
+        "untitled".to_string()
+    } else {
+        result
+    }
 }
 
 fn format_size(bytes: u64) -> String {

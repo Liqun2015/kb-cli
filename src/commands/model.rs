@@ -182,7 +182,7 @@ pub fn execute_add_model(args: ModelArgs) -> Result<()> {
                 println!("Name: {}", entry.name);
                 println!("URL: {}", entry.url);
                 println!();
-                println!("To set as active: ./cli.exe switch-model {}", id);
+                println!("To set as active: kb switch-model {}", id);
             }
         }
         Err(e) => {
@@ -211,7 +211,7 @@ pub fn execute_switch_model(id: &str) -> Result<()> {
                 if let Some(model) = manager.get_current_model() {
                     println!("Switched active model to: {} ({})", model.id, model.name);
                     println!();
-                    println!("Verify with: ./cli.exe show-model");
+                    println!("Verify with: kb show-model");
                 }
             }
         }

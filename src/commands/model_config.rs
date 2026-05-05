@@ -9,6 +9,7 @@ const CONFIG_FILE: &str = ".model_config.json";
 const CONFIG_VERSION: &str = "1.0";
 
 /// errors for model setup
+#[allow(dead_code)]
 #[derive(Debug)]
 pub enum ModelConfigError {
     FileNotFound,
@@ -34,11 +35,7 @@ impl std::fmt::Display for ModelConfigError {
     }
 }
 
-impl std::error::Error for ModelConfigError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        Some(self)
-    }
-}
+impl std::error::Error for ModelConfigError {}
 
 /// source of API Key
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -181,6 +178,7 @@ impl ModelManager {
     }
 
     /// fetch the URL of current model 
+    #[allow(dead_code)]
     pub fn get_model_url(&self) -> String {
         if let Some(model) = self.get_current_model() {
             model.url.clone()
@@ -191,9 +189,10 @@ impl ModelManager {
     }
 
     /// fetch the current model's API Key
+    #[allow(dead_code)]
     pub fn get_api_key(&self) -> Result<String> {
         if let Some(model) = self.get_current_model() {
-            match model.api_key_source {
+            match &model.api_key_source {
                 ApiKeySource::Env => {
                     if let Some(env_var) = &model.api_key_env {
                         std::env::var(env_var).map_err(|_| ModelConfigError::ApiKeyMissing.into())
@@ -250,7 +249,7 @@ impl ModelManager {
                 name: "Kimi K2.5".to_string(),
                 url: "https://api.moonshot.cn/v1".to_string(),
                 api_key_source: ApiKeySource::Env,
-                api_key_env: Some("KIMI-k2.5".to_string()),
+                api_key_env: Some("KIMI_K2_5_API_KEY".to_string()),
                 api_key_value: None,
                 model_name: Some("moonshot-v1-8k".to_string()),
                 description: Some("Moonshot Kimi model".to_string()),

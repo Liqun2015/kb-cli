@@ -156,6 +156,7 @@ impl KeywordPattern {
     }
 
     /// Get friendly description for intent
+    #[allow(dead_code)]
     pub fn description(intent: &Intent) -> &'static str {
         match intent {
             Intent::Help => "Show help information",
@@ -185,6 +186,7 @@ impl KeywordPattern {
     }
 
     /// Check if intent requires LLM
+    #[allow(dead_code)]
     pub fn is_llm_required(intent: &Intent) -> bool {
         matches!(
             intent,

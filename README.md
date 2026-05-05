@@ -1,110 +1,123 @@
 # kb-cli
 
-> A command-line interface between AI agents and the knowledge base  
-> proposed by Andrej Karpathy for LLMs to maintain inside Obsidian.
+> A small Rust CLI for building and maintaining a local Markdown knowledge base.
+>
+> Current version: `v0.1.2`
 
-## For AI Agents
+`kb-cli` follows a Karpathy-style local knowledge workflow: put source materials in `raw/`, generate Markdown pages under `wiki/`, and use Obsidian as the reading/editing frontend.
 
-`kb-cli` provides a standardized CLI interface for AI agents to access and manage Karpathy's bases(kb) of knowledge .
+## Current Scope
 
-### Quick Start
-
-```bash
-# Initialize a Karpathy knowledge base
-kb --kb-path /path/to/kb init
-
-# Add a paper
-kb --kb-path /path/to/kb add-paper /path/to/paper.pdf
-
-# Search content
-kb --kb-path /path/to/kb search "droplet"
-```
-
-### Command Reference
-
-See [Agent API Documentation](docs/agent-api.md) for detailed usage.
-
-### Integration Examples
-
-```python
-import subprocess
-
-class KnowledgeAgent:
-    def __init__(self, kb_path):
-        self.kb_path = kb_path
-
-    def search_papers(self, query):
-        result = subprocess.run(
-            ["kb", "--kb-path", self.kb_path, "search", query],
-            capture_output=True
-        )
-        return self._parse_json_output(result.stdout)
-```
-
----
-
-## For Researchers
-
-`kb-cli` is also a powerful tool for personal knowledge management.
-
-### Features
-
-- 📄 **Paper Management**: Auto-extract PDF metadata, build literature index
-- 📝 **Wiki Generation**: Markdown format, Obsidian compatible
-- 💬 **Interactive REPL**: Conversational interface for quick tasks
-- 🤖 **LLM Integration**: Multi-model support for intelligent understanding
-
-### Workflow
-
-```bash
-# Initialize
-kb init
-
-# Extract metadata from PDFs
-kb extract-metadata
-
-# Build wiki pages
-kb build-wiki
-
-# Interactive mode
-kb repl
-```
-
-### Obsidian Integration
-
-Wiki pages are generated in Markdown format with:
-- [[WikiLinks]] for internal references
-- Frontmatter for metadata
-- Folder structure: papers/, notes/, concepts/, indexes/
-
-Open your knowledge base folder in Obsidian to start organizing.
-
----
+This version is intentionally conservative. It provides a reliable local scaffold and a few file-based operations. It does **not** yet provide full RAG, vector search, JSON agent output, or a networked agent API.
 
 ## Installation
 
 ```bash
-# Clone
-git clone https://github.com/liqun2015/kb-cli.git
-cd kb-cli
-
 # Build
 cargo build --release
 
-# Install
+# Install locally
 cargo install --path .
 ```
 
----
+The binary name is:
 
-## Documentation
+```bash
+kb
+```
 
-- [Agent API](docs/agent-api.md) - For AI agents
-- [Architecture](docs/architecture.md) - Technical details
-- [Contributing](CONTRIBUTING.md) - How to contribute
+## Quick Start
 
----
+```bash
+# Initialize the default KnowledgeBase directory
+kb init
+
+# Re-create missing bootstrap directories/files when needed
+kb init --force
+
+# Extract metadata from PDFs in KnowledgeBase/raw/papers/
+kb extract-metadata
+
+# Overwrite existing metadata
+kb extract-metadata --force
+
+# Build Markdown wiki pages and indexes
+kb build-wiki
+
+# Enter interactive REPL mode
+kb repl
+```
+
+Use a custom knowledge-base path with:
+
+```bash
+kb --kb-path /path/to/KnowledgeBase init
+kb --kb-path /path/to/KnowledgeBase extract-metadata
+kb --kb-path /path/to/KnowledgeBase build-wiki
+```
+
+## Knowledge Base Layout
+
+```text
+KnowledgeBase/
+├── raw/
+│   ├── papers/       # Original PDF papers
+│   ├── notes/        # Notes and documents
+│   ├── images/       # Images and figures
+│   ├── datasets/     # Data sets
+│   └── repos/        # Code repositories
+├── wiki/
+│   ├── papers/       # Generated paper pages
+│   ├── notes/        # Generated note pages
+│   ├── concepts/     # Concept pages
+│   ├── topics/       # Topic pages
+│   └── indexes/      # Navigation indexes
+├── outputs/          # Generated answers and reports
+└── logs/             # Metadata and logs
+```
+
+## Implemented Commands
+
+| Command | Status | Purpose |
+|---|---:|---|
+| `kb init [--force]` | implemented | Create the local knowledge-base structure. |
+| `kb extract-metadata [--force]` | implemented | Extract basic metadata from PDFs under `raw/papers/`. |
+| `kb build-wiki` | implemented | Generate Markdown paper/note pages and index pages. |
+| `kb repl` | implemented | Start a simple interactive shell. |
+| `kb list-models` | implemented | List configured LLM models. |
+| `kb show-model` | implemented | Show the current model configuration. |
+| `kb add-model ...` | implemented | Add a model configuration. |
+| `kb switch-model <id>` | implemented | Switch the active model. |
+| `kb delete-model <id>` | implemented | Delete a model configuration. |
+| `kb validate-model [id]` | implemented | Check local model configuration fields. |
+
+## Model Configuration
+
+The real runtime config file is local-only:
+
+```text
+.model_config.json
+```
+
+It is ignored by Git. Start from the example file if needed:
+
+```bash
+cp .model_config.example.json .model_config.json
+```
+
+Model-switch request/response files are also ignored:
+
+```text
+.model_switch_input.json
+.model_switch_output.json
+```
+
+Each new REPL LLM request writes a `request_id` to `.model_switch_input.json`; matching output should include the same `request_id` to avoid stale responses.
+
+## Notes for Future Agents
+
+`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, or full RAG exists in `v0.1.2`.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file.
+MIT License - see [LICENSE](LICENSE).

@@ -43,6 +43,7 @@ impl IntentParser {
     }
 
     /// Check if LLM is required
+    #[allow(dead_code)]
     pub fn requires_llm(&self, intent: &Intent) -> bool {
         matches!(
             intent,

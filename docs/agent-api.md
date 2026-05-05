@@ -1,173 +1,108 @@
-# Agent API Documentation
+# Agent API Notes
 
-This document describes how AI agents can interact with `kb-cli` for knowledge base management.
+This document describes the **current v0.1.2 boundary** for agents using `kb-cli`.
 
-## Overview
+## Current Command Pattern
 
-`kb-cli` follows a consistent command pattern:
-```
+```bash
 kb [OPTIONS] <COMMAND> [ARGS]
 ```
 
-### Important Options
+Important option:
 
 | Option | Description | Example |
-|---------|-------------|---------|
-| `--kb-path <path>` | Specify knowledge base directory (required for agents) | `kb --kb-path /user/kb init` |
-| `--format json` | Output in JSON format (for agent parsing) | `kb --format json search "query"` |
-| `--model <id>` | Use specific LLM model | `kb --model deepseek search "query"` |
+|---|---|---|
+| `--kb-path <path>` | Specify the knowledge-base directory. | `kb --kb-path /user/KnowledgeBase init` |
 
-### Commands
-
-#### Initialization
+## Implemented Commands
 
 ```bash
-kb --kb-path /path/to/kb init
+kb init [--force]
+kb extract-metadata [--force]
+kb build-wiki
+kb repl
+kb list-models
+kb show-model
+kb add-model [OPTIONS]
+kb switch-model <id>
+kb delete-model <id>
+kb validate-model [id]
 ```
 
-**Output (JSON format)**:
-```json
-{
-  "status": "success",
-  "message": "Knowledge base initialized at /path/to/kb",
-  "created_dirs": ["raw", "wiki", "logs", "outputs"]
-}
-```
+## Not Implemented Yet
 
-#### Paper Operations
-
-**Add a paper**:
-```bash
-kb --kb-path /path/to/kb add-paper /path/to/paper.pdf
-```
-
-**Extract metadata**:
-```bash
-kb --kb-path /path/to/kb extract-metadata
-```
-
-**Output (JSON format)**:
-```json
-{
-  "status": "success",
-  "papers_processed": 15,
-  "papers": [
-    {"id": "paper001", "title": "...", "authors": [...]}
-  ]
-}
-```
-
-#### Search Operations
+The following are design goals, **not current v0.1.2 features**:
 
 ```bash
-kb --kb-path /path/to/kb search "droplet microfluidics"
+kb --format json ...
+kb add-paper ...
+kb search ...
+kb list-papers
+kb list-notes
+kb --use-llm search ...
 ```
 
-**Output (JSON format)**:
-```json
-{
-  "status": "success",
-  "results": [
-    {"type": "paper", "id": "paper001", "title": "...", "relevance": 0.95},
-    {"type": "note", "id": "note001", "title": "...", "relevance": 0.88}
-  ],
-  "total": 25
-}
-```
+Agents should not depend on those commands until they are explicitly implemented.
 
-#### List Operations
+## Stable Local Workflow
+
+1. Put PDFs into `KnowledgeBase/raw/papers/`.
+2. Put notes/documents into `KnowledgeBase/raw/notes/`.
+3. Run:
 
 ```bash
-kb --kb-path /path/to/kb list-papers
-kb --kb-path /path/to/kb list-notes
+kb --kb-path KnowledgeBase extract-metadata
+kb --kb-path KnowledgeBase build-wiki
 ```
 
-**Output (JSON format)**:
-```json
-{
-  "status": "success",
-  "items": [
-    {"id": "paper001", "title": "...", "created_at": "..."},
-    {"id": "paper002", "title": "...", "created_at": "..."}
-  ]
-}
+4. Read generated Markdown under:
+
+```text
+KnowledgeBase/wiki/
+KnowledgeBase/wiki/indexes/
 ```
 
-### Output Formats
+## Model-Switch Bridge
 
-All commands with `--format json` output structured JSON:
+The REPL can write file-based LLM requests:
+
+```text
+.model_switch_input.json
+```
+
+Each request contains:
 
 ```json
 {
-  "status": "success" | "error",
-  "data": {...},
-  "message": "...",
-  "error": {...}
+  "request_id": "kb-...",
+  "prompt": "...",
+  "context": "...",
+  "timestamp": "..."
 }
 ```
 
-This format is designed for:
-- Easy parsing by agent scripts
-- Machine-readable metadata
-- Consistent structure across all commands
+An external model-switch process may respond by writing:
 
-### Error Handling
+```text
+.model_switch_output.json
+```
 
-All errors follow this format:
+Recommended response shape:
 
 ```json
 {
-  "status": "error",
-  "error": {
-    "code": "KB_NOT_FOUND",
-    "message": "Knowledge base not found at specified path",
-    "hint": "Run 'kb init' to create a new knowledge base"
-  }
+  "request_id": "same request_id from input",
+  "response": "...",
+  "model": "optional model name",
+  "error": null
 }
 ```
 
-### Error Codes
+The CLI ignores or warns about responses without a matching `request_id` to avoid stale answers.
 
-| Code | Description | Recovery |
-|-------|-------------|------------|
-| `KB_NOT_FOUND` | Knowledge base directory not found | Run `kb init` |
-| `INVALID_PATH` | Path does not exist | Check path and try again |
-| `PAPER_NOT_FOUND` | Paper ID not found | Search again or check ID |
-| `MODEL_ERROR` | LLM model error | Check model configuration |
+## Agent Safety Rules for This Version
 
-### LLM Integration
-
-Agents can leverage LLM capabilities:
-
-```bash
-# Search with LLM analysis
-kb --kb-path /path/to/kb --use-llm search "droplet formation mechanisms"
-
-# Output includes LLM-generated summary
-{
-  "status": "success",
-  "results": [...],
-  "llm_summary": "Based on 5 papers, droplet formation involves...",
-  "llm_confidence": 0.87
-}
-```
-
-### Memory Pattern
-
-Agents should cache command results:
-
-```python
-class KnowledgeAgent:
-    def __init__(self):
-        self.cache = {}  # Cache paper IDs, metadata
-        self.last_sync = None
-
-    def get_papers(self, force_refresh=False):
-        if not force_refresh and "papers" in self.cache:
-            return self.cache["papers"]
-
-        # Fetch fresh data
-        result = subprocess.run(["kb", "--format", "json", "list-papers"])
-        self.cache["papers"] = json.loads(result.stdout)
-        return self.cache["papers"]
-```
+- Prefer `kb --help` and command-specific `--help` before assuming a command exists.
+- Treat stdout as human-readable text, not stable JSON.
+- Do not assume vector search, RAG, or network calls.
+- Do not write source files into `KnowledgeBase/`; keep the Rust tool and the data directory separate.

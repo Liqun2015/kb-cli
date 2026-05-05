@@ -6,6 +6,9 @@
 # Runtime
 .env
 .env.local
+.model_config.json
+.model_switch_input.json
+.model_switch_output.json
 
 # IDE
 .vscode/

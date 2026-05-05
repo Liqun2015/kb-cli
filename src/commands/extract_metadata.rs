@@ -141,12 +141,12 @@ fn extract_string_from_object(obj: &Object) -> Option<String> {
         Object::String(s, _) => {
             std::str::from_utf8(s)
                 .ok()
-                .map(|s| s.to_string())
+                .map(|s| clean_string(s.to_string()))
         }
         Object::Name(n) => {
             std::str::from_utf8(n)
                 .ok()
-                .map(|s| s.to_string())
+                .map(|s| clean_string(s.to_string()))
         }
         Object::Array(arr) => {
             // Sometimes strings are wrapped in arrays

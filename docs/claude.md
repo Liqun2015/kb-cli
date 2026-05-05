@@ -1,647 +1,123 @@
 # CLAUDE.md
 
-## 项目名称
+## Project
 
-`cli_mini_rust`
+`kb-cli`
 
-## 项目当前定位
+## Current Version Target
 
-这是一个**本地优先、Rust 实现、面向个人知识库构建的极简 CLI 工程**。  
-当前阶段目标不是做“大而全产品”，而是围绕 Karpathy 风格的本地知识库方法，逐步做出一个**稳、小、清楚、可迭代**的 Rust 工具链。
+`v0.1.2` is a warning-cleanup release built on `v0.1.1`. Its purpose is to keep behavior unchanged while making `cargo check` cleaner and preserving the command/document/template consistency already established in `v0.1.1`.
 
-核心方法保持一致：
+## Project Positioning
 
-- 原始资料进入 `KnowledgeBase/raw/`
-- 用程序和代理将原始资料逐步整理为 Markdown Wiki
-- Wiki 本质上是一组本地 `.md` 文件
-- Obsidian 作为主要查看前端
-- CLI 命令提供基础能力
-- 查询输出继续归档回知识库
-- 通过 lint / health check 持续改进知识库质量
+This is a local-first Rust CLI for maintaining a Karpathy-style Markdown knowledge base:
 
----
+- Source materials live in `KnowledgeBase/raw/`.
+- Generated or curated Markdown pages live in `KnowledgeBase/wiki/`.
+- Obsidian is the preferred reading and editing frontend.
+- The Rust project and the `KnowledgeBase/` data directory must remain separate.
 
-## 当前阶段一句话目标
-
-**先把 `cli_mini_rust` 做成一个可靠的本地知识库脚手架与工具箱，而不是立即做成复杂智能系统。**
-
----
-
-## 项目目录关系（非常重要）
-
-本项目默认采用“**代码工程**”与“**知识库数据**”分离的组织方式。
-
-推荐目录结构：
+Recommended layout:
 
 ```text
 workspace/
-├─ cli_mini_rust/
-│  ├─ Cargo.toml
-│  ├─ src/
-│  ├─ CLAUDE.md
-│  └─ ...
-└─ KnowledgeBase/
-   ├─ raw/
-   ├─ wiki/
-   ├─ outputs/
-   └─ logs/
+├─ kb-cli/              # Rust tool project
+└─ KnowledgeBase/       # User data managed by the tool
 ```
 
-说明：
+## Implemented v0.1.2 Commands
 
-- `cli_mini_rust/` 是 **Rust CLI 工程本体**
-- `KnowledgeBase/` 是 **被该工具管理的本地知识库数据目录**
-- **不要**把 `cli_mini_rust` 的全部源码复制到 `KnowledgeBase/` 中
-- `KnowledgeBase/` 默认应与 `cli_mini_rust/` **并列放置**
-- 程序应通过默认路径、配置项或命令行参数访问 `KnowledgeBase/`
+Only these commands should be treated as implemented:
 
-一句话记忆：
+```bash
+kb init [--force]
+kb extract-metadata [--force]
+kb build-wiki
+kb repl
+kb list-models
+kb show-model
+kb add-model [OPTIONS]
+kb switch-model <id>
+kb delete-model <id>
+kb validate-model [id]
+```
 
-**`cli_mini_rust` 是工具，`KnowledgeBase` 是数据；两者并列，不互相吞并。**
+## Not Implemented Yet
 
----
+Do not claim or document these as working features until code exists and has been checked:
 
-## 最高执行原则
+```bash
+kb add-paper
+kb search
+kb list-papers
+kb list-notes
+kb --format json ...
+kb --use-llm search ...
+```
 
-1. **先计划，后编码。**
-2. **先讨论清楚边界，再改代码。**
-3. **先做本地文件 + Markdown Wiki 闭环。**
-4. **先做小命令，再做大系统。**
-5. **先保守推进，不擅自扩张。**
-6. **主语言必须是 Rust。**
-7. **保持 CLI 简洁，不做炫技式工程化。**
-8. **优先兼容 Obsidian 的目录与 Markdown 工作流。**
+The REPL contains simple interactive list/search helpers, but they are not top-level bash subcommands.
 
----
+## Strict Development Rules
 
-## Claude Code 在本项目中的角色
+1. Keep the binary command name as `kb`.
+2. Keep the default knowledge-base directory name as `KnowledgeBase`.
+3. Keep note input under `raw/notes` using lowercase `notes`.
+4. Do not reintroduce `raw/Notes`.
+5. Do not reintroduce `cli`, `cli.exe`, or `cli_mini_rust` as user-facing command names.
+6. Do not hard-code domain-specific examples such as droplet microfluidics into generic wiki templates.
+7. Do not introduce vector databases, RAG, embeddings, network calls, or large frameworks in v0.1.x consistency patches.
+8. Do not store real API keys in the repository.
+9. Keep `.model_config.json`, `.model_switch_input.json`, and `.model_switch_output.json` out of Git.
+10. Prefer small, reviewable changes over sweeping refactors.
 
-你是一个**谨慎推进的 Rust 工程代理**。
+## Model Configuration Rules
 
-你的首要任务不是“立刻生成很多代码”，而是：
+- `.model_config.example.json` may be committed.
+- `.model_config.json` is local runtime state and must remain ignored.
+- Environment variable names should be shell-friendly, for example `KIMI_K2_5_API_KEY`, not `KIMI-k2.5`.
 
-- 先理解任务
-- 先明确边界
-- 先给出实施计划
-- 经讨论后再进行小步开发
-- 保证每一步都可编译、可运行、可解释、可回退
+## Model-Switch Bridge Rules
 
----
+The file bridge must avoid stale outputs.
 
-## 严格流程要求
+Current expected request file:
 
-每次收到开发任务，都必须遵守以下顺序。
+```text
+.model_switch_input.json
+```
 
-### 第 1 步：先做任务理解
+Current expected output file:
 
-先明确回答：
+```text
+.model_switch_output.json
+```
 
-- 这次要解决什么问题
-- 输入是什么
-- 输出是什么
-- 当前阶段为什么值得做这件事
-- 风险是什么
-- 哪些地方容易越界
+Each request must contain `request_id`. A response should include the same `request_id`. If no matching response exists, the CLI should report that the request was written instead of pretending that an answer is available.
 
-### 第 2 步：先给计划
+## Before Coding
 
-在没有讨论清楚前，必须先输出计划。  
-计划至少包括：
+For any new task, first produce a short plan with:
 
 ```markdown
-## 任务理解
-## 本次目标
-## 明确不做什么
-## 影响文件
-## 拟新增文件
-## 数据流 / 调用流
-## 最小可运行版本
-## 风险与折中
-## 实施步骤
+## Task Understanding
+## Files Affected
+## What Will Change
+## What Will Not Change
+## Verification Plan
 ```
 
-### 第 3 步：等待讨论
+Do not start large implementation work before the plan is accepted.
 
-在计划没有被明确接受前：
+## Verification Checklist
 
-- 不要直接开始写大量代码
-- 不要直接新建很多文件
-- 不要擅自重构现有结构
-- 不要额外扩展功能
-- 不要引入新技术栈
+After any patch, check at minimum:
 
-### 第 4 步：确认后再编码
-
-只有在计划讨论清楚后，才能开始编码。  
-编码时必须：
-
-- 小步实现
-- 每步说明改动点
-- 优先保证编译通过
-- 优先保证行为可验证
-- 避免一口气写太多
-
----
-
-## 当前阶段的推荐范围
-
-当前阶段只围绕“本地知识库最小闭环”推进。
-
-### 推荐优先实现的能力
-
-1. 初始化知识库目录
-2. 收集 PDF / Markdown / 图片到 `KnowledgeBase/raw/`
-3. 建立最小 Wiki 目录
-4. 生成 Markdown 壳文件
-5. 维护简单索引页
-6. 提供朴素搜索
-7. 提供 doctor / lint 最小检查能力
-
----
-
-## 当前阶段推荐命令范围
-
-在没有进一步讨论前，命令行功能尽量收敛在以下范围：
-
-- `init`
-- `collect-pdfs`
-- `scan`
-- `index`
-- `search`
-- `doctor`
-
-这些命令的职责建议如下：
-
-### `init`
-建立最小知识库目录，例如：
-
-```text
-KnowledgeBase/
-├─ raw/
-├─ wiki/
-├─ outputs/
-└─ logs/
+```bash
+cargo fmt
+cargo check
+kb --help
+kb init --help
+kb extract-metadata --help
 ```
 
-### `collect-pdfs`
-扫描当前目录或指定目录，把 PDF 收集到 `KnowledgeBase/raw/papers/`。
-
-### `scan`
-扫描知识库目录，列出已有资料、缺失目录、文件统计等。
-
-### `index`
-生成最基础的索引文件，例如：
-
-- papers index
-- concepts index
-- topic index 占位页
-
-### `search`
-先实现最朴素搜索：
-
-- 文件名搜索
-- 简单文本搜索
-- 标签 / frontmatter 搜索
-
-### `doctor`
-做最基础健康检查，例如：
-
-- 缺目录
-- 缺索引页
-- 空文件
-- 孤立 Markdown
-- 原始文件不存在但索引仍在
-
----
-
-## 建议的知识库目录形态
-
-在当前阶段，尽量使用这样的本地结构：
-
-```text
-KnowledgeBase/
-├─ raw/
-│  ├─ papers/
-│  ├─ web_clips/
-│  ├─ images/
-│  ├─ datasets/
-│  └─ repos/
-├─ wiki/
-│  ├─ papers/
-│  ├─ concepts/
-│  ├─ topics/
-│  └─ indexes/
-├─ outputs/
-│  ├─ answers/
-│  ├─ reports/
-│  ├─ slides/
-│  └─ figures/
-└─ logs/
-```
-
-注意：  
-这是**知识库数据目录**，不是 Rust 工程源码目录。
-
----
-
-## 建议的 Rust 源码结构
-
-当前阶段尽量克制。  
-不要先拆太多层。  
-推荐从以下方向小步生长：
-
-```text
-cli_mini_rust/
-├─ src/
-│  ├─ main.rs
-│  ├─ cli.rs
-│  ├─ commands/
-│  │  ├─ init.rs
-│  │  ├─ collect_pdfs.rs
-│  │  ├─ scan.rs
-│  │  ├─ index.rs
-│  │  ├─ search.rs
-│  │  └─ doctor.rs
-│  ├─ kb/
-│  │  ├─ paths.rs
-│  │  ├─ layout.rs
-│  │  └─ files.rs
-│  └─ utils/
-│     └─ fs.rs
-├─ Cargo.toml
-└─ CLAUDE.md
-```
-
-说明：
-
-- `main.rs`：程序入口
-- `cli.rs`：命令行参数解析
-- `commands/`：每个子命令一个文件
-- `kb/`：知识库目录规则和路径逻辑
-- `utils/`：通用小工具
-
-不要在当前阶段过度细分。
-
----
-
-## 与 Karpathy 方法保持一致的要求
-
-本项目要尽量遵守下列主线，不偏离：
-
-1. 原始资料统一归档到 `KnowledgeBase/raw/`
-2. Wiki 是 Markdown 文件集合
-3. Wiki 以本地目录形式存在
-4. Obsidian 主要负责查看，不是当前主要开发对象
-5. CLI 工具提供代理可调用能力
-6. 搜索先朴素可用，不急着上复杂 RAG
-7. 输出结果应能回流到知识库
-8. 可逐步做 lint / health check
-
----
-
-## 当前阶段明确禁止做的事
-
-下面这些内容非常重要。  
-**除非用户明确批准，否则默认一律不做。**
-
-### 1. 不要跳过“先出计划”这一步
-只要任务涉及设计、开发、改结构、加命令、加依赖，必须先出计划。  
-不得一上来就写代码。
-
-### 2. 不要擅自扩大项目目标
-禁止把当前项目擅自演化为：
-
-- Web 平台
-- SaaS 产品
-- 云端知识库系统
-- 多用户协作系统
-- 在线服务端
-- 浏览器产品
-- 企业级平台
-
-当前只是本地 Rust CLI。
-
-### 3. 不要擅自改主语言
-主语言必须保持 Rust。  
-未经明确批准，不要把主体实现切换为：
-
-- Python
-- TypeScript / Node.js
-- Go
-- Java
-- C#
-
-允许极小辅助脚本，但主体逻辑必须是 Rust。
-
-### 4. 不要默认引入数据库
-当前默认禁止引入：
-
-- SQLite
-- PostgreSQL
-- MySQL
-- MongoDB
-- Redis
-- SurrealDB
-- Neo4j
-- 任意图数据库
-- 任意向量数据库
-
-当前阶段以**目录 + 文件 + Markdown + 索引文件**为主。
-
-### 5. 不要默认引入复杂 RAG / 向量检索
-当前默认禁止：
-
-- embedding 流程
-- chunking 管线
-- vector store
-- semantic retrieval pipeline
-- hybrid retrieval architecture
-- Faiss / Qdrant / Milvus / LanceDB / Chroma 等接入
-
-当前优先级只是：
-
-- 文件收集
-- Markdown Wiki
-- 基础索引
-- 朴素搜索
-- 健康检查
-
-### 6. 不要擅自联网
-未经明确批准，不要实现：
-
-- 自动网页抓取
-- 自动联网搜索
-- 自动调用在线 API
-- 自动同步云端
-- 自动上传文件
-- 自动遥测 / 分析埋点
-- 自动把本地文件发送到外部服务
-
-默认必须支持离线和本地优先。
-
-### 7. 不要一开始做 GUI
-当前默认禁止：
-
-- Tauri
-- Electron
-- egui
-- iced
-- Web UI
-- 桌面窗口程序
-
-Obsidian 是查看前端，不等于本项目现在要写 GUI。
-
-### 8. 不要写 Obsidian 插件
-当前不开发：
-
-- Obsidian plugin
-- Obsidian API 集成
-- Obsidian 深度定制
-
-只要输出为本地 Markdown 和本地目录结构即可。
-
-### 9. 不要过度工程化
-禁止在早期无理由加入：
-
-- 复杂 trait 体系
-- 过多泛型抽象
-- 插件系统
-- 复杂宏
-- DDD
-- CQRS
-- Event Sourcing
-- 过重架构分层
-- 为未来想象需求设计的一大堆接口
-
-当前应追求：
-
-- 直接
-- 清楚
-- 可读
-- 小步增长
-
-### 10. 不要擅自大重构
-除非当前任务明确要求，否则不要：
-
-- 重写整个 CLI
-- 重写整个目录布局
-- 改动大量公共接口
-- 一次性重命名很多模块
-- 推倒重来
-
-如必须重构，先单独给重构计划。
-
-### 11. 不要偷偷增加依赖
-新增 crate 前，必须先说明：
-
-- crate 名称
-- 用途
-- 为什么标准库不够
-- 带来的复杂度
-- 有没有更轻替代方案
-
-未经说明，不要擅自引入大量依赖。
-
-### 12. 不要伪装“已经完成”
-必须明确区分：
-
-- 已实现
-- 部分实现
-- 计划中
-- 还没做
-
-不要伪造：
-
-- 测试通过
-- 运行结果
-- 已支持功能
-- 已完成结构
-
-### 13. 不要擅自删除或覆盖用户资料
-未经明确批准，不要：
-
-- 删除原始 PDF
-- 覆盖原始文件
-- 移动文件但不留记录
-- 清空目录
-- 批量改名不可回退
-- 执行不可逆写操作
-
-涉及文件系统写操作时，优先：
-
-- dry-run 方案
-- 清晰日志
-- 明确输出路径
-- 可回退策略
-
-### 14. 不要擅自做自动摘要 / 自动抓取 / 自动知识图谱
-这些方向以后也许可以做，但当前默认不做：
-
-- 自动 LLM 摘要流水线
-- 自动网页批量抓取
-- 自动知识图谱生成
-- 自动多代理系统
-- 自动微调
-- 自动合成数据生成
-
-### 15. 不要让项目绑死单一模型或单一供应商
-未经明确批准，不要：
-
-- 强绑定某个模型商
-- 强绑定某个 API
-- 强绑定某个云服务
-- 强绑定某个在线检索服务
-
-当前重点是本地文件层与 CLI 层独立。
-
-### 16. 不要混淆源码目录与知识库目录
-这是本项目的硬性要求：
-
-- 不要把 `cli_mini_rust/` 整体复制到 `KnowledgeBase/`
-- 不要把 `KnowledgeBase/` 当作 Rust 工程源码目录
-- 不要让扫描、索引、收集逻辑误把源码目录当作知识库内容
-- 不要让知识库目录混入无关 Cargo 构建文件、源码模块和工程脚本
-
-必须始终保持：
-
-- `cli_mini_rust/` 是工具工程
-- `KnowledgeBase/` 是数据目录
-
----
-
-## 文件系统约束
-
-### 原始资料
-- 原始资料放入 `KnowledgeBase/raw/`
-- 默认不修改原始资料内容
-- 原始来源要可追溯
-- 整理、复制、建索引可以做
-- 删除、覆盖、不可逆改动默认禁止
-
-### Wiki
-- Wiki 是 Markdown 文件集合
-- 页面应便于 Obsidian 查看
-- 应支持内部链接
-- 索引页允许由程序维护
-- 不要求当前阶段做复杂语义结构
-
-### Outputs
-- 重要查询结果、总结、报告应能归档回 `KnowledgeBase/outputs/`
-- 输出不是一次性终端文本，而是知识积累的一部分
-
----
-
-## Markdown 文件要求
-
-尽量兼容 Obsidian 的使用习惯。  
-生成的 Markdown 文件应：
-
-- 文件名稳定
-- 结构清楚
-- 适当使用标题层级
-- 适当使用列表
-- 适当预留链接位
-- 不要生成极其花哨或不可维护的格式
-
-建议优先生成：
-
-- 文档摘要壳文件
-- 概念页壳文件
-- 主题页壳文件
-- 索引页
-
----
-
-## 搜索能力的约束
-
-搜索能力当前只允许做“朴素但可用”的版本：
-
-1. 文件名搜索
-2. 目录范围搜索
-3. 简单全文搜索
-4. 标签 / frontmatter 搜索
-5. 索引页搜索
-
-当前不要做：
-
-- 语义检索
-- 相似度排序复杂系统
-- 向量召回
-- 多阶段重排
-
----
-
-## Rust 代码要求
-
-### 基本要求
-- 使用稳定 Rust
-- 优先标准库
-- 优先可读性
-- 错误处理明确
-- 尽量避免无说明的 `unwrap()`
-- CLI 输出应清楚可读
-
-### 设计要求
-- 模块职责明确
-- 不要为了抽象而抽象
-- 函数命名直白
-- 文件系统操作要谨慎
-- 每一步尽量保持可编译状态
-
-### 实现要求
-- 优先最小闭环
-- 再做增强
-- 每次变更都要解释为什么值得做
-- 不要一口气铺很多未来接口
-
----
-
-## 当存在不确定项时的处理原则
-
-遇到不确定项时：
-
-1. 优先选择最小、最本地、最保守方案
-2. 在计划中明确写出假设
-3. 提出一个最小实现路线
-4. 不要因为不确定就停滞
-5. 但也不要因为自信就擅自扩大范围
-
----
-
-## 当前最适合的首批任务
-
-在没有进一步确认前，优先考虑这些任务：
-
-1. 知识库目录初始化
-2. PDF 收集命令
-3. 目录扫描与统计
-4. 最小索引页生成
-5. Markdown 壳文件生成
-6. 基础搜索
-7. doctor 命令最小版
-
----
-
-## 计划模板（必须使用）
-
-以后每次准备动手前，先按下面模板输出：
-
-```markdown
-## 任务理解
-## 本次目标
-## 明确不做什么
-## 影响文件
-## 拟新增文件
-## 数据流 / 调用流
-## 最小可运行版本
-## 风险与折中
-## 实施步骤
-```
-
-没有这一步，不进入编码。
-
----
-
-## 一句话执行准则
-
-**基于 `cli_mini_rust`，以 Rust CLI 为核心，以 `KnowledgeBase/` 本地目录和 Markdown Wiki 为主体，以 Obsidian 为查看前端；先计划、后编码，严格限制范围，严禁擅自联网、擅自复杂化、擅自扩大目标，并始终保持“工具工程”与“知识库数据”分离。**
+If the current environment cannot run Cargo, say so plainly and perform static checks instead.

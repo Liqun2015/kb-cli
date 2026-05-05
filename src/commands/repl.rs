@@ -18,7 +18,7 @@ pub fn execute() -> Result<()> {
     println!();
 
     let stdin = std::io::stdin();
-    std::io::stdout().flush();
+    std::io::stdout().flush()?;
 
     loop {
         // Display prompt
@@ -99,17 +99,17 @@ fn execute_intent(kb_path: &PathBuf, parser: &IntentParser, intent: &Intent, inp
 
         // Initialize
         Intent::Initialize => {
-            println!("Run 'cli init' in bash mode to initialize knowledge base.");
+            println!("Run 'kb init' in bash mode to initialize knowledge base.");
         }
 
         // Extract metadata
         Intent::ExtractMetadata => {
-            println!("Run 'cli extract-metadata' in bash mode to extract metadata.");
+            println!("Run 'kb extract-metadata' in bash mode to extract metadata.");
         }
 
         // Build Wiki
         Intent::BuildWiki => {
-            println!("Run 'cli build-wiki' in bash mode to build wiki pages.");
+            println!("Run 'kb build-wiki' in bash mode to build wiki pages.");
         }
 
         // Commands requiring LLM
@@ -207,9 +207,9 @@ fn print_help() {
     println!("    how to <action>        Get help with something");
     println!();
     println!("Usage examples:");
-    println!("  kb> search droplet");
-    println!("  kb> ask what is T-junction");
-    println!("  kb> explain flow focusing");
+    println!("  kb> search diffusion");
+    println!("  kb> ask what are the key open questions in this knowledge base?");
+    println!("  kb> explain transformation thermotics");
     println!("  kb> summarize papers");
     println!("  kb> list papers");
     println!("  kb> help");
@@ -370,20 +370,9 @@ fn search_notes(kb_path: &PathBuf, query: &str) {
 fn ask_question(question: &str) {
     println!("\nQuestion: '{}'", question);
 
-    // Check if model-switch is available
-    if !model_switch::is_available() {
-        println!("\nModel-switch output file not found.");
-        println!("\nTo use LLM features:");
-        println!("1. Start the model-switch tool");
-        println!("2. Ensure it writes to: {}", model_switch::get_output_file());
-        println!("\nDefault configuration:");
-        println!("  Model URL: {}", model_switch::get_default_model_url());
-        println!("  API Key: ${}", model_switch::get_api_key_env());
-        println!("\nOr configure model-switch to write to: {}", model_switch::get_output_file());
-        return;
-    }
-
-    // Try to read LLM response
+    // Always write the request first. If no matching response exists yet,
+    // model_switch reports the request id and output path instead of showing a
+    // stale answer from an earlier request.
     match model_switch::get_llm_response(question, true) {
         Ok(response) => {
             println!("\nResponse:");
@@ -398,8 +387,8 @@ fn ask_question(question: &str) {
 fn summarize_papers() {
     println!("\nSummarizing recent papers...");
 
-    let prompt = "Please summarize the recent papers in the droplet microfluidics knowledge base. \
-                   Focus on key findings, methodologies, and applications.";
+    let prompt = "Please summarize the recent papers in this knowledge base. \
+                   Focus on key findings, methodologies, and open questions.";
 
     match model_switch::get_llm_response(prompt, true) {
         Ok(response) => {
@@ -432,7 +421,7 @@ fn summarize_notes() {
 fn explain_concept(concept: &str) {
     println!("\nExplaining concept: '{}'", concept);
 
-    let prompt = format!("Please explain the concept of '{}' in the context of droplet microfluidics.", concept);
+    let prompt = format!("Please explain the concept of '{}' in the context of this knowledge base.", concept);
 
     match model_switch::get_llm_response(&prompt, true) {
         Ok(response) => {
