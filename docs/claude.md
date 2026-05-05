@@ -2,7 +2,7 @@
 
 ## Current version
 
-`kb-cli v0.3.0`
+`kb-cli v0.3.1`
 
 ## Core goal
 
@@ -16,7 +16,7 @@ wiki/   AI-maintained Markdown encyclopedia
 rules/  schema/contract layer that constrains AI maintenance behavior
 ```
 
-## v0.3.0 design decision
+## v0.3.1 design decision
 
 This release establishes manifest tracking. `kb status` must scan `raw/` and maintain:
 
@@ -24,7 +24,7 @@ This release establishes manifest tracking. `kb status` must scan `raw/` and mai
 processing/manifest.json
 ```
 
-The manifest is the bridge between the source-material layer and future AI compile operations. It should track raw files by relative path, source kind, size, content hash, status, first-seen timestamp, and last-seen timestamp.
+The manifest is the bridge between the source-material layer and future AI compile operations. It should track raw files by relative path, source kind, size, SHA-256 content hash, status, first-seen timestamp, and last-seen timestamp; missing raw files should remain as `raw_missing`.
 
 The rule/schema layer added in v0.2.0 remains required. `kb init` must still generate:
 
@@ -65,12 +65,12 @@ embedding pipeline
 SQLite/Postgres storage
 network server
 web UI
-JSON agent API
+full JSON agent API
 background daemon
 cloud sync
 ```
 
-Future commands such as `compile`, `query`, and `lint` are planned but not implemented in v0.3.0. `status` is implemented and may refresh `processing/manifest.json`.
+Future commands such as `compile`, `query`, and `lint` are planned but not implemented in v0.3.1. `status`, `status --json`, and `status --unprocessed` are implemented and may refresh `processing/manifest.json`.
 
 ## Safety rules for init/ingest/bootstrap
 

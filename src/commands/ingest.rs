@@ -169,20 +169,18 @@ pub fn execute(custom_kb: Option<&Path>, args: &IngestArgs) -> Result<()> {
             }
         };
 
-        let primary_dest = dest_dir.join(&file_name);
-        let dest_path = if mode == IngestMode::Copy {
-            if primary_dest.exists() {
+        let dest_path = match resolve_destination_path(&file, &dest_dir, &file_name)? {
+            Some(path) => path,
+            None => {
+                let primary_dest = dest_dir.join(&file_name);
                 println!(
-                    "  Skipping existing copy: {} -> {}",
+                    "  Skipping duplicate content: {} -> {}",
                     file.display(),
                     primary_dest.strip_prefix(&kb_path).unwrap_or(&primary_dest).display()
                 );
                 summary.skipped += 1;
                 continue;
             }
-            primary_dest
-        } else {
-            unique_destination_path(&dest_dir, &file_name)
         };
         let relative_dest = dest_path.strip_prefix(&kb_path).unwrap_or(&dest_path);
 
@@ -208,8 +206,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &IngestArgs) -> Result<()> {
     summary.print(args.dry_run);
 
     if args.dry_run {
-        println!("
-Dry run: manifest not refreshed.");
+        println!("\nDry run: manifest not refreshed.");
     } else {
         let manifest_summary = crate::commands::manifest::refresh_for_path(&kb_path, false)?;
         crate::commands::manifest::print_summary(&manifest_summary, false);
@@ -254,6 +251,13 @@ pub fn execute_bootstrap(custom_kb: Option<&Path>, args: &BootstrapArgs) -> Resu
     let kb_path = crate::commands::init::get_kb_path(custom_kb);
     println!("\nBootstrap complete.");
     println!("Wiki home: {}", kb_path.join("wiki/Home.md").display());
+    println!("\nNext steps:");
+    println!("  1. Review rules/LLM_WIKI_SCHEMA.md");
+    println!("  2. Open wiki/Home.md in Obsidian");
+    println!(
+        "  3. Run: kb --kb-path \"{}\" status --unprocessed",
+        kb_path.display()
+    );
     Ok(())
 }
 
@@ -405,6 +409,22 @@ fn extension(path: &Path) -> String {
         .unwrap_or("")
         .trim_start_matches('.')
         .to_lowercase()
+}
+
+
+fn resolve_destination_path(source: &Path, dest_dir: &Path, file_name: &str) -> Result<Option<PathBuf>> {
+    let primary_dest = dest_dir.join(file_name);
+    if !primary_dest.exists() {
+        return Ok(Some(primary_dest));
+    }
+
+    let source_hash = crate::commands::manifest::hash_file(source)?;
+    let dest_hash = crate::commands::manifest::hash_file(&primary_dest)?;
+    if source_hash == dest_hash {
+        return Ok(None);
+    }
+
+    Ok(Some(unique_destination_path(dest_dir, file_name)))
 }
 
 fn unique_destination_path(dest_dir: &Path, file_name: &str) -> PathBuf {

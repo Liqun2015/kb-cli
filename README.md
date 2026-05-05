@@ -2,17 +2,17 @@
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.3.0`
+> Current version: `v0.3.1`
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, let AI maintain Markdown pages under `wiki/`, and constrain future AI maintainers through a generated `rules/` layer.
 
 ## Current Scope
 
-This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, and a manifest registry under `processing/manifest.json`. It still does **not** provide full RAG, vector search, JSON agent output, or autonomous LLM compilation.
+This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, and a manifest registry under `processing/manifest.json`. It still does **not** provide full RAG, vector search, or autonomous LLM compilation.
 
-## What Changed in v0.3.0
+## What Changed in v0.3.1
 
-`kb status` now scans `raw/` and writes a manifest registry:
+`kb status` now has safer manifest tracking and better inspection output. It scans `raw/` and writes a manifest registry:
 
 ```text
 processing/
@@ -20,7 +20,16 @@ processing/
 └── proposals/
 ```
 
-The manifest records each raw file's relative path, kind, extension, size, content hash, first-seen time, last-seen time, status, and future wiki page links. This prepares the project for the next stage: `kb compile --new`.
+The manifest records each raw file's relative path, kind, extension, size, SHA-256 content hash, first-seen time, last-seen time, status, and future wiki page links. Missing raw files are retained as `raw_missing` instead of being silently dropped. This prepares the project for the next stage: `kb compile --new`.
+
+Useful status modes:
+
+```bash
+kb --kb-path /path/to/kb status
+kb --kb-path /path/to/kb status --json
+kb --kb-path /path/to/kb status --unprocessed
+kb --kb-path /path/to/kb status --dry-run
+```
 
 ## What Changed in v0.2.0
 
@@ -180,7 +189,7 @@ KnowledgeBase/
 | `kb bootstrap [--copy\|--move]` | implemented | Run `init + ingest + extract-metadata + build-wiki`. |
 | `kb extract-metadata [--force]` | implemented | Extract basic metadata from PDFs under `raw/papers/`. |
 | `kb build-wiki` | implemented | Generate Markdown paper/note pages and index pages. |
-| `kb status [--dry-run]` | implemented | Refresh `processing/manifest.json` and print raw-file status. |
+| `kb status [--dry-run] [--json] [--unprocessed]` | implemented | Refresh `processing/manifest.json`, print JSON summary, or list unprocessed raw files. |
 | `kb repl` | implemented | Start a simple interactive shell. |
 | `kb list-models` | implemented | List configured LLM models. |
 | `kb show-model` | implemented | Show the current model configuration. |
@@ -254,7 +263,7 @@ Each new REPL LLM request writes a `request_id` to `.model_switch_input.json`; m
 
 ## Notes for Future Agents
 
-`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, `compile`, `query`, `lint`, or full RAG exists in `v0.3.0`.
+`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, `compile`, `query`, `lint`, or full RAG exists in `v0.3.1`.
 
 ## License
 

@@ -1,6 +1,6 @@
 # Manifest Tracking
 
-`kb-cli v0.3.0` introduces a lightweight raw-file registry:
+`kb-cli v0.3.1` maintains a lightweight raw-file registry:
 
 ```text
 processing/manifest.json
@@ -14,6 +14,15 @@ kb --kb-path /path/to/kb status
 
 It is also refreshed automatically after a non-dry-run `kb ingest` and during `kb bootstrap`.
 
+## Useful Status Commands
+
+```bash
+kb --kb-path /path/to/kb status
+kb --kb-path /path/to/kb status --json
+kb --kb-path /path/to/kb status --unprocessed
+kb --kb-path /path/to/kb status --dry-run
+```
+
 ## What It Tracks
 
 Each raw file entry records:
@@ -23,10 +32,24 @@ Each raw file entry records:
 - `kind` — `paper`, `note`, `image`, `dataset`, `archive`, `repo`, or `other`.
 - `extension` — lower-case extension when available.
 - `size_bytes` — file size.
-- `content_hash` — current file-content fingerprint.
-- `status` — currently `raw_registered` or `raw_changed`.
+- `content_hash` — `sha256:<digest>` file-content fingerprint.
+- `status` — currently `raw_registered`, `raw_changed`, or `raw_missing`.
 - `wiki_pages` — reserved for future links to generated Wiki pages.
 - `first_seen_at` and `last_seen_at` — timestamps for tracking file lifecycle.
+
+## Hash Migration
+
+Existing manifests created by v0.3.0 may contain `fnv1a64:<digest>` hashes. v0.3.1 rewrites live entries with `sha256:<digest>` and avoids treating this hash-algorithm migration as a raw content change.
+
+## Missing Files
+
+If a file disappears from `raw/`, its manifest entry is retained with:
+
+```text
+status = raw_missing
+```
+
+This keeps enough history for future lint/compile commands to warn about wiki pages whose source file no longer exists.
 
 ## Why It Exists
 

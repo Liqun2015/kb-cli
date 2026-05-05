@@ -125,3 +125,11 @@ Before asking an AI agent to maintain the Wiki, open:
 ```
 
 This file is the operating contract for future AI updates to `wiki/`.
+
+
+Manifest inspection examples:
+
+```bash
+kb --kb-path /path/to/literature-folder status --json
+kb --kb-path /path/to/literature-folder status --unprocessed
+```

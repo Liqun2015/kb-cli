@@ -1,6 +1,6 @@
 # Windows Quick Start
 
-`v0.3.0` keeps the real quick-start workflow inside the cross-platform Rust CLI. The Windows batch file is only a friendly wrapper around:
+`v0.3.1` keeps the real quick-start workflow inside the cross-platform Rust CLI. The Windows batch file is only a friendly wrapper around:
 
 ```powershell
 kb --kb-path <target> bootstrap --copy
@@ -85,4 +85,12 @@ Before asking an AI agent to maintain the Wiki, review:
 
 ```text
 D:\github\LLM-wiki\quantum\rules\LLM_WIKI_SCHEMA.md
+```
+
+
+Manifest inspection examples:
+
+```bash
+kb --kb-path /path/to/literature-folder status --json
+kb --kb-path /path/to/literature-folder status --unprocessed
 ```

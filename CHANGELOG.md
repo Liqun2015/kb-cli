@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.1] - 2026-05-05
+
+### Added
+- Added `kb status --json` for machine-readable manifest summaries.
+- Added `kb status --unprocessed` to list raw files awaiting future compile work.
+- Added next-step hints after successful `kb bootstrap`.
+
+### Changed
+- Changed manifest content fingerprints from the earlier FNV-style hash to `sha256:<digest>`; existing FNV entries are migrated without being falsely counted as content changes.
+- Retained disappeared raw files in `processing/manifest.json` with status `raw_missing` instead of dropping their history.
+- Improved ingest duplicate handling: if a destination name already exists, identical content is skipped; different content is saved with a unique suffix instead of being silently skipped.
+
+### Notes
+- This remains a manifest/ingest stability release. It still does not introduce LLM compilation, query, lint, vector search, RAG, or a database.
+
 ## [0.3.0] - 2026-05-05
 
 ### Added

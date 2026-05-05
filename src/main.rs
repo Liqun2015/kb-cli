@@ -81,7 +81,7 @@ fn main() -> anyhow::Result<()> {
             println!("  bootstrap [--copy|--move]   Initialize, ingest, extract metadata, build wiki");
             println!("  extract-metadata [--force]  Extract PDF metadata");
             println!("  build-wiki                  Build wiki pages");
-            println!("  status [--dry-run]          Refresh manifest and show raw-file status");
+            println!("  status [--dry-run] [--json] [--unprocessed]  Refresh manifest and show raw-file status");
             println!("  list-models                 List all configured models");
             println!("  show-model                  Show current model");
             println!("  add-model                   Add a new model");
