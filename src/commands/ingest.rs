@@ -314,6 +314,7 @@ fn should_descend(entry: &DirEntry) -> bool {
         name.as_str(),
         "raw"
             | "wiki"
+            | "rules"
             | "processing"
             | "references"
             | "outputs"
@@ -372,7 +373,7 @@ fn is_inside_managed_dir(kb_path: &Path, file: &Path) -> bool {
 
     matches!(
         first.as_str(),
-        "raw" | "wiki" | "processing" | "references" | "outputs" | "logs" | ".git" | ".obsidian" | "target"
+        "raw" | "wiki" | "rules" | "processing" | "references" | "outputs" | "logs" | ".git" | ".obsidian" | "target"
     )
 }
 

@@ -1,14 +1,29 @@
 # kb-cli
 
-> A small Rust CLI for building and maintaining a local Markdown knowledge base.
+> A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.1.4`
+> Current version: `v0.2.0`
 
-`kb-cli` follows a Karpathy-style local knowledge workflow: put source materials in `raw/`, generate Markdown pages under `wiki/`, and use Obsidian as the reading/editing frontend.
+`kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, let AI maintain Markdown pages under `wiki/`, and constrain future AI maintainers through a generated `rules/` layer.
 
 ## Current Scope
 
-This version provides a conservative, file-based local knowledge-base scaffold. It now includes a cross-platform bootstrap workflow, but it still does **not** provide full RAG, vector search, JSON agent output, or a networked agent API.
+This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows and now generates the Wiki rule/schema layer. It still does **not** provide full RAG, vector search, JSON agent output, or autonomous LLM compilation.
+
+## What Changed in v0.2.0
+
+`kb init` now creates the third LLM Wiki layer:
+
+```text
+rules/
+├── LLM_WIKI_SCHEMA.md
+├── PAPER_PAGE_TEMPLATE.md
+├── CONCEPT_PAGE_TEMPLATE.md
+├── QUERY_POLICY.md
+└── LINT_POLICY.md
+```
+
+This layer is the "operating contract" for future AI agents. It explains how to treat `raw/`, how to maintain `wiki/`, how to answer questions, and how to lint the Wiki.
 
 ## Installation
 
@@ -54,7 +69,7 @@ By default, `bootstrap` uses safe copy mode unless `--move` is explicitly provid
 ## Manual Workflow
 
 ```bash
-# 1. Create the local knowledge-base directory structure
+# 1. Create the local LLM Wiki directory structure and rules layer
 kb --kb-path /path/to/kb init
 
 # 2. Organize root-level source files into raw/ subfolders
@@ -101,19 +116,10 @@ Windows users can also use the bundled wrapper script:
 scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum"
 ```
 
-This script now delegates the real work to the cross-platform Rust command:
+This script delegates the real work to the cross-platform Rust command:
 
 ```bat
 kb --kb-path <target> bootstrap --copy
-```
-
-Useful options:
-
-```bat
-scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --move
-scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --recursive
-scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --dry-run
-scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" "D:\github\LLM-wiki\kb-cli"
 ```
 
 ## Knowledge Base Layout
@@ -133,7 +139,13 @@ KnowledgeBase/
 │   ├── notes/        # Generated note pages
 │   ├── concepts/     # Concept pages
 │   ├── topics/       # Topic pages
+│   ├── people/       # People/institution pages
+│   ├── methods/      # Method/protocol pages
+│   ├── comparisons/  # Comparison pages
+│   ├── timelines/    # Timeline pages
+│   ├── questions/    # Saved Q&A pages
 │   └── indexes/      # Navigation indexes
+├── rules/            # LLM Wiki schema and AI-maintainer contract
 ├── outputs/          # Generated answers and reports
 ├── processing/       # Intermediate processing files
 ├── references/       # Templates and reference materials
@@ -144,7 +156,7 @@ KnowledgeBase/
 
 | Command | Status | Purpose |
 |---|---:|---|
-| `kb init [--force]` | implemented | Create the local knowledge-base structure. |
+| `kb init [--force]` | implemented | Create the local LLM Wiki structure and generated rules layer. |
 | `kb ingest [--copy\|--move] [--recursive] [--dry-run]` | implemented | Organize source files into `raw/` subfolders. |
 | `kb bootstrap [--copy\|--move]` | implemented | Run `init + ingest + extract-metadata + build-wiki`. |
 | `kb extract-metadata [--force]` | implemented | Extract basic metadata from PDFs under `raw/papers/`. |
@@ -156,6 +168,18 @@ KnowledgeBase/
 | `kb switch-model <id>` | implemented | Switch the active model. |
 | `kb delete-model <id>` | implemented | Delete a model configuration. |
 | `kb validate-model [id]` | implemented | Check local model configuration fields. |
+
+## Not Yet Implemented
+
+These are planned directions, not current features:
+
+```text
+kb compile       # AI compiles raw materials into wiki pages
+kb query         # Query the compiled wiki and optionally save durable answers
+kb lint          # Wiki health checks: broken links, orphan pages, duplicated concepts
+processing/manifest.json tracking
+vector search / RAG / JSON agent API
+```
 
 ## File Classification Used by `ingest`
 
@@ -202,7 +226,7 @@ Each new REPL LLM request writes a `request_id` to `.model_switch_input.json`; m
 
 ## Notes for Future Agents
 
-`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, or full RAG exists in `v0.1.4`.
+`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, `compile`, `query`, `lint`, or full RAG exists in `v0.2.0`.
 
 ## License
 

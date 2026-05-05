@@ -24,6 +24,11 @@ pub fn execute(custom_kb: Option<&Path>) -> Result<()> {
         "wiki/notes",
         "wiki/concepts",
         "wiki/topics",
+        "wiki/people",
+        "wiki/methods",
+        "wiki/comparisons",
+        "wiki/timelines",
+        "wiki/questions",
         "wiki/indexes",
     ];
     for dir in wiki_dirs {
@@ -300,56 +305,56 @@ Topics are higher-level collections that group papers, notes, and concepts.
 }
 
 fn generate_main_index(kb_path: &Path) -> Result<()> {
-    let papers_count = fs::read_dir(kb_path.join("wiki/papers"))
-        .map(|entries| entries.filter_map(|x| x.ok()).count())
-        .unwrap_or(0);
-    let notes_count = fs::read_dir(kb_path.join("wiki/notes"))
-        .map(|entries| entries.filter_map(|x| x.ok()).count())
-        .unwrap_or(0);
-    let concepts_count = fs::read_dir(kb_path.join("wiki/concepts"))
-        .map(|entries| entries.filter_map(|x| x.ok()).count())
-        .unwrap_or(0);
-    let topics_count = fs::read_dir(kb_path.join("wiki/topics"))
-        .map(|entries| entries.filter_map(|x| x.ok()).count())
-        .unwrap_or(0);
-    let total_md = papers_count + notes_count + concepts_count + topics_count + 4; // +4 for indexes
+    let papers_count = count_md_files(&kb_path.join("wiki/papers"));
+    let notes_count = count_md_files(&kb_path.join("wiki/notes"));
+    let concepts_count = count_md_files(&kb_path.join("wiki/concepts"));
+    let topics_count = count_md_files(&kb_path.join("wiki/topics"));
+    let people_count = count_md_files(&kb_path.join("wiki/people"));
+    let methods_count = count_md_files(&kb_path.join("wiki/methods"));
+    let comparisons_count = count_md_files(&kb_path.join("wiki/comparisons"));
+    let timelines_count = count_md_files(&kb_path.join("wiki/timelines"));
+    let questions_count = count_md_files(&kb_path.join("wiki/questions"));
+    let total_md = papers_count
+        + notes_count
+        + concepts_count
+        + topics_count
+        + people_count
+        + methods_count
+        + comparisons_count
+        + timelines_count
+        + questions_count
+        + 4; // generated index pages
 
     let content = format!(
         r#"# Knowledge Base
 
-Welcome to your local Markdown knowledge base.
+Welcome to your local Markdown LLM Wiki.
 
-## Overview
+## Three-Layer Model
 
-This knowledge base follows the Karpathy-style local knowledge workflow:
-- Original materials are stored in `raw/`.
-- Wiki pages are generated under `wiki/` as Markdown files.
-- Obsidian can be used for reading, editing, backlinks, and graph views.
+- `raw/` stores original source materials. Treat this as read-only source-of-truth.
+- `wiki/` stores the AI-maintained Markdown encyclopedia.
+- `rules/` stores the operating contract for future AI maintainers.
+
+Before asking an AI agent to edit the Wiki, review:
+
+- [[LLM_WIKI_SCHEMA|LLM Wiki Schema]]
 
 ## Running the CLI
 
-### Direct commands
+### Cross-platform bootstrap
 
 ```bash
-kb init                    # Initialize knowledge base
-kb init --force            # Re-create bootstrap structure
-kb extract-metadata        # Extract PDF metadata
-kb extract-metadata --force # Overwrite existing metadata
-kb build-wiki              # Build wiki pages
-kb repl                    # Enter interactive mode
+kb --kb-path /path/to/this/folder bootstrap --copy
 ```
 
-### REPL mode
+### Manual workflow
 
 ```bash
-kb repl
-
-kb> help                   # Show available commands
-kb> ask <question>          # Write a model-switch request
-kb> list papers             # List paper pages
-kb> list notes              # List note pages
-kb> search <query>          # Search paper/note page names
-kb> exit                    # Exit
+kb --kb-path /path/to/this/folder init
+kb --kb-path /path/to/this/folder ingest --copy
+kb --kb-path /path/to/this/folder extract-metadata
+kb --kb-path /path/to/this/folder build-wiki
 ```
 
 ## Indexes
@@ -360,38 +365,53 @@ kb> exit                    # Exit
 - [[Topics Index]] - Thematic collections
 - [[Main Index]] - This page
 
-## Statistics
+## Wiki Areas
 
-| Category | Count |
-|-----------|--------|
-| Papers | {papers} |
-| Notes | {notes} |
-| Concepts | {concepts} |
-| Topics | {topics} |
-| **Total MD files** | **{total}** |
+| Area | Count | Purpose |
+|------|------:|---------|
+| Papers | {papers} | Source-specific paper summaries |
+| Notes | {notes} | Compiled notes and documents |
+| Concepts | {concepts} | Reusable concept pages |
+| Topics | {topics} | Thematic collections |
+| People | {people} | People, labs, institutions |
+| Methods | {methods} | Methods, protocols, algorithms |
+| Comparisons | {comparisons} | Side-by-side analyses |
+| Timelines | {timelines} | Chronological development pages |
+| Questions | {questions} | Durable Q&A notes |
+| **Total MD files** | **{total}** | Includes generated index pages |
 
 ## Directory Structure
 
 ```text
 KnowledgeBase/
-├── raw/
-│   ├── papers/            # Original PDF papers
-│   ├── notes/             # Notes and reference materials
-│   ├── images/            # Images and figures
-│   ├── datasets/          # Data sets
-│   └── repos/             # Code repositories
-├── wiki/
-│   ├── papers/            # Paper wiki pages
-│   ├── notes/             # Note wiki pages
-│   ├── concepts/          # Concept pages
-│   ├── topics/            # Topic pages
-│   └── indexes/           # Navigation pages
-├── outputs/               # Generated answers and reports
+├── raw/                  # Original source materials
+│   ├── papers/
+│   ├── notes/
+│   ├── images/
+│   ├── datasets/
+│   ├── archives/
+│   ├── repos/
+│   └── other/
+├── wiki/                 # AI-maintained Markdown encyclopedia
+│   ├── papers/
+│   ├── notes/
+│   ├── concepts/
+│   ├── topics/
+│   ├── people/
+│   ├── methods/
+│   ├── comparisons/
+│   ├── timelines/
+│   ├── questions/
+│   └── indexes/
+├── rules/                # LLM Wiki schema and AI-maintainer contract
+├── outputs/              # Generated answers and reports
+├── processing/           # Intermediate processing files
+├── references/           # Reference materials and templates
 └── logs/
     └── papers_metadata.json
 ```
 
-### Model-Switch Integration
+## Model-Switch Integration
 
 The REPL writes LLM requests to `.model_switch_input.json`. External model-switch tooling may write responses to `.model_switch_output.json` with the same `request_id`.
 
@@ -403,14 +423,34 @@ The REPL writes LLM requests to `.model_switch_input.json`. External model-switc
         notes = notes_count,
         concepts = concepts_count,
         topics = topics_count,
+        people = people_count,
+        methods = methods_count,
+        comparisons = comparisons_count,
+        timelines = timelines_count,
+        questions = questions_count,
         total = total_md,
         timestamp = chrono::Utc::now().format("%Y-%m-%d %H:%M UTC").to_string()
     );
 
-    let output_path = kb_path.join("wiki/indexes/main_index.md");
-    fs::write(&output_path, content)?;
-    println!("Generated main index");
+    let main_index_path = kb_path.join("wiki/indexes/main_index.md");
+    fs::write(&main_index_path, &content)?;
+
+    let home_path = kb_path.join("wiki/Home.md");
+    fs::write(&home_path, content)?;
+
+    println!("Generated main index and Home.md");
     Ok(())
+}
+
+fn count_md_files(dir: &Path) -> usize {
+    fs::read_dir(dir)
+        .map(|entries| {
+            entries
+                .filter_map(|x| x.ok())
+                .filter(|entry| entry.path().extension().and_then(|s| s.to_str()) == Some("md"))
+                .count()
+        })
+        .unwrap_or(0)
 }
 
 fn paper_page_stem(paper: &PaperMetadata) -> String {

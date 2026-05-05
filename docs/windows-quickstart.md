@@ -1,6 +1,6 @@
 # Windows Quick Start
 
-`v0.1.4` moves the real quick-start workflow into the cross-platform Rust CLI. The Windows batch file is now only a friendly wrapper around:
+`v0.2.0` keeps the real quick-start workflow inside the cross-platform Rust CLI. The Windows batch file is only a friendly wrapper around:
 
 ```powershell
 kb --kb-path <target> bootstrap --copy
@@ -24,10 +24,11 @@ kb --kb-path "D:\github\LLM-wiki\quantum" bootstrap --copy
 This will:
 
 ```text
-1. initialize the folder as a knowledge base
-2. copy root-level source files into raw\ subfolders
-3. extract PDF metadata
-4. generate wiki markdown pages
+1. initialize the folder as a three-layer LLM Wiki
+2. generate the rules\ schema layer
+3. copy root-level source files into raw\ subfolders
+4. extract PDF metadata
+5. generate wiki markdown pages
 ```
 
 ## Using the batch helper
@@ -55,7 +56,7 @@ scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --force-metadata
 - `--copy` is the default and safest mode.
 - `--move` reorganizes files into `raw\` and should be used only when you intend to change the folder layout.
 - `--dry-run` previews actions without copying or moving files.
-- The recursive mode skips managed folders such as `raw`, `wiki`, `processing`, `references`, `outputs`, `logs`, `.git`, `.obsidian`, and `target`.
+- The recursive mode skips managed folders such as `raw`, `wiki`, `rules`, `processing`, `references`, `outputs`, `logs`, `.git`, `.obsidian`, and `target`.
 
 ## Output
 
@@ -69,4 +70,12 @@ The generated home page is:
 
 ```text
 D:\github\LLM-wiki\quantum\wiki\Home.md
+```
+
+## Rules layer
+
+Before asking an AI agent to maintain the Wiki, review:
+
+```text
+D:\github\LLM-wiki\quantum\rules\LLM_WIKI_SCHEMA.md
 ```

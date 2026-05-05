@@ -42,6 +42,16 @@ This runs:
 init -> ingest -> extract-metadata -> build-wiki
 ```
 
+`init` also creates the generated rules layer:
+
+```text
+rules/LLM_WIKI_SCHEMA.md
+rules/PAPER_PAGE_TEMPLATE.md
+rules/CONCEPT_PAGE_TEMPLATE.md
+rules/QUERY_POLICY.md
+rules/LINT_POLICY.md
+```
+
 ## 3. Preview before changing files
 
 ```bash
@@ -86,3 +96,13 @@ The home page will be generated at:
 ```text
 /path/to/literature-folder/wiki/Home.md
 ```
+
+## 8. Review the rules layer
+
+Before asking an AI agent to maintain the Wiki, open:
+
+```text
+/path/to/literature-folder/rules/LLM_WIKI_SCHEMA.md
+```
+
+This file is the operating contract for future AI updates to `wiki/`.

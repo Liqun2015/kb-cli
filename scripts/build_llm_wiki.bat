@@ -187,7 +187,7 @@ echo.
 echo Flags:
 echo   --copy             Copy files into raw\, default and safest.
 echo   --move             Move files into raw\.
-echo   --recursive        Also collect files from subfolders, excluding raw/wiki/etc.
+echo   --recursive        Also collect files from subfolders, excluding raw/wiki/rules/etc.
 echo   --dry-run          Show planned actions without copying or moving files.
 echo   --force-init       Run kb init --force.
 echo   --force-metadata   Re-extract PDF metadata.

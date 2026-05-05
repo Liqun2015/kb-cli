@@ -2,27 +2,33 @@
 
 ## Current version
 
-`kb-cli v0.1.4`
+`kb-cli v0.2.0`
 
 ## Core goal
 
-This project is a small Rust CLI for a local Karpathy-style Markdown knowledge base. It should remain simple, file-based, and easy to inspect.
+This project is a small Rust CLI for a local Karpathy-style LLM Wiki. It should remain simple, file-based, inspectable, and cross-platform.
 
-## v0.1.4 design decision
-
-The Windows batch quick-start was useful, but the real workflow must be cross-platform. Therefore the core onboarding workflow now lives in Rust:
-
-```bash
-kb bootstrap --copy
-```
-
-This command runs:
+The intended three-layer model is:
 
 ```text
-init -> ingest -> extract-metadata -> build-wiki
+raw/    original source materials; AI reads but does not rewrite
+wiki/   AI-maintained Markdown encyclopedia
+rules/  schema/contract layer that constrains AI maintenance behavior
 ```
 
-The Windows script `scripts/build_llm_wiki.bat` should remain only a wrapper around `kb bootstrap`.
+## v0.2.0 design decision
+
+This release establishes the rule/schema layer. `kb init` must generate:
+
+```text
+rules/LLM_WIKI_SCHEMA.md
+rules/PAPER_PAGE_TEMPLATE.md
+rules/CONCEPT_PAGE_TEMPLATE.md
+rules/QUERY_POLICY.md
+rules/LINT_POLICY.md
+```
+
+These files are not decorative. They are the operating contract for future AI agents that compile, query, or lint the Wiki.
 
 ## Implemented commands
 
@@ -57,9 +63,13 @@ background daemon
 cloud sync
 ```
 
-## Safety rules for ingest/bootstrap
+Future commands such as `compile`, `query`, and `lint` are planned but not implemented in v0.2.0.
+
+## Safety rules for init/ingest/bootstrap
 
 - `init` must not move files.
+- `init` may create missing generated rule files.
+- `init --force` may overwrite generated rule files, but it must not rewrite user source materials.
 - `ingest` must not default to destructive behavior.
 - `bootstrap` must be safe by default.
 - `--copy` is the safe path.
@@ -70,6 +80,7 @@ cloud sync
 ```text
 raw
 wiki
+rules
 processing
 references
 outputs
@@ -98,18 +109,14 @@ Do not add content classification, OCR, PDF parsing beyond metadata, or LLM-base
 
 ## Documentation rule
 
-README and docs must describe only implemented behavior. Do not list future commands such as `add-paper`, `search`, `list-papers`, or `--format json` unless they are actually implemented.
+README and docs must describe only implemented behavior. Do not list future commands as available unless they are actually implemented.
 
 ## Versioning rule
 
-Small compatible improvements should increment the patch version:
+Schema-layer work is v0.2.x. Small compatible improvements should increment the patch version:
 
 ```text
-0.1.4 -> 0.1.5
+0.2.0 -> 0.2.1
 ```
 
-Feature clusters can increment the minor version later:
-
-```text
-0.1.x -> 0.2.0
-```
+The next major implementation phase should be manifest/status tracking, likely v0.3.0.
