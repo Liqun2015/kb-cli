@@ -176,7 +176,7 @@ pub fn refresh_for_path(kb_path: &Path, dry_run: bool) -> Result<ManifestSummary
     if !dry_run {
         fs::create_dir_all(kb_path.join("processing"))?;
         let manifest = Manifest {
-            schema_version: "0.3.1".to_string(),
+            schema_version: "0.4.0".to_string(),
             generated_by: "kb-cli".to_string(),
             updated_at: now,
             root: kb_path.display().to_string(),

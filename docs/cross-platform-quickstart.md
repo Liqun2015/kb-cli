@@ -88,6 +88,7 @@ kb --kb-path /path/to/literature-folder ingest --copy
 kb --kb-path /path/to/literature-folder extract-metadata
 kb --kb-path /path/to/literature-folder build-wiki
 kb --kb-path /path/to/literature-folder status
+kb --kb-path /path/to/literature-folder compile --new --dry-run
 ```
 
 ## 7. Inspect manifest status
@@ -133,3 +134,19 @@ Manifest inspection examples:
 kb --kb-path /path/to/literature-folder status --json
 kb --kb-path /path/to/literature-folder status --unprocessed
 ```
+
+## 10. Plan compile work
+
+After `status` has created `processing/manifest.json`, preview future AI wiki-maintenance work:
+
+```bash
+kb --kb-path /path/to/literature-folder compile --new --dry-run
+```
+
+Write review artifacts:
+
+```bash
+kb --kb-path /path/to/literature-folder compile --new
+```
+
+This writes `processing/compile_queue.json` and a proposal under `processing/proposals/`. It does not call an LLM or edit `wiki/`.

@@ -1,6 +1,6 @@
 # Windows Quick Start
 
-`v0.3.1` keeps the real quick-start workflow inside the cross-platform Rust CLI. The Windows batch file is only a friendly wrapper around:
+`v0.4.0` keeps the real quick-start workflow inside the cross-platform Rust CLI. The Windows batch file is only a friendly wrapper around:
 
 ```powershell
 kb --kb-path <target> bootstrap --copy

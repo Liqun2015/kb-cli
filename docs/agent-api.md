@@ -1,6 +1,6 @@
 # Agent/API Boundary Notes
 
-This document records what `kb-cli v0.3.1` actually supports. It is intentionally conservative.
+This document records what `kb-cli v0.4.1` actually supports. It is intentionally conservative.
 
 ## Implemented CLI commands
 
@@ -12,6 +12,7 @@ This document records what `kb-cli v0.3.1` actually supports. It is intentionall
 | `kb extract-metadata [--force]` | Extract PDF metadata from `raw/papers/`. |
 | `kb build-wiki` | Generate Markdown wiki pages and indexes. |
 | `kb status [--dry-run] [--json] [--unprocessed]` | Refresh `processing/manifest.json`, print JSON summary, or list unprocessed raw files. |
+| `kb compile [--new\|--file PATH] [--dry-run]` | Generate compile queue/proposal files for future LLM wiki maintenance without calling an LLM. |
 | `kb repl` | Start a simple interactive shell. |
 | `kb list-models` | List configured LLM models. |
 | `kb show-model` | Show the active model configuration. |
@@ -55,7 +56,7 @@ This is cross-platform because the workflow is implemented inside the Rust CLI, 
 
 ## Manifest / Status
 
-`kb status` is implemented in v0.3.1:
+`kb status` is implemented in v0.4.1:
 
 ```bash
 kb --kb-path /path/to/kb status
@@ -72,13 +73,24 @@ Current behavior:
 
 The manifest is not a stable external API yet; treat it as a local project file that future commands may evolve carefully.
 
+## Compile planning
+
+`kb compile` is implemented in v0.4.1 as a planning command only. It may write:
+
+```text
+processing/compile_queue.json
+processing/proposals/compile_plan_<timestamp>.md
+```
+
+It does not call an LLM, does not edit `wiki/`, and does not mark manifest entries as fully compiled. Treat the generated proposal as a review artifact for a human or future AI maintainer.
+
 ## Current non-goals
 
-Do not assume the following exist in `v0.3.1`:
+Do not assume the following exist in `v0.4.1`:
 
 ```text
 global --format json
-compile
+autonomous compile execution
 query
 lint
 vector search

@@ -2,7 +2,7 @@
 
 ## Current version
 
-`kb-cli v0.3.1`
+`kb-cli v0.4.1`
 
 ## Core goal
 
@@ -16,7 +16,7 @@ wiki/   AI-maintained Markdown encyclopedia
 rules/  schema/contract layer that constrains AI maintenance behavior
 ```
 
-## v0.3.1 design decision
+## v0.4.0 design decision
 
 This release establishes manifest tracking. `kb status` must scan `raw/` and maintain:
 
@@ -70,7 +70,7 @@ background daemon
 cloud sync
 ```
 
-Future commands such as `compile`, `query`, and `lint` are planned but not implemented in v0.3.1. `status`, `status --json`, and `status --unprocessed` are implemented and may refresh `processing/manifest.json`.
+`compile` is implemented only as a review-first planning command in v0.4.1. It generates `processing/compile_queue.json` and `processing/proposals/compile_plan_*.md`; it does not call an LLM or edit `wiki/`. `query` and `lint` are still planned but not implemented.
 
 ## Safety rules for init/ingest/bootstrap
 
@@ -128,10 +128,10 @@ README and docs must describe only implemented behavior. Do not list future comm
 
 ## Versioning rule
 
-Manifest/status work is v0.3.x. Small compatible improvements should increment the patch version:
+Compile planning work starts in v0.4.x. Small compatible improvements should increment the patch version:
 
 ```text
-0.3.0 -> 0.3.1
+0.4.0 -> 0.4.1
 ```
 
-The next major implementation phase should be AI compile planning, likely v0.4.0.
+The next major implementation phase should be query/lint scaffolding after compile planning is stable.

@@ -2,13 +2,119 @@
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.3.1`
+> Current version: `v0.4.1`
 
-`kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, let AI maintain Markdown pages under `wiki/`, and constrain future AI maintainers through a generated `rules/` layer.
+`kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, prepare Markdown pages under `wiki/` for AI maintenance, and constrain future AI maintainers through a generated `rules/` layer.
+
+## How does the LLM maintain Markdown pages?
+
+In this project, an "LLM-maintained wiki" does **not** mean that the LLM edits the original source files. The workflow is intentionally separated into three layers:
+
+1. `raw/` stores original source materials. These files are treated as read-only records.
+2. `wiki/` stores AI-maintained Markdown pages. These pages are summaries, concept notes, comparisons, timelines, indexes, and question-driven analyses derived from `raw/`.
+3. `rules/` stores the operating contract for future AI maintainers. It defines page templates, linking rules, update policy, query policy, and lint policy.
+
+The intended maintenance loop is:
+
+```text
+raw material enters raw/
+        ↓
+kb records the file in processing/manifest.json
+        ↓
+an LLM reads the source material and the rules layer
+        ↓
+the LLM proposes Markdown updates under wiki/
+        ↓
+the user reviews the changes through normal file diff / Git diff
+        ↓
+accepted changes become part of the long-term wiki
+```
+
+A single source file may update multiple wiki pages. For example, one new paper may create or update:
+
+```text
+wiki/papers/<paper-title>.md
+wiki/concepts/<key-concept>.md
+wiki/methods/<method-name>.md
+wiki/topics/<research-topic>.md
+wiki/indexes/papers_index.md
+```
+
+The LLM is expected to maintain the wiki by:
+
+- creating a source-specific summary page under `wiki/papers/` or `wiki/notes/`;
+- extracting important concepts and updating `wiki/concepts/`;
+- linking related pages with Obsidian-style links such as `[[Concept Name]]`;
+- adding source references back to the corresponding file in `raw/`;
+- updating index pages under `wiki/indexes/`;
+- preserving uncertainty instead of inventing unsupported conclusions;
+- following the templates and policies generated under `rules/`.
+
+The current version of `kb-cli` provides the filesystem structure, ingestion workflow, rules layer, manifest tracking, and a first compile-planning command needed for this maintenance loop. `kb compile` does **not** call an LLM or directly edit `wiki/` yet. Instead, it generates a reviewable compile queue and proposal file that an LLM agent can follow under Git review.
+
+```bash
+kb compile --new --dry-run
+kb compile --new
+kb compile --file raw/papers/example.pdf
+```
+
+Full LLM-driven writing, durable query saving, and wiki linting are planned for later stages:
+
+```bash
+kb query "your question" --save
+kb lint
+```
+
+Until full autonomous compile is implemented, users can use the generated `processing/proposals/compile_plan_*.md` files plus the generated `rules/` files as instructions for Claude Code, ChatGPT, or another coding/knowledge agent to update the Markdown wiki manually under Git review.
 
 ## Current Scope
 
-This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, and a manifest registry under `processing/manifest.json`. It still does **not** provide full RAG, vector search, or autonomous LLM compilation.
+This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, and a manifest registry under `processing/manifest.json`. It still does **not** provide full RAG, vector search, or autonomous LLM compilation. `kb compile` currently plans and documents the compile work; it does not perform LLM edits by itself.
+
+
+## What Changed in v0.4.1
+
+`v0.4.1` is a small compile-fix release. It fixes a Rust ownership issue in `kb compile` where a manifest entry ID was moved before the entry was later borrowed to generate proposed wiki pages and instructions.
+
+There is no behavior change from `v0.4.0`: `kb compile` still generates reviewable compile plans only. It does not call an LLM and does not edit `wiki/` directly.
+
+## What Changed in v0.4.0
+
+This is the first **compile skeleton** release. It adds a review-first command for planning how raw files should be compiled into Markdown wiki pages, without calling an LLM and without editing `wiki/` directly.
+
+Useful compile commands:
+
+```bash
+# Preview raw files that are ready for future LLM compilation
+kb --kb-path /path/to/kb compile --new --dry-run
+
+# Write processing/compile_queue.json and a reviewable proposal under processing/proposals/
+kb --kb-path /path/to/kb compile --new
+
+# Plan compilation for one raw file listed in processing/manifest.json
+kb --kb-path /path/to/kb compile --file raw/papers/example.pdf
+```
+
+Generated files:
+
+```text
+processing/compile_queue.json
+processing/proposals/compile_plan_<timestamp>.md
+```
+
+This release is deliberately conservative: it creates the planning artifact that a human or LLM agent can review and execute later under Git diff.
+
+## What Changed in v0.3.2
+
+This is a small cross-platform hygiene release. It keeps the README clarification about how future LLM maintainers should update Markdown pages and adds `.gitattributes` to make line-ending behavior explicit across Windows, Linux, and macOS.
+
+Recommended one-time normalization after updating:
+
+```bash
+git add .gitattributes
+git add --renormalize .
+git status
+```
 
 ## What Changed in v0.3.1
 
@@ -106,6 +212,9 @@ kb --kb-path /path/to/kb build-wiki
 
 # 5. Refresh and inspect the raw-file manifest
 kb --kb-path /path/to/kb status
+
+# 6. Plan future LLM compilation work without editing wiki/ directly
+kb --kb-path /path/to/kb compile --new --dry-run
 ```
 
 Useful ingest modes:
@@ -133,6 +242,26 @@ kb --kb-path /path/to/kb bootstrap --copy --recursive
 kb --kb-path /path/to/kb bootstrap --copy --dry-run
 kb --kb-path /path/to/kb bootstrap --copy --force-metadata
 ```
+
+## Compile Planning
+
+`kb compile` is a planning command. It reads `processing/manifest.json`, selects raw files that have not yet been linked to wiki pages, and generates a review artifact for future AI-maintained Markdown edits.
+
+```bash
+# Preview what would be selected
+kb --kb-path /path/to/kb compile --new --dry-run
+
+# Write queue and proposal files
+kb --kb-path /path/to/kb compile --new
+
+# Plan one source file
+kb --kb-path /path/to/kb compile --file raw/papers/example.pdf
+
+# Limit the number of selected files
+kb --kb-path /path/to/kb compile --new --limit 5
+```
+
+`compile` currently writes planning files only. It does not call an LLM and does not modify `wiki/`.
 
 ## Windows Helper Script
 
@@ -190,6 +319,7 @@ KnowledgeBase/
 | `kb extract-metadata [--force]` | implemented | Extract basic metadata from PDFs under `raw/papers/`. |
 | `kb build-wiki` | implemented | Generate Markdown paper/note pages and index pages. |
 | `kb status [--dry-run] [--json] [--unprocessed]` | implemented | Refresh `processing/manifest.json`, print JSON summary, or list unprocessed raw files. |
+| `kb compile [--new\|--file PATH] [--dry-run]` | implemented skeleton | Generate `processing/compile_queue.json` and reviewable compile proposals without calling an LLM. |
 | `kb repl` | implemented | Start a simple interactive shell. |
 | `kb list-models` | implemented | List configured LLM models. |
 | `kb show-model` | implemented | Show the current model configuration. |
@@ -203,10 +333,10 @@ KnowledgeBase/
 These are planned directions, not current features:
 
 ```text
-kb compile       # AI compiles raw materials into wiki pages
-kb query         # Query the compiled wiki and optionally save durable answers
-kb lint          # Wiki health checks: broken links, orphan pages, duplicated concepts
-AI compile logic using the manifest
+autonomous AI compile execution  # `kb compile` currently plans work only
+kb query                         # Query the compiled wiki and optionally save durable answers
+kb lint                          # Wiki health checks: broken links, orphan pages, duplicated concepts
+AI apply logic using the manifest
 vector search / RAG / JSON agent API
 ```
 
@@ -263,7 +393,7 @@ Each new REPL LLM request writes a `request_id` to `.model_switch_input.json`; m
 
 ## Notes for Future Agents
 
-`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, `compile`, `query`, `lint`, or full RAG exists in `v0.3.1`.
+`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM compile execution, `query`, `lint`, or full RAG exists in `v0.4.1`.
 
 ## License
 

@@ -1,6 +1,6 @@
 # Manifest Tracking
 
-`kb-cli v0.3.1` maintains a lightweight raw-file registry:
+`kb-cli v0.4.1` maintains a lightweight raw-file registry:
 
 ```text
 processing/manifest.json
@@ -39,7 +39,7 @@ Each raw file entry records:
 
 ## Hash Migration
 
-Existing manifests created by v0.3.0 may contain `fnv1a64:<digest>` hashes. v0.3.1 rewrites live entries with `sha256:<digest>` and avoids treating this hash-algorithm migration as a raw content change.
+Existing manifests created by v0.3.0 may contain `fnv1a64:<digest>` hashes. v0.3.1 and later rewrite live entries with `sha256:<digest>` and avoids treating this hash-algorithm migration as a raw content change.
 
 ## Missing Files
 
@@ -53,13 +53,14 @@ This keeps enough history for future lint/compile commands to warn about wiki pa
 
 ## Why It Exists
 
-The manifest prepares the project for the next stage:
+The manifest feeds the compile-planning stage:
 
 ```bash
+kb compile --new --dry-run
 kb compile --new
 ```
 
-A future compile command can compare `raw/` against `processing/manifest.json` and process only new or changed files.
+In v0.4.0, `kb compile` compares `raw/` against `processing/manifest.json` and generates a queue/proposal for new or changed files. It does not call an LLM or edit `wiki/` directly.
 
 ## Safe Boundary
 

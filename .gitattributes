@@ -10,6 +10,7 @@
 *.yaml text eol=lf
 *.yml text eol=lf
 *.gitignore text eol=lf
+*.gitattributes text eol=lf
 
 # Windows scripts: keep CRLF
 *.bat text eol=crlf
@@ -24,5 +25,9 @@
 *.jpeg binary
 *.gif binary
 *.webp binary
+*.bmp binary
+*.tif binary
+*.tiff binary
+*.ico binary
 *.exe binary
 *.dll binary

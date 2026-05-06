@@ -2,6 +2,43 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1] - 2026-05-07
+
+### Fixed
+- Fixed a Rust ownership error in `src/commands/compile.rs` where `entry.id` was moved before `entry` was borrowed again for proposed wiki page and instruction generation.
+
+### Notes
+- This is a compile-fix release. It does not change `kb compile` behavior: compile remains a review-first planning command and still does not call an LLM or directly edit `wiki/`.
+
+
+## [0.4.0] - 2026-05-06
+
+### Added
+- Added `kb compile` as a conservative compile-planning skeleton.
+- Added `kb compile --new --dry-run` to preview raw files ready for future LLM compilation.
+- Added `kb compile --new` to write `processing/compile_queue.json` and a reviewable proposal file under `processing/proposals/`.
+- Added `kb compile --file <PATH>` to plan work for one manifest-tracked raw file.
+
+### Changed
+- Updated README and agent boundary documentation to distinguish compile planning from autonomous LLM editing.
+- Updated manifest schema version marker to `0.4.0`.
+
+### Notes
+- This release does not call an LLM and does not directly modify `wiki/`. It creates review artifacts that a human or LLM agent can use under Git diff.
+
+## [0.3.2] - 2026-05-06
+
+### Added
+- Added `.gitattributes` to define cross-platform line-ending rules.
+- Added binary file rules for common archive, document, image, and executable formats.
+
+### Changed
+- Clarified README wording around how future LLM maintainers should maintain Markdown pages under `wiki/`.
+- Updated the README to distinguish current scaffold/manifest behavior from planned LLM-driven `compile`, `query`, and `lint` commands.
+
+### Notes
+- This is a documentation and repository-hygiene release. It does not introduce LLM compilation, query, lint, vector search, RAG, or a database.
+
 ## [0.3.1] - 2026-05-05
 
 ### Added
