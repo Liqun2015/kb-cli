@@ -181,7 +181,7 @@ fn build_queue(mode: &str, entries: Vec<ManifestEntry>) -> CompileQueue {
         .collect::<Vec<_>>();
 
     CompileQueue {
-        schema_version: "0.4.0".to_string(),
+        schema_version: "0.4.2".to_string(),
         generated_by: "kb-cli".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         mode: mode.to_string(),
@@ -275,17 +275,22 @@ fn write_queue_and_proposal(kb_path: &Path, queue: &CompileQueue) -> Result<()> 
     let proposal_path = kb_path.join(format!("processing/proposals/compile_plan_{timestamp}.md"));
     fs::write(&proposal_path, render_proposal(queue))?;
 
+    let prompt_path = kb_path.join(format!("processing/proposals/compile_agent_prompt_{timestamp}.md"));
+    fs::write(&prompt_path, render_agent_prompt(queue))?;
+
     println!("\nCompile planning complete.");
     println!("Queue written to   : {}", queue_path.display());
     println!("Proposal written to: {}", proposal_path.display());
+    println!("Agent prompt       : {}", prompt_path.display());
 
     if queue.item_count == 0 {
         println!("\nNo raw files currently need compile planning.");
     } else {
         println!("\nNext steps:");
         println!("  1. Review the proposal file.");
-        println!("  2. Ask an LLM agent to implement the proposal under Git review.");
-        println!("  3. After accepting wiki edits, update manifest wiki_pages in a future compile/apply step.");
+        println!("  2. Copy the agent prompt into Claude Code, ChatGPT, or another knowledge agent.");
+        println!("  3. Let the agent edit only wiki/ and processing/ outputs, never raw/.");
+        println!("  4. Review all changes with git diff before committing.");
     }
 
     Ok(())
@@ -330,6 +335,60 @@ fn render_proposal(queue: &CompileQueue) -> String {
         }
         out.push('\n');
     }
+
+    out
+}
+
+
+fn render_agent_prompt(queue: &CompileQueue) -> String {
+    let mut out = String::new();
+    out.push_str("# LLM Wiki Compile Agent Prompt\n\n");
+    out.push_str("You are maintaining a local LLM Wiki. Follow the project rules exactly.\n\n");
+    out.push_str("## Non-negotiable constraints\n\n");
+    out.push_str("1. Do not edit, rename, move, or delete anything under `raw/`.\n");
+    out.push_str("2. Read `rules/LLM_WIKI_SCHEMA.md` before editing wiki pages.\n");
+    out.push_str("3. Use `rules/PAPER_PAGE_TEMPLATE.md` for paper summary pages.\n");
+    out.push_str("4. Use `rules/CONCEPT_PAGE_TEMPLATE.md` for concept pages.\n");
+    out.push_str("5. Prefer small, reviewable Markdown edits.\n");
+    out.push_str("6. Preserve uncertainty; do not invent claims not supported by the source.\n");
+    out.push_str("7. Add backlinks and Obsidian-style links only when they help future navigation.\n");
+    out.push_str("8. After editing, summarize every changed file and why it changed.\n\n");
+
+    out.push_str("## Compile scope\n\n");
+    out.push_str(&format!("- Mode: `{}`\n", queue.mode));
+    out.push_str(&format!("- Generated at: `{}`\n", queue.generated_at));
+    out.push_str(&format!("- Item count: `{}`\n\n", queue.item_count));
+
+    if queue.items.is_empty() {
+        out.push_str("There are no raw files to compile in this queue. Do not edit the wiki.\n");
+        return out;
+    }
+
+    out.push_str("## Source files to compile\n\n");
+    for item in &queue.items {
+        out.push_str(&format!("### `{}`\n\n", item.raw_path));
+        out.push_str(&format!("- Kind: `{}`\n", item.kind));
+        out.push_str(&format!("- Status: `{}`\n", item.status));
+        out.push_str(&format!("- Manifest ID: `{}`\n", item.manifest_id));
+        out.push_str(&format!("- Content hash: `{}`\n", item.content_hash));
+        out.push_str("- Proposed wiki pages:\n");
+        for page in &item.proposed_wiki_pages {
+            out.push_str(&format!("  - `{page}`\n"));
+        }
+        out.push_str("- Required actions:\n");
+        for instruction in &item.instructions {
+            out.push_str(&format!("  - {instruction}\n"));
+        }
+        out.push('\n');
+    }
+
+    out.push_str("## Expected output from the agent\n\n");
+    out.push_str("When finished, report:\n\n");
+    out.push_str("1. New wiki pages created.\n");
+    out.push_str("2. Existing wiki pages updated.\n");
+    out.push_str("3. Concepts or topics that should be reviewed by the user.\n");
+    out.push_str("4. Any source files that could not be read or confidently summarized.\n");
+    out.push_str("5. Suggested next command, usually `kb lint` in a future version or `git diff` now.\n");
 
     out
 }

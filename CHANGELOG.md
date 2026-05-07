@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.2] - 2026-05-07
+
+### Added
+- Added `processing/proposals/compile_agent_prompt_<timestamp>.md` generation for non-dry-run `kb compile` runs.
+- The generated agent prompt is designed as a copy-paste instruction block for Claude Code, ChatGPT, or another knowledge agent.
+
+### Changed
+- Improved `kb compile` next-step output to point users to both the review proposal and the agent prompt.
+- Updated compile documentation to describe the new prompt handoff artifact.
+
+### Notes
+- `kb compile` still does not call an LLM and still does not directly edit `wiki/`. This release only improves the review-first AI handoff workflow.
+
 ## [0.4.1] - 2026-05-07
 
 ### Fixed

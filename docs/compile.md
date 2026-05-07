@@ -2,12 +2,13 @@
 
 `kb compile` is the first step toward LLM-maintained Markdown wiki pages.
 
-In `v0.4.1`, it is intentionally conservative:
+In `v0.4.2`, it is intentionally conservative:
 
 - it reads `processing/manifest.json`;
 - it selects raw files that appear ready for future wiki compilation;
 - it writes `processing/compile_queue.json`;
 - it writes a reviewable Markdown proposal under `processing/proposals/`;
+- it writes a copy-paste LLM agent prompt under `processing/proposals/`;
 - it does **not** call an LLM;
 - it does **not** edit files under `wiki/`.
 
@@ -36,9 +37,10 @@ kb --kb-path /path/to/kb compile --new --limit 5
 ```text
 processing/compile_queue.json
 processing/proposals/compile_plan_<timestamp>.md
+processing/proposals/compile_agent_prompt_<timestamp>.md
 ```
 
-The proposal file is meant to be handed to a future AI maintainer, together with the files under `rules/`.
+The proposal and agent-prompt files are meant to be handed to a future AI maintainer, together with the files under `rules/`.
 
 ## Review-first design
 
@@ -49,7 +51,7 @@ raw file appears
         ↓
 kb status records it in processing/manifest.json
         ↓
-kb compile generates a queue and proposal
+kb compile generates a queue, proposal, and agent prompt
         ↓
 human reviews the proposal
         ↓

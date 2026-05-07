@@ -2,7 +2,7 @@
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.4.1`
+> Current version: `v0.4.2`
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, prepare Markdown pages under `wiki/` for AI maintenance, and constrain future AI maintainers through a generated `rules/` layer.
 
@@ -50,7 +50,7 @@ The LLM is expected to maintain the wiki by:
 - preserving uncertainty instead of inventing unsupported conclusions;
 - following the templates and policies generated under `rules/`.
 
-The current version of `kb-cli` provides the filesystem structure, ingestion workflow, rules layer, manifest tracking, and a first compile-planning command needed for this maintenance loop. `kb compile` does **not** call an LLM or directly edit `wiki/` yet. Instead, it generates a reviewable compile queue and proposal file that an LLM agent can follow under Git review.
+The current version of `kb-cli` provides the filesystem structure, ingestion workflow, rules layer, manifest tracking, and a first compile-planning command needed for this maintenance loop. `kb compile` does **not** call an LLM or directly edit `wiki/` yet. Instead, it generates a reviewable compile queue, proposal file, and copy-paste agent prompt that an LLM agent can follow under Git review.
 
 ```bash
 kb compile --new --dry-run
@@ -65,11 +65,23 @@ kb query "your question" --save
 kb lint
 ```
 
-Until full autonomous compile is implemented, users can use the generated `processing/proposals/compile_plan_*.md` files plus the generated `rules/` files as instructions for Claude Code, ChatGPT, or another coding/knowledge agent to update the Markdown wiki manually under Git review.
+Until full autonomous compile is implemented, users can use the generated `processing/proposals/compile_plan_*.md` and `processing/proposals/compile_agent_prompt_*.md` files plus the generated `rules/` files as instructions for Claude Code, ChatGPT, or another coding/knowledge agent to update the Markdown wiki manually under Git review.
 
 ## Current Scope
 
 This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, and a manifest registry under `processing/manifest.json`. It still does **not** provide full RAG, vector search, or autonomous LLM compilation. `kb compile` currently plans and documents the compile work; it does not perform LLM edits by itself.
+
+## What Changed in v0.4.2
+
+`v0.4.2` makes `kb compile` more directly usable as an AI handoff step. In addition to the JSON queue and human-readable compile plan, non-dry-run compile now writes a copy-paste agent prompt:
+
+```text
+processing/proposals/compile_agent_prompt_<timestamp>.md
+```
+
+The prompt tells Claude Code, ChatGPT, or another knowledge agent exactly how to maintain `wiki/` while respecting the key constraints: never modify `raw/`, read the generated `rules/` files first, create small reviewable Markdown edits, preserve uncertainty, and report every changed page for Git review.
+
+`kb compile` still does **not** call an LLM and still does **not** directly edit `wiki/`.
 
 
 ## What Changed in v0.4.1
@@ -393,7 +405,7 @@ Each new REPL LLM request writes a `request_id` to `.model_switch_input.json`; m
 
 ## Notes for Future Agents
 
-`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM compile execution, `query`, `lint`, or full RAG exists in `v0.4.1`.
+`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM compile execution, `query`, `lint`, or full RAG exists in `v0.4.2`.
 
 ## License
 
