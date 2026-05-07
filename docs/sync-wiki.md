@@ -12,10 +12,9 @@ After an AI agent writes pages under `wiki/`, those pages should declare their s
 ---
 page_type: paper
 source_ids:
-  - <manifest-id-from-compile-plan>
+  - <manifest-id-from-prepare-plan>
 source_files:
   - raw/papers/example.pdf
-status: compiled
 ---
 ```
 

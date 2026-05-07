@@ -28,8 +28,8 @@ enum Commands {
     Bootstrap(commands::ingest::BootstrapArgs),
     #[command(about = "Build Wiki from raw materials")]
     BuildWiki,
-    #[command(about = "Plan LLM compilation from raw files into wiki pages without editing wiki/ directly")]
-    Compile(commands::compile::CompileArgs),
+    #[command(name = "prepare", alias = "compile", about = "Prepare LLM/wiki handoff artifacts from raw files without calling an LLM")]
+    Prepare(commands::prepare::PrepareArgs),
     #[command(about = "Sync wiki page source front matter back into processing/manifest.json")]
     SyncWiki(commands::sync_wiki::SyncWikiArgs),
     #[command(about = "Run static wiki health checks for links, orphans, and source front matter")]
@@ -71,7 +71,7 @@ fn main() -> anyhow::Result<()> {
         Some(Commands::Ingest(args)) => commands::ingest::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Bootstrap(args)) => commands::ingest::execute_bootstrap(cli.kb_path.as_deref(), args),
         Some(Commands::BuildWiki) => commands::build_wiki::execute(cli.kb_path.as_deref()),
-        Some(Commands::Compile(args)) => commands::compile::execute(cli.kb_path.as_deref(), args),
+        Some(Commands::Prepare(args)) => commands::prepare::execute(cli.kb_path.as_deref(), args),
         Some(Commands::SyncWiki(args)) => commands::sync_wiki::execute(cli.kb_path.as_deref(), args),
         Some(Commands::LintStatic(args)) => commands::lint_static::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Status(args)) => commands::manifest::execute(cli.kb_path.as_deref(), args),
@@ -90,7 +90,7 @@ fn main() -> anyhow::Result<()> {
             println!("  bootstrap [--copy|--move]   Initialize, ingest, extract metadata, build wiki");
             println!("  extract-metadata [--force]  Extract PDF metadata");
             println!("  build-wiki                  Build wiki pages");
-            println!("  compile [--new|--file PATH] [--dry-run|--preview]  Plan LLM wiki compilation");
+            println!("  prepare [--new|--file PATH] [--dry-run|--preview]  Prepare LLM/wiki handoff artifacts");
             println!("  status [--dry-run|--preview] [--json] [--unprocessed]  Refresh manifest and show raw-file status");
             println!("  sync-wiki [--dry-run|--preview] [--json]  Link wiki front matter back to manifest");
             println!("  lint-static [--dry-run|--preview|--no-report] [--json] [--strict]  Check broken links, orphans, and source front matter");

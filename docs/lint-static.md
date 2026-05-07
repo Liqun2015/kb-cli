@@ -74,7 +74,6 @@ source_files:
   - "raw/papers/example.pdf"
 source_ids:
   - "raw_example"
-status: compiled
 generated_by: kb build-wiki
 ---
 ```
@@ -128,7 +127,7 @@ Generated placeholder links that previously caused guaranteed broken-link noise,
 ## Intended workflow
 
 ```text
-kb compile --new
+kb prepare --new
         ↓
 AI/human writes source-linked wiki Markdown
         ↓

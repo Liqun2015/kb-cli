@@ -24,7 +24,7 @@ This release establishes manifest tracking. `kb status` must scan `raw/` and mai
 processing/manifest.json
 ```
 
-The manifest is the bridge between the source-material layer and future AI compile operations. It should track raw files by relative path, source kind, size, SHA-256 content hash, status, first-seen timestamp, and last-seen timestamp; missing raw files should remain as `raw_missing`.
+The manifest is the bridge between the source-material layer and future AI prepare operations. It should track raw files by relative path, source kind, size, SHA-256 content hash, status, first-seen timestamp, and last-seen timestamp; missing raw files should remain as `raw_missing`.
 
 The rule/schema layer added in v0.2.0 remains required. `kb init` must still generate:
 
@@ -70,7 +70,7 @@ background daemon
 cloud sync
 ```
 
-`compile` is implemented only as a review-first planning command in v0.4.6. It generates `processing/compile_queue.json` and `processing/proposals/compile_plan_*.md`; it does not call an LLM or edit `wiki/`. `query` is still planned; `lint-static` is implemented as a deterministic local health check.
+`prepare` is implemented only as a review-first planning command in v0.4.6.2. It generates `processing/prepare_queue.json` and `processing/proposals/prepare_plan_*.md`; it does not call an LLM or edit `wiki/`. `query` is still planned; `lint-static` is implemented as a deterministic local health check.
 
 ## Safety rules for init/ingest/bootstrap
 
@@ -128,7 +128,7 @@ README and docs must describe only implemented behavior. Do not list future comm
 
 ## Versioning rule
 
-Compile planning work starts in v0.4.x. Small compatible improvements should increment the patch version:
+Prepare planning work starts in v0.4.x. Small compatible improvements should increment the patch version:
 
 ```text
 0.4.0 -> 0.4.1 -> 0.4.2 -> 0.4.3 -> 0.4.4 -> 0.4.5 -> 0.4.6

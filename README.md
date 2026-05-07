@@ -1,8 +1,11 @@
 # kb-cli
 
+> **v0.4.6.2 note:** User-facing documentation now uses only `kb prepare` for the review-first planning step. Cargo metadata uses `0.4.6-2` for SemVer compatibility; the release package is labeled `v0.4.6.2`.
+
+
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.4.6`
+> Current version: `v0.4.6.2`
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, prepare Markdown pages under `wiki/` for AI maintenance, and constrain future AI maintainers through a generated `rules/` layer.
 
@@ -50,12 +53,12 @@ The LLM is expected to maintain the wiki by:
 - preserving uncertainty instead of inventing unsupported conclusions;
 - following the templates and policies generated under `rules/`.
 
-The current version of `kb-cli` provides the filesystem structure, ingestion workflow, rules layer, manifest tracking, static linting, and a first compile-planning command needed for this maintenance loop. `kb compile` does **not** call an LLM or directly edit `wiki/` yet. Instead, it generates a reviewable compile queue, proposal file, and copy-paste agent prompt that an LLM agent can follow under Git review.
+The current version of `kb-cli` provides the filesystem structure, ingestion workflow, rules layer, manifest tracking, static linting, and a first prepare-planning command needed for this maintenance loop. `kb prepare` does **not** call an LLM or directly edit `wiki/` yet. Instead, it generates a reviewable prepare queue, proposal file, and copy-paste agent prompt that an LLM agent can follow under Git review.
 
 ```bash
-kb compile --new --dry-run
-kb compile --new
-kb compile --file raw/papers/example.pdf
+kb prepare --new --dry-run
+kb prepare --new
+kb prepare --file raw/papers/example.pdf
 ```
 
 Full LLM-driven writing and durable query saving are planned for later stages:
@@ -70,11 +73,33 @@ Static wiki linting is now available:
 kb lint-static
 ```
 
-Until full autonomous compile is implemented, users can use the generated `processing/proposals/compile_plan_*.md` and `processing/proposals/compile_agent_prompt_*.md` files plus the generated `rules/` files as instructions for Claude Code, ChatGPT, or another coding/knowledge agent to update the Markdown wiki manually under Git review.
+Until full autonomous prepare is implemented, users can use the generated `processing/proposals/prepare_plan_*.md` and `processing/proposals/prepare_agent_prompt_*.md` files plus the generated `rules/` files as instructions for Claude Code, ChatGPT, or another coding/knowledge agent to update the Markdown wiki manually under Git review.
 
 ## Current Scope
 
-This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, and a manifest registry under `processing/manifest.json`. It still does **not** provide full RAG, vector search, or autonomous LLM compilation. `kb compile` currently plans and documents the compile work; it does not perform LLM edits by itself.
+This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, and a manifest registry under `processing/manifest.json`. It still does **not** provide full RAG, vector search, or autonomous LLM/wiki preparation. `kb prepare` currently plans and documents the prepare work; it does not perform LLM edits by itself.
+
+## What Changed in v0.4.6.2
+
+`v0.4.6.2` is a documentation polish release before `v0.5.0`. It does not add query, vector search, embeddings, RAG, or autonomous LLM execution. Its purpose is to keep the user-facing workflow language focused on `prepare`.
+
+Main changes:
+
+- `kb prepare` is now the primary command for generating AI/human handoff artifacts.
+- Generated artifacts now use prepare-oriented names:
+  - `processing/prepare_queue.json`
+  - `processing/proposals/prepare_plan_<timestamp>.md`
+  - `processing/proposals/prepare_agent_prompt_<timestamp>.md`
+- Cargo metadata uses `0.4.6-2` for SemVer compatibility, while the release package is labeled `v0.4.6.2`.
+
+Recommended command:
+
+```bash
+kb prepare --new --dry-run
+kb prepare --new
+kb prepare --file raw/papers/example.pdf
+```
+
 
 ## What Changed in v0.4.6
 
@@ -125,7 +150,7 @@ kb --kb-path /path/to/kb lint-static --strict
 
 ## What Changed in v0.4.4
 
-`v0.4.4` adds the second step in the traceable AI-maintained Wiki loop: static linting. After `kb compile` creates an agent task and `kb sync-wiki` links accepted Markdown pages back to the manifest, `kb lint-static` checks whether the Wiki is structurally healthy.
+`v0.4.4` adds the second step in the traceable AI-maintained Wiki loop: static linting. After `kb prepare` creates an agent task and `kb sync-wiki` links accepted Markdown pages back to the manifest, `kb lint-static` checks whether the Wiki is structurally healthy.
 
 Useful lint commands:
 
@@ -140,47 +165,47 @@ The current static lint pass checks broken `[[WikiLinks]]`, orphan pages, source
 
 ## What Changed in v0.4.3
 
-`v0.4.3` closes the first compile loop with `kb sync-wiki`. `kb compile` can generate a queue and agent prompt; after a human or AI writes source-linked Markdown pages under `wiki/`, `kb sync-wiki` scans their YAML front matter and records the corresponding `wiki_pages` back into `processing/manifest.json`.
+`v0.4.3` closes the first prepare loop with `kb sync-wiki`. `kb prepare` can generate a queue and agent prompt; after a human or AI writes source-linked Markdown pages under `wiki/`, `kb sync-wiki` scans their YAML front matter and records the corresponding `wiki_pages` back into `processing/manifest.json`.
 
-`v0.4.2` made `kb compile` more directly usable as an AI handoff step. In addition to the JSON queue and human-readable compile plan, non-dry-run compile now writes a copy-paste agent prompt:
+`v0.4.2` made `kb prepare` more directly usable as an AI handoff step. In addition to the JSON queue and human-readable prepare plan, non-dry-run prepare now writes a copy-paste agent prompt:
 
 ```text
-processing/proposals/compile_agent_prompt_<timestamp>.md
+processing/proposals/prepare_agent_prompt_<timestamp>.md
 ```
 
 The prompt tells Claude Code, ChatGPT, or another knowledge agent exactly how to maintain `wiki/` while respecting the key constraints: never modify `raw/`, read the generated `rules/` files first, create small reviewable Markdown edits, preserve uncertainty, and report every changed page for Git review.
 
-`kb compile` still does **not** call an LLM and still does **not** directly edit `wiki/`.
+`kb prepare` still does **not** call an LLM and still does **not** directly edit `wiki/`.
 
 
 ## What Changed in v0.4.1
 
-`v0.4.1` is a small compile-fix release. It fixes a Rust ownership issue in `kb compile` where a manifest entry ID was moved before the entry was later borrowed to generate proposed wiki pages and instructions.
+`v0.4.1` is a small prepare-fix release. It fixes a Rust ownership issue in `kb prepare` where a manifest entry ID was moved before the entry was later borrowed to generate proposed wiki pages and instructions.
 
-There is no behavior change from `v0.4.0`: `kb compile` still generates reviewable compile plans only. It does not call an LLM and does not edit `wiki/` directly.
+There is no behavior change from `v0.4.0`: `kb prepare` still generates reviewable prepare plans only. It does not call an LLM and does not edit `wiki/` directly.
 
 ## What Changed in v0.4.0
 
-This is the first **compile skeleton** release. It adds a review-first command for planning how raw files should be compiled into Markdown wiki pages, without calling an LLM and without editing `wiki/` directly.
+This is the first **prepare skeleton** release. It adds a review-first command for planning how raw files should be prepared for Markdown wiki pages, without calling an LLM and without editing `wiki/` directly.
 
-Useful compile commands:
+Useful prepare commands:
 
 ```bash
-# Preview raw files that are ready for future LLM compilation
-kb --kb-path /path/to/kb compile --new --dry-run
+# Preview raw files that are ready for future LLM/wiki preparation
+kb --kb-path /path/to/kb prepare --new --dry-run
 
-# Write processing/compile_queue.json and a reviewable proposal under processing/proposals/
-kb --kb-path /path/to/kb compile --new
+# Write processing/prepare_queue.json and a reviewable proposal under processing/proposals/
+kb --kb-path /path/to/kb prepare --new
 
 # Plan compilation for one raw file listed in processing/manifest.json
-kb --kb-path /path/to/kb compile --file raw/papers/example.pdf
+kb --kb-path /path/to/kb prepare --file raw/papers/example.pdf
 ```
 
 Generated files:
 
 ```text
-processing/compile_queue.json
-processing/proposals/compile_plan_<timestamp>.md
+processing/prepare_queue.json
+processing/proposals/prepare_plan_<timestamp>.md
 ```
 
 This release is deliberately conservative: it creates the planning artifact that a human or LLM agent can review and execute later under Git diff.
@@ -207,7 +232,7 @@ processing/
 └── proposals/
 ```
 
-The manifest records each raw file's relative path, kind, extension, size, SHA-256 content hash, first-seen time, last-seen time, status, and future wiki page links. Missing raw files are retained as `raw_missing` instead of being silently dropped. This prepares the project for the next stage: `kb compile --new`.
+The manifest records each raw file's relative path, kind, extension, size, SHA-256 content hash, first-seen time, last-seen time, status, and future wiki page links. Missing raw files are retained as `raw_missing` instead of being silently dropped. This prepares the project for the next stage: `kb prepare --new`.
 
 Useful status modes:
 
@@ -317,8 +342,8 @@ kb --kb-path /path/to/kb build-wiki
 # 5. Refresh and inspect the raw-file manifest
 kb --kb-path /path/to/kb status
 
-# 6. Plan future LLM compilation work without editing wiki/ directly
-kb --kb-path /path/to/kb compile --new --dry-run
+# 6. Plan future LLM/wiki preparation work without editing wiki/ directly
+kb --kb-path /path/to/kb prepare --new --dry-run
 ```
 
 Useful ingest modes:
@@ -347,25 +372,25 @@ kb --kb-path /path/to/kb bootstrap --copy --dry-run
 kb --kb-path /path/to/kb bootstrap --copy --force-metadata
 ```
 
-## Compile Planning
+## Prepare Planning
 
-`kb compile` is a planning command. It reads `processing/manifest.json`, selects raw files that have not yet been linked to wiki pages, and generates a review artifact for future AI-maintained Markdown edits.
+`kb prepare` is a planning command. It reads `processing/manifest.json`, selects raw files that have not yet been linked to wiki pages, and generates a review artifact for future AI-maintained Markdown edits.
 
 ```bash
 # Preview what would be selected
-kb --kb-path /path/to/kb compile --new --dry-run
+kb --kb-path /path/to/kb prepare --new --dry-run
 
 # Write queue and proposal files
-kb --kb-path /path/to/kb compile --new
+kb --kb-path /path/to/kb prepare --new
 
 # Plan one source file
-kb --kb-path /path/to/kb compile --file raw/papers/example.pdf
+kb --kb-path /path/to/kb prepare --file raw/papers/example.pdf
 
 # Limit the number of selected files
-kb --kb-path /path/to/kb compile --new --limit 5
+kb --kb-path /path/to/kb prepare --new --limit 5
 ```
 
-`compile` currently writes planning files only. It does not call an LLM and does not modify `wiki/`.
+`prepare` currently writes planning files only. It does not call an LLM and does not modify `wiki/`.
 
 ## Windows Helper Script
 
@@ -423,7 +448,7 @@ KnowledgeBase/
 | `kb extract-metadata [--force]` | implemented | Extract basic metadata from PDFs under `raw/papers/`. |
 | `kb build-wiki` | implemented | Generate Markdown paper/note pages and index pages. |
 | `kb status [--dry-run\|--preview] [--json] [--unprocessed]` | implemented | Refresh `processing/manifest.json`, print JSON summary, or list unprocessed raw files. |
-| `kb compile [--new\|--file PATH] [--dry-run\|--preview]` | implemented skeleton | Generate `processing/compile_queue.json` and reviewable compile proposals without calling an LLM. |
+| `kb prepare [--new\|--file PATH] [--dry-run\|--preview]` | implemented skeleton | Generate `processing/prepare_queue.json` and reviewable prepare proposals without calling an LLM. |
 | `kb sync-wiki [--dry-run\|--preview] [--json]` | implemented skeleton | Read `source_ids` / `source_files` front matter from `wiki/**/*.md` and update manifest `wiki_pages`. |
 | `kb lint-static [--dry-run\|--preview\|--no-report] [--json] [--strict]` | implemented skeleton | Check broken WikiLinks, orphan pages, missing source front matter, empty pages, and duplicate titles. |
 | `kb repl` | implemented | Start a simple interactive shell. |
@@ -439,8 +464,8 @@ KnowledgeBase/
 These are planned directions, not current features:
 
 ```text
-autonomous AI compile execution  # `kb compile` currently plans work only
-kb query                         # Query the compiled wiki and optionally save durable answers
+autonomous AI prepare execution  # `kb prepare` currently plans work only
+kb query                         # Query the prepared wiki and optionally save durable answers
 semantic LLM lint                # Deeper checks for contradictions, stale claims, weak organization
 AI apply logic using the manifest
 vector search / RAG / JSON agent API
@@ -499,7 +524,7 @@ Each new REPL LLM request writes a `request_id` to `.model_switch_input.json`; m
 
 ## Notes for Future Agents
 
-`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM compile execution, `query`, semantic LLM lint, or full RAG exists in `v0.4.6`.
+`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM prepare execution, `query`, semantic LLM lint, or full RAG exists in `v0.4.6.2`.
 
 ## License
 
@@ -513,7 +538,7 @@ After an AI agent or human creates Markdown pages under `wiki/`, run:
 kb --kb-path /path/to/kb sync-wiki
 ```
 
-`sync-wiki` scans YAML front matter in `wiki/**/*.md`, reads `source_ids` and `source_files`, and updates `processing/manifest.json` so raw files become linked to their compiled wiki pages. Preview first with:
+`sync-wiki` scans YAML front matter in `wiki/**/*.md`, reads `source_ids` and `source_files`, and updates `processing/manifest.json` so raw files become linked to their prepared wiki pages. Preview first with:
 
 ```bash
 kb --kb-path /path/to/kb sync-wiki --dry-run

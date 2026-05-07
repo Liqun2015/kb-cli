@@ -228,7 +228,7 @@ pub fn print_summary(summary: &ManifestSummary, dry_run: bool) {
     }
 
     if summary.unprocessed_files > 0 {
-        println!("\nNext: run `kb status --unprocessed` to list files awaiting future compile work.");
+        println!("\nNext: run `kb status --unprocessed` to list files awaiting future prepare work.");
     }
 }
 

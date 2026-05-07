@@ -382,7 +382,7 @@ Example:
 ---
 page_type: paper
 source_ids:
-  - <manifest-id-from-compile-plan>
+  - <manifest-id-from-prepare-plan>
 source_files:
   - raw/papers/example.pdf
 status: compiled
@@ -390,7 +390,7 @@ status: compiled
 ```
 
 Rules:
-- `source_ids` should contain manifest IDs from `processing/manifest.json` or `processing/compile_queue.json` when available.
+- `source_ids` should contain manifest IDs from `processing/manifest.json` or `processing/prepare_queue.json` when available.
 - `source_files` should contain raw paths such as `raw/papers/example.pdf`.
 - Concept/topic/method pages may list multiple sources.
 - Run `kb sync-wiki` after accepted wiki edits so the manifest records which raw files have corresponding wiki pages.
@@ -429,7 +429,7 @@ Use this template for pages under `wiki/papers/`.
 ---
 page_type: paper
 source_ids:
-  - <manifest-id-from-compile-plan>
+  - <manifest-id-from-prepare-plan>
 source_files:
   - raw/papers/example.pdf
 status: compiled
@@ -504,7 +504,7 @@ Use this template for pages under `wiki/concepts/`.
 ---
 page_type: concept
 source_ids:
-  - <manifest-id-from-compile-plan>
+  - <manifest-id-from-prepare-plan>
 source_files:
   - raw/papers/example.pdf
 status: evolving

@@ -1,5 +1,5 @@
 pub mod build_wiki;
-pub mod compile;
+pub mod prepare;
 pub mod extract_metadata;
 pub mod init;
 pub mod ingest;

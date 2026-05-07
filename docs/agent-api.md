@@ -12,7 +12,7 @@ This document records what `kb-cli v0.4.6` actually supports. It is intentionall
 | `kb extract-metadata [--force]` | Extract PDF metadata from `raw/papers/`. |
 | `kb build-wiki` | Generate Markdown wiki pages and indexes. |
 | `kb status [--dry-run\|--preview] [--json] [--unprocessed]` | Refresh `processing/manifest.json`, print JSON summary, or list unprocessed raw files. |
-| `kb compile [--new\|--file PATH] [--dry-run\|--preview]` | Generate compile queue/proposal files for future LLM wiki maintenance without calling an LLM. |
+| `kb prepare [--new\|--file PATH] [--dry-run\|--preview]` | Generate prepare queue/proposal files for future LLM wiki maintenance without calling an LLM. |
 | `kb sync-wiki [--dry-run\|--preview] [--json]` | Link source front matter in `wiki/**/*.md` back to manifest entries. |
 | `kb lint-static [--dry-run\|--preview\|--no-report] [--json] [--strict]` | Check broken WikiLinks, orphan pages, missing source front matter, empty pages, and duplicate titles. |
 | `kb repl` | Start a simple interactive shell. |
@@ -75,16 +75,16 @@ Current behavior:
 
 The manifest is not a stable external API yet; treat it as a local project file that future commands may evolve carefully.
 
-## Compile planning
+## Prepare planning
 
-`kb compile` is implemented in v0.4.6 as a planning command only. It may write:
+`kb prepare` is implemented in v0.4.6.2 as a planning command only. It may write:
 
 ```text
-processing/compile_queue.json
-processing/proposals/compile_plan_<timestamp>.md
+processing/prepare_queue.json
+processing/proposals/prepare_plan_<timestamp>.md
 ```
 
-It does not call an LLM, does not edit `wiki/`, and does not mark manifest entries as fully compiled. Treat the generated proposal as a review artifact for a human or future AI maintainer.
+It does not call an LLM, does not edit `wiki/`, and does not mark manifest entries as fully prepared. Treat the generated proposal as a review artifact for a human or future AI maintainer.
 
 ## Static wiki lint
 
@@ -105,7 +105,7 @@ Do not assume the following exist in `v0.4.6`:
 
 ```text
 global --format json
-autonomous compile execution
+autonomous prepare execution
 query
 semantic LLM lint
 vector search

@@ -50,18 +50,18 @@ If a file disappears from `raw/`, its manifest entry is retained with:
 status = raw_missing
 ```
 
-This keeps enough history for future lint/compile commands to warn about wiki pages whose source file no longer exists.
+This keeps enough history for future lint/prepare commands to warn about wiki pages whose source file no longer exists.
 
 ## Why It Exists
 
-The manifest feeds the compile-planning stage:
+The manifest feeds the prepare-planning stage:
 
 ```bash
-kb compile --new --dry-run
-kb compile --new
+kb prepare --new --dry-run
+kb prepare --new
 ```
 
-In v0.4.0, `kb compile` compares `raw/` against `processing/manifest.json` and generates a queue/proposal for new or changed files. It does not call an LLM or edit `wiki/` directly.
+In the current prepare-planning workflow, `kb prepare` compares `raw/` against `processing/manifest.json` and generates a queue/proposal for new or changed files. It does not call an LLM or edit `wiki/` directly.
 
 ## Safe Boundary
 

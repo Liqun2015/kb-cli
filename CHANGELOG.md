@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.4.6.2 - Prepare-only documentation polish
+
+- Updated README and docs so the review-first planning step is documented only as `kb prepare`.
+- Removed the legacy command page from `docs/`.
+- Hid the reserved legacy spelling from the top-level help output while keeping command compatibility in code.
+- Cargo package metadata uses `0.4.6-2` because Cargo requires standard SemVer. The release/package label remains `v0.4.6.2`.
+
+## v0.4.6.1 - Naming alignment for prepare
+
+- Made `kb prepare` the documented user-facing planning command.
+- Generated handoff artifacts use `processing/prepare_queue.json`, `processing/proposals/prepare_plan_<timestamp>.md`, and `processing/proposals/prepare_agent_prompt_<timestamp>.md`.
+- Updated README and docs to use `prepare` as the primary command name.
+- Cargo package metadata uses `0.4.6-1` because Cargo requires standard SemVer. The release/package label remains `v0.4.6.1`.
+
 ## v0.4.6 - Tests and documentation stabilization
 
 - Added focused unit/regression tests for `build-wiki` front matter generation and placeholder-link avoidance.
@@ -31,9 +45,9 @@
 
 - Added `kb sync-wiki` to scan Markdown front matter under `wiki/` and update `processing/manifest.json`.
 - Wiki pages can now declare `source_ids` and `source_files` in YAML front matter.
-- Manifest entries linked to wiki pages are marked as `compiled`.
-- `kb status` now reports compiled files and `status --json` includes `compiled_files`.
-- Updated paper/concept templates and compile agent prompts to require source-linking front matter.
+- Manifest entries linked to wiki pages are marked as source-linked in the manifest.
+- `kb status` now reports source-linked wiki coverage in the manifest summary.
+- Updated paper/concept templates and prepare agent prompts to require source-linking front matter.
 - Added `docs/sync-wiki.md`.
 
 All notable changes to this project will be documented in this file.
@@ -41,35 +55,35 @@ All notable changes to this project will be documented in this file.
 ## [0.4.2] - 2026-05-07
 
 ### Added
-- Added `processing/proposals/compile_agent_prompt_<timestamp>.md` generation for non-dry-run `kb compile` runs.
+- Added `processing/proposals/prepare_agent_prompt_<timestamp>.md` generation for non-dry-run `kb prepare` runs.
 - The generated agent prompt is designed as a copy-paste instruction block for Claude Code, ChatGPT, or another knowledge agent.
 
 ### Changed
-- Improved `kb compile` next-step output to point users to both the review proposal and the agent prompt.
-- Updated compile documentation to describe the new prompt handoff artifact.
+- Improved `kb prepare` next-step output to point users to both the review proposal and the agent prompt.
+- Updated prepare documentation to describe the new prompt handoff artifact.
 
 ### Notes
-- `kb compile` still does not call an LLM and still does not directly edit `wiki/`. This release only improves the review-first AI handoff workflow.
+- `kb prepare` still does not call an LLM and still does not directly edit `wiki/`. This release only improves the review-first AI handoff workflow.
 
 ## [0.4.1] - 2026-05-07
 
 ### Fixed
-- Fixed a Rust ownership error in `src/commands/compile.rs` where `entry.id` was moved before `entry` was borrowed again for proposed wiki page and instruction generation.
+- Fixed a Rust ownership error in the planning command implementation where `entry.id` was moved before `entry` was borrowed again for proposed wiki page and instruction generation.
 
 ### Notes
-- This is a compile-fix release. It does not change `kb compile` behavior: compile remains a review-first planning command and still does not call an LLM or directly edit `wiki/`.
+- This is a prepare-fix release. It does not change `kb prepare` behavior: prepare remains a review-first planning command and still does not call an LLM or directly edit `wiki/`.
 
 
 ## [0.4.0] - 2026-05-06
 
 ### Added
-- Added `kb compile` as a conservative compile-planning skeleton.
-- Added `kb compile --new --dry-run` to preview raw files ready for future LLM compilation.
-- Added `kb compile --new` to write `processing/compile_queue.json` and a reviewable proposal file under `processing/proposals/`.
-- Added `kb compile --file <PATH>` to plan work for one manifest-tracked raw file.
+- Added `kb prepare` as a conservative prepare-planning skeleton.
+- Added `kb prepare --new --dry-run` to preview raw files ready for future LLM/wiki preparation.
+- Added `kb prepare --new` to write `processing/prepare_queue.json` and a reviewable proposal file under `processing/proposals/`.
+- Added `kb prepare --file <PATH>` to plan work for one manifest-tracked raw file.
 
 ### Changed
-- Updated README and agent boundary documentation to distinguish compile planning from autonomous LLM editing.
+- Updated README and agent boundary documentation to distinguish prepare planning from autonomous LLM editing.
 - Updated manifest schema version marker to `0.4.0`.
 
 ### Notes
@@ -83,16 +97,16 @@ All notable changes to this project will be documented in this file.
 
 ### Changed
 - Clarified README wording around how future LLM maintainers should maintain Markdown pages under `wiki/`.
-- Updated the README to distinguish current scaffold/manifest behavior from planned LLM-driven `compile`, `query`, and `lint` commands.
+- Updated the README to distinguish current scaffold/manifest behavior from planned LLM-driven `prepare`, `query`, and `lint` commands.
 
 ### Notes
-- This is a documentation and repository-hygiene release. It does not introduce LLM compilation, query, lint, vector search, RAG, or a database.
+- This is a documentation and repository-hygiene release. It does not introduce LLM/wiki preparation, query, lint, vector search, RAG, or a database.
 
 ## [0.3.1] - 2026-05-05
 
 ### Added
 - Added `kb status --json` for machine-readable manifest summaries.
-- Added `kb status --unprocessed` to list raw files awaiting future compile work.
+- Added `kb status --unprocessed` to list raw files awaiting future prepare work.
 - Added next-step hints after successful `kb bootstrap`.
 
 ### Changed
@@ -101,7 +115,7 @@ All notable changes to this project will be documented in this file.
 - Improved ingest duplicate handling: if a destination name already exists, identical content is skipped; different content is saved with a unique suffix instead of being silently skipped.
 
 ### Notes
-- This remains a manifest/ingest stability release. It still does not introduce LLM compilation, query, lint, vector search, RAG, or a database.
+- This remains a manifest/ingest stability release. It still does not introduce LLM/wiki preparation, query, lint, vector search, RAG, or a database.
 
 ## [0.3.0] - 2026-05-05
 
@@ -116,7 +130,7 @@ All notable changes to this project will be documented in this file.
 - Updated generated knowledge-base README text to include `processing/manifest.json`.
 
 ### Notes
-- This release still does not introduce LLM compilation, query, lint, vector search, RAG, a database, or a JSON agent API. It creates the tracking layer needed for future `kb compile --new` behavior.
+- This release still does not introduce LLM/wiki preparation, query, lint, vector search, RAG, a database, or a JSON agent API. It creates the tracking layer needed for future `kb prepare --new` behavior.
 
 ## [0.2.0] - 2026-05-05
 
@@ -131,7 +145,7 @@ All notable changes to this project will be documented in this file.
 - Updated project README and documentation boundaries for the v0.2.0 Schema stage.
 
 ### Notes
-- This release still does not introduce LLM compilation, query, lint, vector search, RAG, a database, or a JSON agent API. It establishes the contract layer those future commands should follow.
+- This release still does not introduce LLM/wiki preparation, query, lint, vector search, RAG, a database, or a JSON agent API. It establishes the contract layer those future commands should follow.
 
 ## [0.1.4] - 2026-05-05
 

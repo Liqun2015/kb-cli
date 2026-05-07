@@ -88,7 +88,7 @@ kb --kb-path /path/to/literature-folder ingest --copy
 kb --kb-path /path/to/literature-folder extract-metadata
 kb --kb-path /path/to/literature-folder build-wiki
 kb --kb-path /path/to/literature-folder status
-kb --kb-path /path/to/literature-folder compile --new --dry-run
+kb --kb-path /path/to/literature-folder prepare --new --dry-run
 ```
 
 ## 7. Inspect manifest status
@@ -135,18 +135,18 @@ kb --kb-path /path/to/literature-folder status --json
 kb --kb-path /path/to/literature-folder status --unprocessed
 ```
 
-## 10. Plan compile work
+## 10. Plan prepare work
 
 After `status` has created `processing/manifest.json`, preview future AI wiki-maintenance work:
 
 ```bash
-kb --kb-path /path/to/literature-folder compile --new --dry-run
+kb --kb-path /path/to/literature-folder prepare --new --dry-run
 ```
 
 Write review artifacts:
 
 ```bash
-kb --kb-path /path/to/literature-folder compile --new
+kb --kb-path /path/to/literature-folder prepare --new
 ```
 
-This writes `processing/compile_queue.json` and a proposal under `processing/proposals/`. It does not call an LLM or edit `wiki/`.
+This writes `processing/prepare_queue.json` and a proposal under `processing/proposals/`. It does not call an LLM or edit `wiki/`.
