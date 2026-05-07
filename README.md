@@ -2,7 +2,7 @@
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.4.2`
+> Current version: `v0.4.3`
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, prepare Markdown pages under `wiki/` for AI maintenance, and constrain future AI maintainers through a generated `rules/` layer.
 
@@ -71,9 +71,11 @@ Until full autonomous compile is implemented, users can use the generated `proce
 
 This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, and a manifest registry under `processing/manifest.json`. It still does **not** provide full RAG, vector search, or autonomous LLM compilation. `kb compile` currently plans and documents the compile work; it does not perform LLM edits by itself.
 
-## What Changed in v0.4.2
+## What Changed in v0.4.3
 
-`v0.4.2` makes `kb compile` more directly usable as an AI handoff step. In addition to the JSON queue and human-readable compile plan, non-dry-run compile now writes a copy-paste agent prompt:
+`v0.4.3` closes the first compile loop with `kb sync-wiki`. `kb compile` can generate a queue and agent prompt; after a human or AI writes source-linked Markdown pages under `wiki/`, `kb sync-wiki` scans their YAML front matter and records the corresponding `wiki_pages` back into `processing/manifest.json`.
+
+`v0.4.2` made `kb compile` more directly usable as an AI handoff step. In addition to the JSON queue and human-readable compile plan, non-dry-run compile now writes a copy-paste agent prompt:
 
 ```text
 processing/proposals/compile_agent_prompt_<timestamp>.md
@@ -332,6 +334,7 @@ KnowledgeBase/
 | `kb build-wiki` | implemented | Generate Markdown paper/note pages and index pages. |
 | `kb status [--dry-run] [--json] [--unprocessed]` | implemented | Refresh `processing/manifest.json`, print JSON summary, or list unprocessed raw files. |
 | `kb compile [--new\|--file PATH] [--dry-run]` | implemented skeleton | Generate `processing/compile_queue.json` and reviewable compile proposals without calling an LLM. |
+| `kb sync-wiki [--dry-run] [--json]` | implemented skeleton | Read `source_ids` / `source_files` front matter from `wiki/**/*.md` and update manifest `wiki_pages`. |
 | `kb repl` | implemented | Start a simple interactive shell. |
 | `kb list-models` | implemented | List configured LLM models. |
 | `kb show-model` | implemented | Show the current model configuration. |
@@ -405,8 +408,22 @@ Each new REPL LLM request writes a `request_id` to `.model_switch_input.json`; m
 
 ## Notes for Future Agents
 
-`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM compile execution, `query`, `lint`, or full RAG exists in `v0.4.2`.
+`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM compile execution, `query`, `lint`, or full RAG exists in `v0.4.3`.
 
 ## License
 
 MIT License - see [LICENSE](LICENSE).
+
+### Sync wiki links back to manifest
+
+After an AI agent or human creates Markdown pages under `wiki/`, run:
+
+```bash
+kb --kb-path /path/to/kb sync-wiki
+```
+
+`sync-wiki` scans YAML front matter in `wiki/**/*.md`, reads `source_ids` and `source_files`, and updates `processing/manifest.json` so raw files become linked to their compiled wiki pages. Preview first with:
+
+```bash
+kb --kb-path /path/to/kb sync-wiki --dry-run
+```

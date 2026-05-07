@@ -30,6 +30,8 @@ enum Commands {
     BuildWiki,
     #[command(about = "Plan LLM compilation from raw files into wiki pages without editing wiki/ directly")]
     Compile(commands::compile::CompileArgs),
+    #[command(about = "Sync wiki page source front matter back into processing/manifest.json")]
+    SyncWiki(commands::sync_wiki::SyncWikiArgs),
     #[command(about = "Refresh manifest and show raw-file status")]
     Status(commands::manifest::StatusArgs),
     #[command(about = "Extract metadata from papers")]
@@ -68,6 +70,7 @@ fn main() -> anyhow::Result<()> {
         Some(Commands::Bootstrap(args)) => commands::ingest::execute_bootstrap(cli.kb_path.as_deref(), args),
         Some(Commands::BuildWiki) => commands::build_wiki::execute(cli.kb_path.as_deref()),
         Some(Commands::Compile(args)) => commands::compile::execute(cli.kb_path.as_deref(), args),
+        Some(Commands::SyncWiki(args)) => commands::sync_wiki::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Status(args)) => commands::manifest::execute(cli.kb_path.as_deref(), args),
         Some(Commands::ExtractMetadata { force }) => commands::extract_metadata::execute(cli.kb_path.as_deref(), *force),
         Some(Commands::Repl) => commands::repl::execute(),
@@ -86,6 +89,7 @@ fn main() -> anyhow::Result<()> {
             println!("  build-wiki                  Build wiki pages");
             println!("  compile [--new|--file PATH] [--dry-run]  Plan LLM wiki compilation");
             println!("  status [--dry-run] [--json] [--unprocessed]  Refresh manifest and show raw-file status");
+            println!("  sync-wiki [--dry-run] [--json]  Link wiki front matter back to manifest");
             println!("  list-models                 List all configured models");
             println!("  show-model                  Show current model");
             println!("  add-model                   Add a new model");

@@ -8,3 +8,4 @@ pub mod model;
 pub mod model_config;
 pub mod model_switch;
 pub mod repl;
+pub mod sync_wiki;

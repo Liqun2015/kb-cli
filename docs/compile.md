@@ -2,7 +2,7 @@
 
 `kb compile` is the first step toward LLM-maintained Markdown wiki pages.
 
-In `v0.4.2`, it is intentionally conservative:
+In `v0.4.3`, it is intentionally conservative:
 
 - it reads `processing/manifest.json`;
 - it selects raw files that appear ready for future wiki compilation;
@@ -61,3 +61,14 @@ human reviews git diff and accepts or rejects changes
 ```
 
 This keeps `raw/` immutable and keeps AI-generated Markdown changes auditable.
+
+
+## Closing the compile loop
+
+After the generated agent prompt has been used to create or update Markdown pages under `wiki/`, run:
+
+```bash
+kb --kb-path /path/to/kb sync-wiki
+```
+
+The sync step reads `source_ids` and `source_files` from wiki page front matter and writes the corresponding `wiki_pages` links back into `processing/manifest.json`.

@@ -181,7 +181,7 @@ fn build_queue(mode: &str, entries: Vec<ManifestEntry>) -> CompileQueue {
         .collect::<Vec<_>>();
 
     CompileQueue {
-        schema_version: "0.4.2".to_string(),
+        schema_version: "0.4.3".to_string(),
         generated_by: "kb-cli".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         mode: mode.to_string(),
@@ -212,6 +212,7 @@ fn compile_instructions(entry: &ManifestEntry) -> Vec<String> {
         "Read the raw source without modifying it.".to_string(),
         "Read rules/LLM_WIKI_SCHEMA.md before proposing wiki edits.".to_string(),
         "Create or update the proposed source-summary Markdown page.".to_string(),
+        "Add YAML front matter with source_ids and source_files so `kb sync-wiki` can update the manifest.".to_string(),
         "Extract durable concepts, methods, people, topics, and cross-links when supported by the source.".to_string(),
         "Preserve uncertainty and cite the raw source path instead of inventing unsupported conclusions.".to_string(),
         "Use Git diff or proposal review before accepting changes into wiki/.".to_string(),
@@ -291,6 +292,7 @@ fn write_queue_and_proposal(kb_path: &Path, queue: &CompileQueue) -> Result<()> 
         println!("  2. Copy the agent prompt into Claude Code, ChatGPT, or another knowledge agent.");
         println!("  3. Let the agent edit only wiki/ and processing/ outputs, never raw/.");
         println!("  4. Review all changes with git diff before committing.");
+        println!("  5. Run `kb sync-wiki` after accepted wiki edits.");
     }
 
     Ok(())
@@ -316,7 +318,8 @@ fn render_proposal(queue: &CompileQueue) -> String {
     out.push_str("3. Prefer small, reviewable Markdown edits.\n");
     out.push_str("4. Add Obsidian-style links such as `[[Concept Name]]` only when useful.\n");
     out.push_str("5. Preserve uncertainty and cite the raw source path.\n");
-    out.push_str("6. Let the user review changes through `git diff`.\n\n");
+    out.push_str("6. Every source-derived wiki page must include YAML front matter with `source_ids` and `source_files`.\n");
+    out.push_str("7. Let the user review changes through `git diff`, then run `kb sync-wiki`.\n\n");
 
     out.push_str("## Planned Source Items\n\n");
     for item in &queue.items {
@@ -325,6 +328,9 @@ fn render_proposal(queue: &CompileQueue) -> String {
         out.push_str(&format!("- Status: `{}`\n", item.status));
         out.push_str(&format!("- Manifest ID: `{}`\n", item.manifest_id));
         out.push_str(&format!("- Content hash: `{}`\n", item.content_hash));
+        out.push_str("- Required source front matter values:\n");
+        out.push_str(&format!("  - `source_ids`: `{}`\n", item.manifest_id));
+        out.push_str(&format!("  - `source_files`: `{}`\n", item.raw_path));
         out.push_str("- Proposed wiki pages:\n");
         for page in &item.proposed_wiki_pages {
             out.push_str(&format!("  - `{page}`\n"));
@@ -352,7 +358,9 @@ fn render_agent_prompt(queue: &CompileQueue) -> String {
     out.push_str("5. Prefer small, reviewable Markdown edits.\n");
     out.push_str("6. Preserve uncertainty; do not invent claims not supported by the source.\n");
     out.push_str("7. Add backlinks and Obsidian-style links only when they help future navigation.\n");
-    out.push_str("8. After editing, summarize every changed file and why it changed.\n\n");
+    out.push_str("8. Add YAML front matter to every source-derived page. Include both `source_ids` and `source_files`.\n");
+    out.push_str("9. After editing, summarize every changed file and why it changed.\n");
+    out.push_str("10. Tell the user to run `kb sync-wiki` after review so the manifest records the new wiki links.\n\n");
 
     out.push_str("## Compile scope\n\n");
     out.push_str(&format!("- Mode: `{}`\n", queue.mode));
@@ -371,6 +379,9 @@ fn render_agent_prompt(queue: &CompileQueue) -> String {
         out.push_str(&format!("- Status: `{}`\n", item.status));
         out.push_str(&format!("- Manifest ID: `{}`\n", item.manifest_id));
         out.push_str(&format!("- Content hash: `{}`\n", item.content_hash));
+        out.push_str("- Required source front matter values:\n");
+        out.push_str(&format!("  - `source_ids`: `{}`\n", item.manifest_id));
+        out.push_str(&format!("  - `source_files`: `{}`\n", item.raw_path));
         out.push_str("- Proposed wiki pages:\n");
         for page in &item.proposed_wiki_pages {
             out.push_str(&format!("  - `{page}`\n"));
@@ -388,7 +399,7 @@ fn render_agent_prompt(queue: &CompileQueue) -> String {
     out.push_str("2. Existing wiki pages updated.\n");
     out.push_str("3. Concepts or topics that should be reviewed by the user.\n");
     out.push_str("4. Any source files that could not be read or confidently summarized.\n");
-    out.push_str("5. Suggested next command, usually `kb lint` in a future version or `git diff` now.\n");
+    out.push_str("5. Suggested next command: `git diff`, then `kb sync-wiki` after accepted wiki edits.\n");
 
     out
 }

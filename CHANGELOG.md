@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.4.3 - Sync wiki source links back to manifest
+
+- Added `kb sync-wiki` to scan Markdown front matter under `wiki/` and update `processing/manifest.json`.
+- Wiki pages can now declare `source_ids` and `source_files` in YAML front matter.
+- Manifest entries linked to wiki pages are marked as `compiled`.
+- `kb status` now reports compiled files and `status --json` includes `compiled_files`.
+- Updated paper/concept templates and compile agent prompts to require source-linking front matter.
+- Added `docs/sync-wiki.md`.
+
 All notable changes to this project will be documented in this file.
 
 ## [0.4.2] - 2026-05-07

@@ -2,7 +2,7 @@
 
 ## Current version
 
-`kb-cli v0.4.2`
+`kb-cli v0.4.3`
 
 ## Core goal
 
@@ -70,7 +70,7 @@ background daemon
 cloud sync
 ```
 
-`compile` is implemented only as a review-first planning command in v0.4.2. It generates `processing/compile_queue.json` and `processing/proposals/compile_plan_*.md`; it does not call an LLM or edit `wiki/`. `query` and `lint` are still planned but not implemented.
+`compile` is implemented only as a review-first planning command in v0.4.3. It generates `processing/compile_queue.json` and `processing/proposals/compile_plan_*.md`; it does not call an LLM or edit `wiki/`. `query` and `lint` are still planned but not implemented.
 
 ## Safety rules for init/ingest/bootstrap
 
@@ -131,7 +131,7 @@ README and docs must describe only implemented behavior. Do not list future comm
 Compile planning work starts in v0.4.x. Small compatible improvements should increment the patch version:
 
 ```text
-0.4.0 -> 0.4.1 -> 0.4.2
+0.4.0 -> 0.4.1 -> 0.4.2 -> 0.4.3
 ```
 
 The next major implementation phase should be query/lint scaffolding after compile planning is stable.

@@ -50,6 +50,7 @@ pub struct ManifestSummary {
     pub new_files: usize,
     pub changed_files: usize,
     pub removed_files: usize,
+    pub compiled_files: usize,
     pub unprocessed_files: usize,
     pub unprocessed_paths: Vec<String>,
     pub by_kind: BTreeMap<String, usize>,
@@ -63,6 +64,7 @@ struct ManifestSummaryReport {
     new_files: usize,
     changed_files: usize,
     removed_files: usize,
+    compiled_files: usize,
     unprocessed_files: usize,
     unprocessed_paths: Vec<String>,
     by_kind: BTreeMap<String, usize>,
@@ -137,6 +139,10 @@ pub fn refresh_for_path(kb_path: &Path, dry_run: bool) -> Result<ManifestSummary
                 }
             };
 
+            if status == "compiled" && !wiki_pages.is_empty() {
+                summary.compiled_files += 1;
+            }
+
             if is_unprocessed_status(&status, &wiki_pages) {
                 summary.unprocessed_files += 1;
                 summary.unprocessed_paths.push(rel_path.clone());
@@ -176,7 +182,7 @@ pub fn refresh_for_path(kb_path: &Path, dry_run: bool) -> Result<ManifestSummary
     if !dry_run {
         fs::create_dir_all(kb_path.join("processing"))?;
         let manifest = Manifest {
-            schema_version: "0.4.0".to_string(),
+            schema_version: "0.4.3".to_string(),
             generated_by: "kb-cli".to_string(),
             updated_at: now,
             root: kb_path.display().to_string(),
@@ -196,6 +202,7 @@ pub fn print_summary(summary: &ManifestSummary, dry_run: bool) {
     println!("  new files       : {}", summary.new_files);
     println!("  changed files   : {}", summary.changed_files);
     println!("  removed files   : {}", summary.removed_files);
+    println!("  compiled        : {}", summary.compiled_files);
     println!("  unprocessed     : {}", summary.unprocessed_files);
 
     if !summary.by_kind.is_empty() {
@@ -223,6 +230,7 @@ fn print_json_summary(summary: &ManifestSummary, dry_run: bool) -> Result<()> {
         new_files: summary.new_files,
         changed_files: summary.changed_files,
         removed_files: summary.removed_files,
+        compiled_files: summary.compiled_files,
         unprocessed_files: summary.unprocessed_files,
         unprocessed_paths: summary.unprocessed_paths.clone(),
         by_kind: summary.by_kind.clone(),
@@ -297,7 +305,7 @@ fn make_entry_id(path: &str, content_hash: &str) -> String {
 }
 
 fn is_unprocessed_status(status: &str, wiki_pages: &[String]) -> bool {
-    matches!(status, "raw_registered" | "raw_changed") || (status.starts_with("raw_") && !matches!(status, "raw_missing") && wiki_pages.is_empty())
+    status != "raw_missing" && status != "compiled" && wiki_pages.is_empty()
 }
 
 pub fn hash_file(path: &Path) -> Result<String> {

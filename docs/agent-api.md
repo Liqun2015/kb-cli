@@ -1,6 +1,6 @@
 # Agent/API Boundary Notes
 
-This document records what `kb-cli v0.4.2` actually supports. It is intentionally conservative.
+This document records what `kb-cli v0.4.3` actually supports. It is intentionally conservative.
 
 ## Implemented CLI commands
 
@@ -56,7 +56,7 @@ This is cross-platform because the workflow is implemented inside the Rust CLI, 
 
 ## Manifest / Status
 
-`kb status` is implemented in v0.4.2:
+`kb status` is implemented in v0.4.3:
 
 ```bash
 kb --kb-path /path/to/kb status
@@ -75,7 +75,7 @@ The manifest is not a stable external API yet; treat it as a local project file 
 
 ## Compile planning
 
-`kb compile` is implemented in v0.4.2 as a planning command only. It may write:
+`kb compile` is implemented in v0.4.3 as a planning command only. It may write:
 
 ```text
 processing/compile_queue.json
@@ -86,7 +86,7 @@ It does not call an LLM, does not edit `wiki/`, and does not mark manifest entri
 
 ## Current non-goals
 
-Do not assume the following exist in `v0.4.2`:
+Do not assume the following exist in `v0.4.3`:
 
 ```text
 global --format json
@@ -126,3 +126,8 @@ kb --kb-path /path/to/kb bootstrap --copy
 ## Output style
 
 `kb status --json` provides a machine-readable summary. Other command outputs remain human-readable and should not be treated as a stable JSON API.
+
+
+## sync-wiki
+
+Use `kb sync-wiki --dry-run` after wiki edits to preview manifest updates, then `kb sync-wiki` to record source-to-wiki links.
