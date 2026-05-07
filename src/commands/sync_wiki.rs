@@ -14,8 +14,17 @@ pub struct SyncWikiArgs {
     #[arg(long, help = "Scan wiki/ and preview manifest updates without writing processing/manifest.json")]
     pub dry_run: bool,
 
+    #[arg(long, help = "Alias for --dry-run.")]
+    pub preview: bool,
+
     #[arg(long, help = "Print a machine-readable JSON sync summary")]
     pub json: bool,
+}
+
+impl SyncWikiArgs {
+    pub fn is_dry_run(&self) -> bool {
+        self.dry_run || self.preview
+    }
 }
 
 #[derive(Debug, Default, Serialize)]
@@ -46,7 +55,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &SyncWikiArgs) -> Result<()> {
     }
 
     let mut manifest = load_manifest(&manifest_path)?;
-    let summary = sync_manifest_from_wiki(&kb_path, &manifest_path, &mut manifest, args.dry_run)?;
+    let summary = sync_manifest_from_wiki(&kb_path, &manifest_path, &mut manifest, args.is_dry_run())?;
 
     if args.json {
         println!("{}", serde_json::to_string_pretty(&summary)?);
@@ -138,7 +147,7 @@ fn sync_manifest_from_wiki(
     summary.unmatched_sources = unmatched.into_iter().collect();
 
     if !dry_run {
-        manifest.schema_version = "0.4.4".to_string();
+        manifest.schema_version = "0.4.5".to_string();
         manifest.generated_by = "kb-cli".to_string();
         manifest.updated_at = chrono::Utc::now().to_rfc3339();
         fs::write(manifest_path, serde_json::to_string_pretty(manifest)?)?;

@@ -18,6 +18,15 @@ pub struct IngestArgs {
 
     #[arg(long, help = "Print planned ingest actions without copying or moving files.")]
     pub dry_run: bool,
+
+    #[arg(long, help = "Alias for --dry-run.")]
+    pub preview: bool,
+}
+
+impl IngestArgs {
+    pub fn is_dry_run(&self) -> bool {
+        self.dry_run || self.preview
+    }
 }
 
 #[derive(Debug, Clone, Args)]
@@ -144,7 +153,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &IngestArgs) -> Result<()> {
             IngestMode::Copy => "copy",
             IngestMode::Move => "move",
         },
-        if args.dry_run { " (dry run)" } else { "" }
+        if args.is_dry_run() { " (dry run)" } else { "" }
     );
     println!("Recursive: {}", if args.recursive { "yes" } else { "no" });
 
@@ -186,7 +195,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &IngestArgs) -> Result<()> {
 
         println!("  {} -> {}", file.display(), relative_dest.display());
 
-        if !args.dry_run {
+        if !args.is_dry_run() {
             match mode {
                 IngestMode::Copy => {
                     fs::copy(&file, &dest_path)?;
@@ -203,9 +212,9 @@ pub fn execute(custom_kb: Option<&Path>, args: &IngestArgs) -> Result<()> {
         summary.record(kind);
     }
 
-    summary.print(args.dry_run);
+    summary.print(args.is_dry_run());
 
-    if args.dry_run {
+    if args.is_dry_run() {
         println!("\nDry run: manifest not refreshed.");
     } else {
         let manifest_summary = crate::commands::manifest::refresh_for_path(&kb_path, false)?;
@@ -228,7 +237,7 @@ pub fn execute_bootstrap(custom_kb: Option<&Path>, args: &BootstrapArgs) -> Resu
         println!("\nRunning ingest...");
         execute(custom_kb, &args.ingest)?;
 
-        if args.ingest.dry_run {
+        if args.ingest.is_dry_run() {
             println!("\nDry run complete. Skipping metadata extraction and wiki build.");
             return Ok(());
         }

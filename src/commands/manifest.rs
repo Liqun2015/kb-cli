@@ -13,11 +13,20 @@ pub struct StatusArgs {
     #[arg(long, help = "Scan raw/ and print status without writing processing/manifest.json")]
     pub dry_run: bool,
 
+    #[arg(long, help = "Alias for --dry-run.")]
+    pub preview: bool,
+
     #[arg(long, help = "Print a machine-readable JSON status summary")]
     pub json: bool,
 
     #[arg(long, help = "Print raw files that are not yet compiled into wiki pages")]
     pub unprocessed: bool,
+}
+
+impl StatusArgs {
+    pub fn is_dry_run(&self) -> bool {
+        self.dry_run || self.preview
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -74,14 +83,14 @@ struct ManifestSummaryReport {
 
 pub fn execute(custom_kb: Option<&Path>, args: &StatusArgs) -> Result<()> {
     let kb_path = crate::commands::init::get_kb_path(custom_kb);
-    let summary = refresh_for_path(&kb_path, args.dry_run)?;
+    let summary = refresh_for_path(&kb_path, args.is_dry_run())?;
 
     if args.json {
-        print_json_summary(&summary, args.dry_run)?;
+        print_json_summary(&summary, args.is_dry_run())?;
     } else if args.unprocessed {
         print_unprocessed(&summary);
     } else {
-        print_summary(&summary, args.dry_run);
+        print_summary(&summary, args.is_dry_run());
     }
 
     Ok(())
@@ -182,7 +191,7 @@ pub fn refresh_for_path(kb_path: &Path, dry_run: bool) -> Result<ManifestSummary
     if !dry_run {
         fs::create_dir_all(kb_path.join("processing"))?;
         let manifest = Manifest {
-            schema_version: "0.4.4".to_string(),
+            schema_version: "0.4.5".to_string(),
             generated_by: "kb-cli".to_string(),
             updated_at: now,
             root: kb_path.display().to_string(),

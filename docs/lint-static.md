@@ -14,8 +14,12 @@ outputs/reports/lint_static_<timestamp>.md
 # Write a Markdown lint report
 kb --kb-path /path/to/kb lint-static
 
-# Preview without writing a report
+# Check without writing a report
+kb --kb-path /path/to/kb lint-static --no-report
+
+# Equivalent inspection aliases
 kb --kb-path /path/to/kb lint-static --dry-run
+kb --kb-path /path/to/kb lint-static --preview
 
 # Machine-readable summary
 kb --kb-path /path/to/kb lint-static --json
@@ -23,6 +27,8 @@ kb --kb-path /path/to/kb lint-static --json
 # CI/script mode: fail when issues are found
 kb --kb-path /path/to/kb lint-static --strict
 ```
+
+`--dry-run` remains supported. `--preview` is a general inspection alias. For `lint-static`, `--no-report` is the clearest wording when the only skipped write is the Markdown report file.
 
 ## Checks
 
@@ -42,6 +48,12 @@ The current static lint pass checks:
 
 5. **Duplicate titles**  
    Multiple pages use the same first-level heading or inferred title.
+
+## v0.4.5 consistency note
+
+`kb build-wiki` now generates source front matter for paper and note pages. A freshly generated source-derived page should not be reported as missing source information merely because it was created by the CLI.
+
+Generated placeholder links that previously caused guaranteed broken-link noise, such as `[[Concept Placeholder]]`, `[[Topic Placeholder]]`, and `[[LLM_WIKI_SCHEMA]]`, are no longer emitted by `build-wiki`.
 
 ## Intended workflow
 

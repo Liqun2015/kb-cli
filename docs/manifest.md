@@ -1,6 +1,6 @@
 # Manifest Tracking
 
-`kb-cli v0.4.4` maintains a lightweight raw-file registry:
+`kb-cli v0.4.5` maintains a lightweight raw-file registry:
 
 ```text
 processing/manifest.json
@@ -21,6 +21,7 @@ kb --kb-path /path/to/kb status
 kb --kb-path /path/to/kb status --json
 kb --kb-path /path/to/kb status --unprocessed
 kb --kb-path /path/to/kb status --dry-run
+kb --kb-path /path/to/kb status --preview
 ```
 
 ## What It Tracks

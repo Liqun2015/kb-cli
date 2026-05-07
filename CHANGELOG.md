@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.4.5 - Build/lint consistency polish
+
+- Kept `--dry-run` and added `--preview` as an equivalent inspection alias for dry-run-capable commands.
+- Added `kb lint-static --no-report` as a clearer alias for checking without writing `outputs/reports/lint_static_*.md`.
+- Updated `kb build-wiki` so generated paper and note pages include YAML source front matter.
+- Generated paper/note pages now include `source_files`, and include `source_ids` when a matching manifest entry is available.
+- Removed generated placeholder WikiLinks that caused avoidable broken-link noise, including `[[Concept Placeholder]]`, `[[Topic Placeholder]]`, and `[[LLM_WIKI_SCHEMA]]`.
+- Bumped schema/version markers to `0.4.5` and updated README/docs.
+
 ## v0.4.4 - Static wiki lint
 
 - Added `kb lint-static` for deterministic Markdown health checks under `wiki/`.

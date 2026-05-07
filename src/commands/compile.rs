@@ -21,8 +21,17 @@ pub struct CompileArgs {
     #[arg(long, help = "Preview the compile plan without writing processing/compile_queue.json or a proposal file.")]
     pub dry_run: bool,
 
+    #[arg(long, help = "Alias for --dry-run.")]
+    pub preview: bool,
+
     #[arg(long, help = "Do not refresh processing/manifest.json before planning. Non-dry-run compile refreshes it by default.")]
     pub no_refresh: bool,
+}
+
+impl CompileArgs {
+    pub fn is_dry_run(&self) -> bool {
+        self.dry_run || self.preview
+    }
 }
 
 #[derive(Debug, Serialize)]
@@ -57,7 +66,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &CompileArgs) -> Result<()> {
         ));
     }
 
-    if !args.dry_run && !args.no_refresh {
+    if !args.is_dry_run() && !args.no_refresh {
         println!("Refreshing manifest before compile planning...");
         crate::commands::manifest::refresh_for_path(&kb_path, false)?;
     }
@@ -67,7 +76,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &CompileArgs) -> Result<()> {
     let selected = select_entries(&kb_path, manifest.entries, args)?;
     let queue = build_queue(mode, selected);
 
-    if args.dry_run {
+    if args.is_dry_run() {
         print_queue_preview(&queue);
         println!("\nDry run: no compile queue or proposal file was written.");
         return Ok(());
@@ -181,7 +190,7 @@ fn build_queue(mode: &str, entries: Vec<ManifestEntry>) -> CompileQueue {
         .collect::<Vec<_>>();
 
     CompileQueue {
-        schema_version: "0.4.4".to_string(),
+        schema_version: "0.4.5".to_string(),
         generated_by: "kb-cli".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         mode: mode.to_string(),

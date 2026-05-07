@@ -2,7 +2,7 @@
 
 `kb compile` is the first step toward LLM-maintained Markdown wiki pages.
 
-In `v0.4.4`, it is intentionally conservative:
+In `v0.4.5`, it is intentionally conservative:
 
 - it reads `processing/manifest.json`;
 - it selects raw files that appear ready for future wiki compilation;
@@ -17,6 +17,7 @@ In `v0.4.4`, it is intentionally conservative:
 ```bash
 kb --kb-path /path/to/kb status
 kb --kb-path /path/to/kb compile --new --dry-run
+kb --kb-path /path/to/kb compile --new --preview
 kb --kb-path /path/to/kb compile --new
 ```
 

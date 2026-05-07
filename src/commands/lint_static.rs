@@ -13,11 +13,23 @@ pub struct LintStaticArgs {
     #[arg(long, help = "Preview lint results without writing outputs/reports/lint_static_*.md")]
     pub dry_run: bool,
 
+    #[arg(long, help = "Alias for --dry-run.")]
+    pub preview: bool,
+
+    #[arg(long = "no-report", help = "Alias for --dry-run in lint-static: check only, do not write a report file.")]
+    pub no_report: bool,
+
     #[arg(long, help = "Print a machine-readable JSON lint summary")]
     pub json: bool,
 
     #[arg(long, help = "Return a non-zero exit code when static lint issues are found")]
     pub strict: bool,
+}
+
+impl LintStaticArgs {
+    pub fn is_dry_run(&self) -> bool {
+        self.dry_run || self.preview || self.no_report
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -78,11 +90,11 @@ pub fn execute(custom_kb: Option<&Path>, args: &LintStaticArgs) -> Result<()> {
 
     let mut report = run_lint(&kb_path)?;
 
-    if !args.dry_run {
+    if !args.is_dry_run() {
         let report_path = write_report(&kb_path, &report)?;
         report.report_path = Some(report_path.display().to_string());
     }
-    report.dry_run = args.dry_run;
+    report.dry_run = args.is_dry_run();
 
     if args.json {
         println!("{}", serde_json::to_string_pretty(&report)?);
@@ -194,7 +206,7 @@ fn run_lint(kb_path: &Path) -> Result<LintStaticReport> {
     duplicate_titles.sort_by(|a, b| a.title.cmp(&b.title));
 
     Ok(LintStaticReport {
-        schema_version: "0.4.4".to_string(),
+        schema_version: "0.4.5".to_string(),
         generated_by: "kb-cli".to_string(),
         generated_at,
         pages_scanned: pages.len(),

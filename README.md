@@ -2,7 +2,7 @@
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.4.4`
+> Current version: `v0.4.5`
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, prepare Markdown pages under `wiki/` for AI maintenance, and constrain future AI maintainers through a generated `rules/` layer.
 
@@ -75,6 +75,30 @@ Until full autonomous compile is implemented, users can use the generated `proce
 ## Current Scope
 
 This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, and a manifest registry under `processing/manifest.json`. It still does **not** provide full RAG, vector search, or autonomous LLM compilation. `kb compile` currently plans and documents the compile work; it does not perform LLM edits by itself.
+
+## What Changed in v0.4.5
+
+`v0.4.5` is a small consistency release before `v0.5.0`. It does not add query, vector search, embeddings, RAG, or autonomous LLM execution. The goal is to make the existing build/sync/lint loop more self-consistent and less noisy.
+
+Main changes:
+
+- `kb build-wiki` now writes YAML source front matter on generated `wiki/papers/*.md` and `wiki/notes/*.md` pages.
+- Generated source-derived pages include `source_files`, and include `source_ids` when a matching manifest entry is available.
+- Generated placeholder WikiLinks such as `[[Concept Placeholder]]`, `[[Topic Placeholder]]`, and `[[LLM_WIKI_SCHEMA]]` were removed to avoid guaranteed broken-link noise.
+- `--dry-run` remains supported.
+- `--preview` is available as an equivalent inspection alias for dry-run-capable commands.
+- `kb lint-static --no-report` is available as a clearer alias for checking without writing `outputs/reports/lint_static_*.md`.
+
+Useful lint commands:
+
+```bash
+kb --kb-path /path/to/kb lint-static
+kb --kb-path /path/to/kb lint-static --no-report
+kb --kb-path /path/to/kb lint-static --dry-run
+kb --kb-path /path/to/kb lint-static --preview
+kb --kb-path /path/to/kb lint-static --json
+kb --kb-path /path/to/kb lint-static --strict
+```
 
 ## What Changed in v0.4.4
 
@@ -264,7 +288,7 @@ kb --kb-path /path/to/kb ingest --move
 kb --kb-path /path/to/kb ingest --copy --recursive
 
 # Preview planned actions without copying or moving
-kb --kb-path /path/to/kb ingest --copy --dry-run
+kb --kb-path /path/to/kb ingest --dry-run
 ```
 
 Useful bootstrap modes:
@@ -348,14 +372,14 @@ KnowledgeBase/
 | Command | Status | Purpose |
 |---|---:|---|
 | `kb init [--force]` | implemented | Create the local LLM Wiki structure and generated rules layer. |
-| `kb ingest [--copy\|--move] [--recursive] [--dry-run]` | implemented | Organize source files into `raw/` subfolders. |
-| `kb bootstrap [--copy\|--move]` | implemented | Run `init + ingest + extract-metadata + build-wiki`. |
+| `kb ingest [--copy\|--move] [--recursive] [--dry-run\|--preview]` | implemented | Organize source files into `raw/` subfolders. |
+| `kb bootstrap [--copy\|--move] [--dry-run\|--preview]` | implemented | Run `init + ingest + extract-metadata + build-wiki`. |
 | `kb extract-metadata [--force]` | implemented | Extract basic metadata from PDFs under `raw/papers/`. |
 | `kb build-wiki` | implemented | Generate Markdown paper/note pages and index pages. |
-| `kb status [--dry-run] [--json] [--unprocessed]` | implemented | Refresh `processing/manifest.json`, print JSON summary, or list unprocessed raw files. |
-| `kb compile [--new\|--file PATH] [--dry-run]` | implemented skeleton | Generate `processing/compile_queue.json` and reviewable compile proposals without calling an LLM. |
-| `kb sync-wiki [--dry-run] [--json]` | implemented skeleton | Read `source_ids` / `source_files` front matter from `wiki/**/*.md` and update manifest `wiki_pages`. |
-| `kb lint-static [--dry-run] [--json] [--strict]` | implemented skeleton | Check broken WikiLinks, orphan pages, missing source front matter, empty pages, and duplicate titles. |
+| `kb status [--dry-run\|--preview] [--json] [--unprocessed]` | implemented | Refresh `processing/manifest.json`, print JSON summary, or list unprocessed raw files. |
+| `kb compile [--new\|--file PATH] [--dry-run\|--preview]` | implemented skeleton | Generate `processing/compile_queue.json` and reviewable compile proposals without calling an LLM. |
+| `kb sync-wiki [--dry-run\|--preview] [--json]` | implemented skeleton | Read `source_ids` / `source_files` front matter from `wiki/**/*.md` and update manifest `wiki_pages`. |
+| `kb lint-static [--dry-run\|--preview\|--no-report] [--json] [--strict]` | implemented skeleton | Check broken WikiLinks, orphan pages, missing source front matter, empty pages, and duplicate titles. |
 | `kb repl` | implemented | Start a simple interactive shell. |
 | `kb list-models` | implemented | List configured LLM models. |
 | `kb show-model` | implemented | Show the current model configuration. |
@@ -429,7 +453,7 @@ Each new REPL LLM request writes a `request_id` to `.model_switch_input.json`; m
 
 ## Notes for Future Agents
 
-`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM compile execution, `query`, semantic LLM lint, or full RAG exists in `v0.4.4`.
+`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM compile execution, `query`, semantic LLM lint, or full RAG exists in `v0.4.5`.
 
 ## License
 
@@ -447,6 +471,8 @@ kb --kb-path /path/to/kb sync-wiki
 
 ```bash
 kb --kb-path /path/to/kb sync-wiki --dry-run
+# Equivalent preview alias:
+kb --kb-path /path/to/kb sync-wiki --preview
 ```
 
 
@@ -458,10 +484,13 @@ After `sync-wiki`, run a structural health check:
 kb --kb-path /path/to/kb lint-static
 ```
 
-Preview without writing a report:
+Check without writing a report:
 
 ```bash
+kb --kb-path /path/to/kb lint-static --no-report
+# Equivalent aliases:
 kb --kb-path /path/to/kb lint-static --dry-run
+kb --kb-path /path/to/kb lint-static --preview
 ```
 
 The report is saved under:

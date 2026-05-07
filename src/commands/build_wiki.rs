@@ -1,7 +1,10 @@
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
 
 use anyhow::Result;
+
+use crate::commands::manifest::Manifest;
 
 #[derive(Debug, serde::Deserialize)]
 struct PaperMetadata {
@@ -38,6 +41,8 @@ pub fn execute(custom_kb: Option<&Path>) -> Result<()> {
         }
     }
 
+    let manifest_lookup = load_manifest_lookup(&kb_path).unwrap_or_default();
+
     // 1. Build paper pages from metadata.
     let metadata_path = kb_path.join("logs/papers_metadata.json");
     if metadata_path.exists() {
@@ -46,7 +51,7 @@ pub fn execute(custom_kb: Option<&Path>) -> Result<()> {
 
         println!("\nGenerating paper pages...");
         for paper in &papers {
-            generate_paper_page(&kb_path, paper)?;
+            generate_paper_page(&kb_path, paper, &manifest_lookup)?;
         }
         println!("Generated {} paper pages", papers.len());
 
@@ -56,7 +61,7 @@ pub fn execute(custom_kb: Option<&Path>) -> Result<()> {
     }
 
     // 2. Build note pages from raw/notes.
-    build_note_pages(&kb_path)?;
+    build_note_pages(&kb_path, &manifest_lookup)?;
 
     // 3. Generate indexes.
     generate_concepts_index(&kb_path)?;
@@ -68,7 +73,7 @@ pub fn execute(custom_kb: Option<&Path>) -> Result<()> {
     Ok(())
 }
 
-fn generate_paper_page(kb_path: &Path, paper: &PaperMetadata) -> Result<()> {
+fn generate_paper_page(kb_path: &Path, paper: &PaperMetadata, manifest_lookup: &BTreeMap<String, String>) -> Result<()> {
     let title = paper
         .title
         .as_ref()
@@ -86,8 +91,11 @@ fn generate_paper_page(kb_path: &Path, paper: &PaperMetadata) -> Result<()> {
         .map(|d| format!("DOI: [{}](https://doi.org/{})", d, d))
         .unwrap_or_else(|| "N/A".to_string());
 
+    let source_path = format!("raw/papers/{}", paper.filename.as_str());
+    let front_matter = source_front_matter("paper", &source_path, manifest_lookup.get(&source_path).map(|s| s.as_str()));
+
     let content = format!(
-        r#"# {title}
+        r#"{front_matter}# {title}
 
 ## Metadata
 
@@ -109,12 +117,13 @@ fn generate_paper_page(kb_path: &Path, paper: &PaperMetadata) -> Result<()> {
 
 ## Related Concepts
 
-- [[Concept Placeholder]]
+Add links to concrete concept pages after the paper has been reviewed.
 
 ## Reading Notes
 
 *Add your reading notes here.*
 "#,
+        front_matter = front_matter,
         title = title,
         filename = paper.filename.as_str(),
         authors = authors,
@@ -128,7 +137,7 @@ fn generate_paper_page(kb_path: &Path, paper: &PaperMetadata) -> Result<()> {
     Ok(())
 }
 
-fn build_note_pages(kb_path: &Path) -> Result<()> {
+fn build_note_pages(kb_path: &Path, manifest_lookup: &BTreeMap<String, String>) -> Result<()> {
     let notes_dir = kb_path.join("raw/notes");
 
     if !notes_dir.exists() {
@@ -151,8 +160,17 @@ fn build_note_pages(kb_path: &Path) -> Result<()> {
             .unwrap_or("Unknown")
             .to_string();
 
+        let source_path = relative_path_string(kb_path, path);
+        let front_matter = source_front_matter("note", &source_path, manifest_lookup.get(&source_path).map(|s| s.as_str()));
+        let note_display_path = path
+            .strip_prefix(&notes_dir)
+            .unwrap_or(path)
+            .to_str()
+            .unwrap_or("")
+            .replace('\\', "/");
+
         let content = format!(
-            r#"# {filename}
+            r#"{front_matter}# {filename}
 
 ## File Info
 
@@ -170,12 +188,9 @@ fn build_note_pages(kb_path: &Path) -> Result<()> {
 
 *Add your notes here.*
 "#,
+            front_matter = front_matter,
             filename = filename,
-            rel_path = path
-                .strip_prefix(&notes_dir)
-                .unwrap_or(path)
-                .to_str()
-                .unwrap_or(""),
+            rel_path = note_display_path,
             file_type = path
                 .extension()
                 .and_then(|s| s.to_str())
@@ -222,7 +237,7 @@ This page is a neutral starting point for concepts compiled from local source ma
 
 ## Core Concepts
 
-- [[Concept Placeholder]]
+No concrete concept pages have been linked yet.
 
 ## Candidate Concepts
 
@@ -286,7 +301,7 @@ Topics are higher-level collections that group papers, notes, and concepts.
 
 ## Candidate Topics
 
-- [[Topic Placeholder]]
+No concrete topic pages have been linked yet.
 
 ## Suggested Workflow
 
@@ -336,9 +351,11 @@ Welcome to your local Markdown LLM Wiki.
 - `wiki/` stores the AI-maintained Markdown encyclopedia.
 - `rules/` stores the operating contract for future AI maintainers.
 
-Before asking an AI agent to edit the Wiki, review:
+Before asking an AI agent to edit the Wiki, review the schema file at:
 
-- [[LLM_WIKI_SCHEMA|LLM Wiki Schema]]
+```text
+rules/LLM_WIKI_SCHEMA.md
+```
 
 ## Running the CLI
 
@@ -443,6 +460,53 @@ The REPL writes LLM requests to `.model_switch_input.json`. External model-switc
 
     println!("Generated main index and Home.md");
     Ok(())
+}
+
+
+fn load_manifest_lookup(kb_path: &Path) -> Result<BTreeMap<String, String>> {
+    let manifest_path = kb_path.join("processing/manifest.json");
+    if !manifest_path.exists() {
+        return Ok(BTreeMap::new());
+    }
+
+    let content = fs::read_to_string(&manifest_path)?;
+    let manifest: Manifest = serde_json::from_str(&content)?;
+    Ok(manifest
+        .entries
+        .into_iter()
+        .map(|entry| (entry.path, entry.id))
+        .collect())
+}
+
+fn source_front_matter(page_type: &str, source_path: &str, source_id: Option<&str>) -> String {
+    let mut out = String::new();
+    out.push_str("---\n");
+    out.push_str(&format!("page_type: {}\n", page_type));
+    out.push_str("source_files:\n");
+    out.push_str(&format!("  - {}\n", yaml_quote(source_path)));
+
+    if let Some(source_id) = source_id {
+        out.push_str("source_ids:\n");
+        out.push_str(&format!("  - {}\n", yaml_quote(source_id)));
+    }
+
+    out.push_str("status: compiled\n");
+    out.push_str("generated_by: kb build-wiki\n");
+    out.push_str("---\n\n");
+    out
+}
+
+fn yaml_quote(value: &str) -> String {
+    format!("\"{}\"", value.replace('\\', "\\\\").replace('"', "\\\""))
+}
+
+fn relative_path_string(kb_path: &Path, path: &Path) -> String {
+    path.strip_prefix(kb_path)
+        .unwrap_or(path)
+        .components()
+        .map(|component| component.as_os_str().to_string_lossy().to_string())
+        .collect::<Vec<_>>()
+        .join("/")
 }
 
 fn count_md_files(dir: &Path) -> usize {

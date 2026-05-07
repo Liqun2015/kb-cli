@@ -25,10 +25,11 @@ status: compiled
 
 ```bash
 kb --kb-path /path/to/kb sync-wiki --dry-run
+kb --kb-path /path/to/kb sync-wiki --preview
 kb --kb-path /path/to/kb sync-wiki
 kb --kb-path /path/to/kb sync-wiki --json
 ```
 
 ## Safety
 
-The command never edits `raw/` or `wiki/`. It only updates `processing/manifest.json` unless `--dry-run` is used.
+The command never edits `raw/` or `wiki/`. It only updates `processing/manifest.json` unless `--dry-run` or `--preview` is used.
