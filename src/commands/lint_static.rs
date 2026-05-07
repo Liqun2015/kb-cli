@@ -206,7 +206,7 @@ fn run_lint(kb_path: &Path) -> Result<LintStaticReport> {
     duplicate_titles.sort_by(|a, b| a.title.cmp(&b.title));
 
     Ok(LintStaticReport {
-        schema_version: "0.4.6".to_string(),
+        schema_version: "0.4.7".to_string(),
         generated_by: "kb-cli".to_string(),
         generated_at,
         pages_scanned: pages.len(),

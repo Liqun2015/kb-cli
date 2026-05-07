@@ -190,7 +190,7 @@ fn build_queue(mode: &str, entries: Vec<ManifestEntry>) -> PrepareQueue {
         .collect::<Vec<_>>();
 
     PrepareQueue {
-        schema_version: "0.4.6.1".to_string(),
+        schema_version: "0.4.7".to_string(),
         generated_by: "kb-cli prepare".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         mode: mode.to_string(),

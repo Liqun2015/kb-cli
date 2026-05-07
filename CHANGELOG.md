@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.4.7 - Cross-platform quickstart polish
+
+- Added `docs/unix-quickstart.md` for macOS/Linux users.
+- Added `docs/platform-notes.md` to document path syntax, shell differences, wrapper-script policy, and release smoke-test expectations.
+- Added `scripts/build_llm_wiki.sh` as a thin Unix shell helper around the Rust CLI bootstrap flow.
+- Rewrote `docs/cross-platform-quickstart.md` so Windows and Unix examples are both first-class.
+- Updated Windows and core docs to point to the cross-platform documentation set.
+- Bumped Cargo package version and schema/version markers to `0.4.7`.
+- No query, vector search, embeddings, RAG, or autonomous LLM execution was added.
+
 ## v0.4.6.2 - Prepare-only documentation polish
 
 - Updated README and docs so the review-first planning step is documented only as `kb prepare`.

@@ -8,7 +8,7 @@ It does **not** call an LLM, does **not** modify `raw/`, and does **not** rewrit
 outputs/reports/lint_static_<timestamp>.md
 ```
 
-Current version: `v0.4.6`
+Current version: `v0.4.7`
 
 ## Commands
 
@@ -89,9 +89,9 @@ raw_files
 
 `kb build-wiki` now emits this front matter for generated paper and note pages. Manually created concept, topic, method, comparison, timeline, and question pages should also carry source references when they are derived from source materials.
 
-## v0.4.6 testing note
+## Testing note
 
-`v0.4.6` adds regression tests for the most fragile lint behavior:
+The current regression tests cover the most fragile lint behavior:
 
 ```text
 WikiLink target cleaning

@@ -2,10 +2,10 @@
 
 `kb prepare` is the first step toward LLM-maintained Markdown wiki pages.
 
-In `v0.4.6`, it is intentionally conservative:
+In `v0.4.7`, it is intentionally conservative:
 
 - it reads `processing/manifest.json`;
-- it selects raw files that appear ready for future wiki compilation;
+- it selects raw files that appear ready for future wiki writing;
 - it writes `processing/prepare_queue.json`;
 - it writes a reviewable Markdown proposal under `processing/proposals/`;
 - it writes a copy-paste LLM agent prompt under `processing/proposals/`;

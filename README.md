@@ -1,11 +1,10 @@
 # kb-cli
 
-> **v0.4.6.2 note:** User-facing documentation now uses only `kb prepare` for the review-first planning step. Cargo metadata uses `0.4.6-2` for SemVer compatibility; the release package is labeled `v0.4.6.2`.
-
+> **v0.4.7 note:** Cross-platform onboarding is now balanced across Windows, macOS, and Linux. This release adds a Unix quick start, a platform-notes document, and a thin `scripts/build_llm_wiki.sh` helper.
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.4.6.2`
+> Current version: `v0.4.7`
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, prepare Markdown pages under `wiki/` for AI maintenance, and constrain future AI maintainers through a generated `rules/` layer.
 
@@ -75,13 +74,53 @@ kb lint-static
 
 Until full autonomous prepare is implemented, users can use the generated `processing/proposals/prepare_plan_*.md` and `processing/proposals/prepare_agent_prompt_*.md` files plus the generated `rules/` files as instructions for Claude Code, ChatGPT, or another coding/knowledge agent to update the Markdown wiki manually under Git review.
 
+## Platform Quick Starts
+
+Use the guide that matches your shell:
+
+```text
+docs/windows-quickstart.md      PowerShell and .bat helper
+docs/unix-quickstart.md         macOS/Linux bash or zsh
+docs/cross-platform-quickstart.md  Shared command flow
+docs/platform-notes.md          Path and wrapper-script policy
+```
+
 ## Current Scope
 
 This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, and a manifest registry under `processing/manifest.json`. It still does **not** provide full RAG, vector search, or autonomous LLM/wiki preparation. `kb prepare` currently plans and documents the prepare work; it does not perform LLM edits by itself.
 
+## What Changed in v0.4.7
+
+`v0.4.7` is a cross-platform documentation stabilization release before `v0.5.0`. It deliberately does not add query, vector search, embeddings, RAG, or autonomous LLM execution. The goal is to make the same local Wiki workflow easy to run on Windows, macOS, and Linux.
+
+Main changes:
+
+- Added `docs/unix-quickstart.md` for macOS/Linux users.
+- Added `docs/platform-notes.md` to define how platform differences should be handled.
+- Added `scripts/build_llm_wiki.sh` as a thin Unix shell wrapper around the Rust CLI.
+- Updated `docs/cross-platform-quickstart.md` so Windows and Unix paths are both first-class examples.
+- Updated `docs/windows-quickstart.md` to align with the v0.4.7 cross-platform documentation set.
+- Kept the Rust core workflow unchanged.
+
+Quick-start documents:
+
+```text
+docs/windows-quickstart.md
+docs/unix-quickstart.md
+docs/cross-platform-quickstart.md
+docs/platform-notes.md
+```
+
+Recommended macOS/Linux helper usage:
+
+```bash
+chmod +x scripts/build_llm_wiki.sh
+scripts/build_llm_wiki.sh "$HOME/github/LLM-wiki/quantum"
+```
+
 ## What Changed in v0.4.6.2
 
-`v0.4.6.2` is a documentation polish release before `v0.5.0`. It does not add query, vector search, embeddings, RAG, or autonomous LLM execution. Its purpose is to keep the user-facing workflow language focused on `prepare`.
+`v0.4.6.2` was a documentation polish release before `v0.5.0`. It did not add query, vector search, embeddings, RAG, or autonomous LLM execution. Its purpose was to keep the user-facing workflow language focused on `prepare`.
 
 Main changes:
 
@@ -90,7 +129,7 @@ Main changes:
   - `processing/prepare_queue.json`
   - `processing/proposals/prepare_plan_<timestamp>.md`
   - `processing/proposals/prepare_agent_prompt_<timestamp>.md`
-- Cargo metadata uses `0.4.6-2` for SemVer compatibility, while the release package is labeled `v0.4.6.2`.
+- Cargo metadata used `0.4.6-2` for SemVer compatibility, while the release package was labeled `v0.4.6.2`.
 
 Recommended command:
 
@@ -99,6 +138,7 @@ kb prepare --new --dry-run
 kb prepare --new
 kb prepare --file raw/papers/example.pdf
 ```
+
 
 
 ## What Changed in v0.4.6
@@ -524,7 +564,7 @@ Each new REPL LLM request writes a `request_id` to `.model_switch_input.json`; m
 
 ## Notes for Future Agents
 
-`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM prepare execution, `query`, semantic LLM lint, or full RAG exists in `v0.4.6.2`.
+`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM prepare execution, `query`, semantic LLM lint, or full RAG exists in `v0.4.7`.
 
 ## License
 

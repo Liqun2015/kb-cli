@@ -1,6 +1,12 @@
 # Cross-Platform Quick Start
 
-This guide works on Windows, macOS, Linux, and Unix-like systems because the core workflow is now implemented inside the Rust CLI.
+This guide gives the shared workflow. For platform-specific details, see:
+
+- `docs/windows-quickstart.md`
+- `docs/unix-quickstart.md`
+- `docs/platform-notes.md`
+
+Current version: `v0.4.7`
 
 ## 1. Install `kb`
 
@@ -64,6 +70,12 @@ rules/LINT_POLICY.md
 kb --kb-path /path/to/literature-folder bootstrap --copy --dry-run
 ```
 
+`--preview` is an equivalent alias where dry-run behavior is supported:
+
+```bash
+kb --kb-path /path/to/literature-folder bootstrap --copy --preview
+```
+
 ## 4. Move instead of copy
 
 Only use this when you intentionally want to reorganize the folder:
@@ -78,7 +90,7 @@ kb --kb-path /path/to/literature-folder bootstrap --move
 kb --kb-path /path/to/literature-folder bootstrap --copy --recursive
 ```
 
-Recursive mode skips managed/generated folders including `raw`, `wiki`, `processing`, `references`, `outputs`, `logs`, `.git`, `.obsidian`, and `target`.
+Recursive mode skips managed/generated folders including `raw`, `wiki`, `processing`, `references`, `outputs`, `logs`, `.git`, `.obsidian`, `target`, and `node_modules`.
 
 ## 6. Manual workflow
 
@@ -95,6 +107,8 @@ kb --kb-path /path/to/literature-folder prepare --new --dry-run
 
 ```bash
 kb --kb-path /path/to/literature-folder status
+kb --kb-path /path/to/literature-folder status --json
+kb --kb-path /path/to/literature-folder status --unprocessed
 ```
 
 The manifest is written to:
@@ -103,7 +117,39 @@ The manifest is written to:
 /path/to/literature-folder/processing/manifest.json
 ```
 
-## 8. Open in Obsidian
+## 8. Plan prepare work
+
+After `status` has created `processing/manifest.json`, preview future AI/human wiki-maintenance work:
+
+```bash
+kb --kb-path /path/to/literature-folder prepare --new --dry-run
+```
+
+Write review artifacts:
+
+```bash
+kb --kb-path /path/to/literature-folder prepare --new
+```
+
+This writes `processing/prepare_queue.json` and proposal files under `processing/proposals/`. It does not call an LLM or edit `wiki/`.
+
+## 9. Close the review loop
+
+After a human or AI has edited Markdown pages under `wiki/`, run:
+
+```bash
+kb --kb-path /path/to/literature-folder sync-wiki --dry-run
+kb --kb-path /path/to/literature-folder sync-wiki
+kb --kb-path /path/to/literature-folder lint-static
+```
+
+For linting without writing a report:
+
+```bash
+kb --kb-path /path/to/literature-folder lint-static --no-report
+```
+
+## 10. Open in Obsidian
 
 Open the target folder itself, not only `wiki/`:
 
@@ -117,36 +163,8 @@ The home page will be generated at:
 /path/to/literature-folder/wiki/Home.md
 ```
 
-## 9. Review the rules layer
-
-Before asking an AI agent to maintain the Wiki, open:
+Before asking an AI agent to maintain the Wiki, review:
 
 ```text
 /path/to/literature-folder/rules/LLM_WIKI_SCHEMA.md
 ```
-
-This file is the operating contract for future AI updates to `wiki/`.
-
-
-Manifest inspection examples:
-
-```bash
-kb --kb-path /path/to/literature-folder status --json
-kb --kb-path /path/to/literature-folder status --unprocessed
-```
-
-## 10. Plan prepare work
-
-After `status` has created `processing/manifest.json`, preview future AI wiki-maintenance work:
-
-```bash
-kb --kb-path /path/to/literature-folder prepare --new --dry-run
-```
-
-Write review artifacts:
-
-```bash
-kb --kb-path /path/to/literature-folder prepare --new
-```
-
-This writes `processing/prepare_queue.json` and a proposal under `processing/proposals/`. It does not call an LLM or edit `wiki/`.

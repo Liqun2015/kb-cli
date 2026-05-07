@@ -1,0 +1,77 @@
+# Platform Notes
+
+`kb-cli` is designed so the Rust CLI stays cross-platform and the platform-specific differences stay in documentation and small wrapper scripts.
+
+Current version: `v0.4.7`
+
+## Core policy
+
+The core commands are the same on Windows, macOS, and Linux:
+
+```bash
+kb init
+kb ingest
+kb build-wiki
+kb status
+kb prepare
+kb sync-wiki
+kb lint-static
+```
+
+Platform differences should normally be limited to:
+
+- shell syntax;
+- path syntax;
+- executable lookup through `PATH`;
+- wrapper scripts such as `.bat` and `.sh`.
+
+Do not add large platform-specific branches to the Rust core unless a real bug requires it.
+
+## Path examples
+
+Windows PowerShell:
+
+```powershell
+kb --kb-path "D:\github\LLM-wiki\quantum" status
+```
+
+macOS/Linux:
+
+```bash
+kb --kb-path "$HOME/github/LLM-wiki/quantum" status
+```
+
+Cross-platform relative path:
+
+```bash
+kb --kb-path ./quantum status
+```
+
+## Wrapper scripts
+
+Windows helper:
+
+```text
+scripts/build_llm_wiki.bat
+```
+
+macOS/Linux helper:
+
+```text
+scripts/build_llm_wiki.sh
+```
+
+Both helpers should remain thin wrappers around the Rust CLI. They should not become independent implementations of the knowledge-base workflow.
+
+## Release check
+
+Before tagging a release, run the Rust checks on at least one platform:
+
+```bash
+cargo fmt --check
+cargo test
+cargo check
+cargo build --release
+```
+
+When possible, also smoke-test the quick-start examples on Windows PowerShell and a Unix-like shell.

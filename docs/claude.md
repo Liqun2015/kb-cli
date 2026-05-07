@@ -2,7 +2,7 @@
 
 ## Current version
 
-`kb-cli v0.4.6`
+`kb-cli v0.4.7`
 
 ## Core goal
 
@@ -70,7 +70,7 @@ background daemon
 cloud sync
 ```
 
-`prepare` is implemented only as a review-first planning command in v0.4.6.2. It generates `processing/prepare_queue.json` and `processing/proposals/prepare_plan_*.md`; it does not call an LLM or edit `wiki/`. `query` is still planned; `lint-static` is implemented as a deterministic local health check.
+`prepare` is implemented only as a review-first planning command in v0.4.7. It generates `processing/prepare_queue.json` and `processing/proposals/prepare_plan_*.md`; it does not call an LLM or edit `wiki/`. `query` is still planned; `lint-static` is implemented as a deterministic local health check.
 
 ## Safety rules for init/ingest/bootstrap
 
@@ -131,7 +131,7 @@ README and docs must describe only implemented behavior. Do not list future comm
 Prepare planning work starts in v0.4.x. Small compatible improvements should increment the patch version:
 
 ```text
-0.4.0 -> 0.4.1 -> 0.4.2 -> 0.4.3 -> 0.4.4 -> 0.4.5 -> 0.4.6
+0.4.0 -> 0.4.1 -> 0.4.2 -> 0.4.3 -> 0.4.4 -> 0.4.5 -> 0.4.6 -> 0.4.7
 ```
 
 The next major implementation phase should be query scaffolding and later semantic LLM linting after static lint is stable.
