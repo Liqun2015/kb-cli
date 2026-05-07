@@ -2,7 +2,7 @@
 
 `kb compile` is the first step toward LLM-maintained Markdown wiki pages.
 
-In `v0.4.5`, it is intentionally conservative:
+In `v0.4.6`, it is intentionally conservative:
 
 - it reads `processing/manifest.json`;
 - it selects raw files that appear ready for future wiki compilation;

@@ -2,7 +2,7 @@
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.4.5`
+> Current version: `v0.4.6`
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, prepare Markdown pages under `wiki/` for AI maintenance, and constrain future AI maintainers through a generated `rules/` layer.
 
@@ -75,6 +75,29 @@ Until full autonomous compile is implemented, users can use the generated `proce
 ## Current Scope
 
 This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, and a manifest registry under `processing/manifest.json`. It still does **not** provide full RAG, vector search, or autonomous LLM compilation. `kb compile` currently plans and documents the compile work; it does not perform LLM edits by itself.
+
+## What Changed in v0.4.6
+
+`v0.4.6` is a testing and documentation stabilization release before `v0.5.0`. It deliberately does not add query, vector search, embeddings, RAG, or autonomous LLM execution. The goal is to make the existing build/sync/lint loop easier to verify, teach, and run on Windows.
+
+Main changes:
+
+- Added focused Rust regression tests for `build-wiki` source front matter generation.
+- Added focused Rust regression tests for `lint-static` WikiLink parsing, source front matter parsing, issue detection, and report-writing behavior.
+- Documented the exact local test commands to run before tagging a release.
+- Expanded the README with a clearer v0.4.6 testing/release checklist.
+- Expanded `docs/windows-quickstart.md` with a PowerShell-first workflow, dry-run/preview examples, lint commands, and common troubleshooting notes.
+- Expanded `docs/lint-static.md` with issue categories, examples, cleanup order, and CI/script usage.
+- Updated version/schema markers to `0.4.6`.
+
+Recommended release check:
+
+```bash
+cargo fmt --check
+cargo test
+cargo check
+cargo build --release
+```
 
 ## What Changed in v0.4.5
 
@@ -222,6 +245,29 @@ The binary name is:
 ```bash
 kb
 ```
+
+## Testing and Release Check
+
+Before tagging or handing a build to another agent, run the lightweight local checks:
+
+```bash
+cargo fmt --check
+cargo test
+cargo check
+cargo build --release
+```
+
+The regression tests added in `v0.4.6` focus on the fragile parts of the current workflow:
+
+```text
+build-wiki source front matter
+placeholder WikiLink avoidance
+lint-static source parsing
+lint-static broken-link detection
+lint-static --no-report / default report behavior
+```
+
+These tests are intentionally small. They protect the reviewable local-Wiki loop without introducing a database, an LLM API, or network access.
 
 ## Cross-Platform Quick Start
 
@@ -453,7 +499,7 @@ Each new REPL LLM request writes a `request_id` to `.model_switch_input.json`; m
 
 ## Notes for Future Agents
 
-`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM compile execution, `query`, semantic LLM lint, or full RAG exists in `v0.4.5`.
+`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM compile execution, `query`, semantic LLM lint, or full RAG exists in `v0.4.6`.
 
 ## License
 

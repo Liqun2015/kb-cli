@@ -206,7 +206,7 @@ fn run_lint(kb_path: &Path) -> Result<LintStaticReport> {
     duplicate_titles.sort_by(|a, b| a.title.cmp(&b.title));
 
     Ok(LintStaticReport {
-        schema_version: "0.4.5".to_string(),
+        schema_version: "0.4.6".to_string(),
         generated_by: "kb-cli".to_string(),
         generated_at,
         pages_scanned: pages.len(),
@@ -574,5 +574,157 @@ fn push_path_section(out: &mut String, title: &str, paths: &[String]) {
             out.push_str(&format!("- `{path}`\n"));
         }
         out.push('\n');
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Result;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn unique_test_kb(name: &str) -> std::path::PathBuf {
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system clock before unix epoch")
+            .as_nanos();
+        std::env::temp_dir().join(format!(
+            "kb_cli_lint_static_{}_{}_{}",
+            name,
+            std::process::id(),
+            nanos
+        ))
+    }
+
+    fn write_clean_wiki(kb_path: &Path) -> Result<()> {
+        fs::create_dir_all(kb_path.join("wiki/papers"))?;
+        fs::write(
+            kb_path.join("wiki/Home.md"),
+            "# Home\n\n- [[Source Paper]]\n",
+        )?;
+        fs::write(
+            kb_path.join("wiki/papers/source_paper.md"),
+            r#"---
+page_type: paper
+source_files:
+  - "raw/papers/source.pdf"
+source_ids:
+  - "raw_source"
+status: compiled
+generated_by: kb build-wiki
+---
+
+# Source Paper
+
+This is a source-linked paper page with enough body content for lint.
+"#,
+        )?;
+        Ok(())
+    }
+
+    #[test]
+    fn clean_wikilink_target_handles_aliases_and_headings() {
+        assert_eq!(clean_wikilink_target("Page Name|Alias"), "Page Name");
+        assert_eq!(clean_wikilink_target("Page Name#Heading"), "Page Name");
+        assert_eq!(clean_wikilink_target(" `Page Name` "), "Page Name");
+        assert_eq!(clean_wikilink_target("folder\\Page"), "folder/Page");
+    }
+
+    #[test]
+    fn source_refs_are_parsed_from_yaml_front_matter() {
+        let markdown = r#"---
+page_type: paper
+source_ids:
+  - raw_abc
+source_files:
+  - "raw/papers/example.pdf"
+status: compiled
+---
+
+# Example
+"#;
+
+        let refs = source_refs_from_markdown(markdown);
+        assert_eq!(refs, vec!["raw_abc", "raw/papers/example.pdf"]);
+    }
+
+    #[test]
+    fn run_lint_accepts_source_linked_generated_pages() -> Result<()> {
+        let kb_path = unique_test_kb("clean_generated_pages");
+        write_clean_wiki(&kb_path)?;
+
+        let report = run_lint(&kb_path)?;
+        assert_eq!(report.broken_links.len(), 0);
+        assert_eq!(report.missing_source_pages.len(), 0);
+        assert_eq!(report.orphan_pages.len(), 0);
+        assert_eq!(report.empty_pages.len(), 0);
+        assert_eq!(report.duplicate_titles.len(), 0);
+
+        let _ = fs::remove_dir_all(&kb_path);
+        Ok(())
+    }
+
+    #[test]
+    fn run_lint_reports_broken_links_and_missing_sources() -> Result<()> {
+        let kb_path = unique_test_kb("issues");
+        fs::create_dir_all(kb_path.join("wiki/papers"))?;
+        fs::write(kb_path.join("wiki/Home.md"), "# Home\n\n[[Missing Page]]\n")?;
+        fs::write(
+            kb_path.join("wiki/papers/no_source.md"),
+            "# No Source\n\nThis page intentionally lacks source front matter.\n",
+        )?;
+
+        let report = run_lint(&kb_path)?;
+        assert_eq!(report.broken_links.len(), 1);
+        assert_eq!(report.broken_links[0].target, "Missing Page");
+        assert_eq!(report.missing_source_pages, vec!["wiki/papers/no_source.md".to_string()]);
+
+        let _ = fs::remove_dir_all(&kb_path);
+        Ok(())
+    }
+
+    #[test]
+    fn no_report_alias_does_not_write_lint_report() -> Result<()> {
+        let kb_path = unique_test_kb("no_report");
+        write_clean_wiki(&kb_path)?;
+
+        let args = LintStaticArgs {
+            dry_run: false,
+            preview: false,
+            no_report: true,
+            json: false,
+            strict: false,
+        };
+        execute(Some(&kb_path), &args)?;
+
+        assert!(!kb_path.join("outputs/reports").exists());
+
+        let _ = fs::remove_dir_all(&kb_path);
+        Ok(())
+    }
+
+    #[test]
+    fn default_lint_writes_markdown_report() -> Result<()> {
+        let kb_path = unique_test_kb("writes_report");
+        write_clean_wiki(&kb_path)?;
+
+        let args = LintStaticArgs {
+            dry_run: false,
+            preview: false,
+            no_report: false,
+            json: false,
+            strict: false,
+        };
+        execute(Some(&kb_path), &args)?;
+
+        let reports_dir = kb_path.join("outputs/reports");
+        let report_count = fs::read_dir(&reports_dir)?
+            .filter_map(|entry| entry.ok())
+            .filter(|entry| entry.path().extension().and_then(|s| s.to_str()) == Some("md"))
+            .count();
+        assert_eq!(report_count, 1);
+
+        let _ = fs::remove_dir_all(&kb_path);
+        Ok(())
     }
 }

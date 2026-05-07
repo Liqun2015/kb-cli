@@ -1,38 +1,111 @@
 # Windows Quick Start
 
-`v0.4.0` keeps the real quick-start workflow inside the cross-platform Rust CLI. The Windows batch file is only a friendly wrapper around:
+This guide is written for PowerShell on Windows. The safest workflow is still the cross-platform Rust CLI; the batch file is only a convenience wrapper.
+
+Current version: `v0.4.6`
+
+## 1. Install Rust once
+
+Open PowerShell and run:
 
 ```powershell
-kb --kb-path <target> bootstrap --copy
+winget install Rustlang.Rustup
 ```
 
-## Recommended direct command
+Close PowerShell, open it again, then verify:
 
-After installing `kb`:
+```powershell
+rustc --version
+cargo --version
+```
+
+## 2. Build and install `kb`
+
+From the `kb-cli` project directory:
 
 ```powershell
 cd D:\github\LLM-wiki\kb-cli
 cargo install --path . --force
 ```
 
-Build a wiki from an existing folder:
+Verify that Windows can find the executable:
+
+```powershell
+kb --help
+```
+
+If `kb` is not recognized, close and reopen PowerShell. If it is still not found, check that Cargo's bin directory is on `PATH`:
+
+```powershell
+$env:USERPROFILE\.cargo\bin
+```
+
+## 3. Bootstrap a knowledge folder
+
+Recommended safe command:
 
 ```powershell
 kb --kb-path "D:\github\LLM-wiki\quantum" bootstrap --copy
 ```
 
-This will:
+This runs:
 
 ```text
-1. initialize the folder as a three-layer LLM Wiki
-2. generate the rules\ schema layer
-3. copy root-level source files into raw\ subfolders
-4. extract PDF metadata
-5. generate wiki markdown pages
-6. refresh processing\manifest.json
+init -> ingest -> extract-metadata -> build-wiki
 ```
 
-## Using the batch helper
+It will create or ensure:
+
+```text
+raw\
+wiki\
+rules\
+processing\
+outputs\
+references\
+logs\
+```
+
+## 4. Preview before writing
+
+For a dry run, use either `--dry-run` or its alias `--preview`:
+
+```powershell
+kb --kb-path "D:\github\LLM-wiki\quantum" ingest --copy --dry-run
+kb --kb-path "D:\github\LLM-wiki\quantum" ingest --copy --preview
+```
+
+For linting only, the clearest wording is `--no-report`:
+
+```powershell
+kb --kb-path "D:\github\LLM-wiki\quantum" lint-static --no-report
+```
+
+Equivalent aliases still work:
+
+```powershell
+kb --kb-path "D:\github\LLM-wiki\quantum" lint-static --dry-run
+kb --kb-path "D:\github\LLM-wiki\quantum" lint-static --preview
+```
+
+## 5. Recommended v0.4.6 verification flow
+
+After bootstrapping or after an AI/human edits `wiki\`, run:
+
+```powershell
+kb --kb-path "D:\github\LLM-wiki\quantum" status
+kb --kb-path "D:\github\LLM-wiki\quantum" sync-wiki --dry-run
+kb --kb-path "D:\github\LLM-wiki\quantum" sync-wiki
+kb --kb-path "D:\github\LLM-wiki\quantum" lint-static
+```
+
+Open the generated lint report here:
+
+```text
+D:\github\LLM-wiki\quantum\outputs\reports\lint_static_<timestamp>.md
+```
+
+## 6. Use the batch helper when desired
 
 From the project root:
 
@@ -40,9 +113,7 @@ From the project root:
 scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum"
 ```
 
-The helper will install `kb` if needed, then run `kb bootstrap`.
-
-## Useful flags
+Useful flags:
 
 ```powershell
 scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --copy
@@ -52,45 +123,77 @@ scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --dry-run
 scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --force-metadata
 ```
 
-## Safety notes
+The helper delegates to:
+
+```powershell
+kb --kb-path <target> bootstrap --copy
+```
+
+## 7. Run tests before release
+
+From the `kb-cli` project directory:
+
+```powershell
+cargo fmt --check
+cargo test
+cargo check
+cargo build --release
+```
+
+`v0.4.6` adds tests around `build-wiki` and `lint-static`, especially the source-front-matter and report-writing behavior that protects the local Wiki loop.
+
+## 8. Safety notes
 
 - `--copy` is the default and safest mode.
-- `--move` reorganizes files into `raw\` and should be used only when you intend to change the folder layout.
-- `--dry-run` previews actions without copying or moving files.
-- The recursive mode skips managed folders such as `raw`, `wiki`, `rules`, `processing`, `references`, `outputs`, `logs`, `.git`, `.obsidian`, and `target`.
+- `--move` changes the folder layout and should be used only when intentional.
+- `--dry-run` previews write-like actions.
+- `--preview` is an alias for `--dry-run` on dry-run-capable commands.
+- `lint-static --no-report` checks without writing `outputs\reports\lint_static_*.md`.
+- Recursive ingest skips managed folders such as `raw`, `wiki`, `rules`, `processing`, `references`, `outputs`, `logs`, `.git`, `.obsidian`, `target`, and `node_modules`.
 
-## Output
+## 9. Troubleshooting
 
-Open this folder in Obsidian:
+### `kb` is not recognized
+
+Reopen PowerShell after `cargo install --path . --force`. Then check:
+
+```powershell
+where.exe kb
+```
+
+### The wrong folder was used
+
+Always pass an explicit path:
+
+```powershell
+kb --kb-path "D:\github\LLM-wiki\quantum" status
+```
+
+### A path contains spaces
+
+Quote it:
+
+```powershell
+kb --kb-path "D:\My Knowledge Bases\quantum" bootstrap --copy
+```
+
+### Lint reports too many orphan pages
+
+Start with broken links and missing source front matter first. Orphan pages are often normal while the Wiki is young. Link useful pages from `wiki\Home.md`, index pages, or topic pages after the source links are clean.
+
+## 10. Open in Obsidian
+
+Open the knowledge folder itself, for example:
 
 ```text
 D:\github\LLM-wiki\quantum
 ```
 
-The generated home page is:
+Useful files:
 
 ```text
-D:\github\LLM-wiki\quantum\wiki\Home.md
-```
-
-Manifest file:
-
-```text
-D:\github\LLM-wiki\quantum\processing\manifest.json
-```
-
-## Rules layer
-
-Before asking an AI agent to maintain the Wiki, review:
-
-```text
-D:\github\LLM-wiki\quantum\rules\LLM_WIKI_SCHEMA.md
-```
-
-
-Manifest inspection examples:
-
-```bash
-kb --kb-path /path/to/literature-folder status --json
-kb --kb-path /path/to/literature-folder status --unprocessed
+wiki\Home.md
+processing\manifest.json
+rules\LLM_WIKI_SCHEMA.md
+outputs\reports\
 ```

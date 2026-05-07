@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.4.6 - Tests and documentation stabilization
+
+- Added focused unit/regression tests for `build-wiki` front matter generation and placeholder-link avoidance.
+- Added focused unit/regression tests for `lint-static` WikiLink parsing, YAML source-reference parsing, issue detection, `--no-report`, and default report writing.
+- Expanded README with a dedicated testing and release-check section.
+- Expanded `docs/windows-quickstart.md` with a PowerShell-first workflow, dry-run/preview examples, lint commands, and troubleshooting notes.
+- Expanded `docs/lint-static.md` with issue categories, concrete examples, cleanup order, JSON/strict usage, and test coverage notes.
+- Bumped schema/version markers to `0.4.6`.
+- No query, vector search, embeddings, RAG, or autonomous LLM execution was added.
+
 ## v0.4.5 - Build/lint consistency polish
 
 - Kept `--dry-run` and added `--preview` as an equivalent inspection alias for dry-run-capable commands.

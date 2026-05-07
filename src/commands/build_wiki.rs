@@ -584,3 +584,83 @@ fn format_size(bytes: u64) -> String {
         format!("{:.1} MB", bytes as f64 / (1024.0 * 1024.0))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use anyhow::Result;
+    use std::collections::BTreeMap;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn unique_test_kb(name: &str) -> std::path::PathBuf {
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system clock before unix epoch")
+            .as_nanos();
+        std::env::temp_dir().join(format!(
+            "kb_cli_build_wiki_{}_{}_{}",
+            name,
+            std::process::id(),
+            nanos
+        ))
+    }
+
+    #[test]
+    fn source_front_matter_includes_source_file_and_id() {
+        let front_matter = source_front_matter(
+            "paper",
+            "raw/papers/example paper.pdf",
+            Some("raw_123456"),
+        );
+
+        assert!(front_matter.starts_with("---\n"));
+        assert!(front_matter.contains("page_type: paper"));
+        assert!(front_matter.contains("source_files:"));
+        assert!(front_matter.contains("\"raw/papers/example paper.pdf\""));
+        assert!(front_matter.contains("source_ids:"));
+        assert!(front_matter.contains("\"raw_123456\""));
+        assert!(front_matter.contains("status: compiled"));
+        assert!(front_matter.contains("generated_by: kb build-wiki"));
+    }
+
+    #[test]
+    fn generated_paper_page_has_lint_compatible_front_matter() -> Result<()> {
+        let kb_path = unique_test_kb("paper_front_matter");
+        fs::create_dir_all(kb_path.join("wiki/papers"))?;
+
+        let paper = PaperMetadata {
+            filename: "example.pdf".to_string(),
+            title: Some("Example Paper".to_string()),
+            author: Some("A. Author".to_string()),
+            subject: None,
+            pages: 7,
+            doi: None,
+        };
+
+        let mut manifest_lookup = BTreeMap::new();
+        manifest_lookup.insert("raw/papers/example.pdf".to_string(), "raw_example".to_string());
+
+        generate_paper_page(&kb_path, &paper, &manifest_lookup)?;
+        let content = fs::read_to_string(kb_path.join("wiki/papers/Example_Paper.md"))?;
+
+        assert!(content.starts_with("---\n"));
+        assert!(content.contains("page_type: paper"));
+        assert!(content.contains("source_files:"));
+        assert!(content.contains("raw/papers/example.pdf"));
+        assert!(content.contains("source_ids:"));
+        assert!(content.contains("raw_example"));
+        assert!(!content.contains("[[Concept Placeholder]]"));
+        assert!(!content.contains("[[Topic Placeholder]]"));
+        assert!(!content.contains("[[LLM_WIKI_SCHEMA"));
+
+        let _ = fs::remove_dir_all(&kb_path);
+        Ok(())
+    }
+
+    #[test]
+    fn sanitize_filename_is_stable_for_common_titles() {
+        assert_eq!(sanitize_filename("A Diffusion-Based Framework.pdf"), "A_Diffusion-Based_Framework_pdf");
+        assert_eq!(sanitize_filename("  paper: title / with * marks  "), "paper_title_with_marks");
+        assert_eq!(sanitize_filename("!!!"), "untitled");
+    }
+}
