@@ -1,6 +1,6 @@
 # Agent/API Boundary Notes
 
-This document records what `kb-cli v0.4.3` actually supports. It is intentionally conservative.
+This document records what `kb-cli v0.4.4` actually supports. It is intentionally conservative.
 
 ## Implemented CLI commands
 
@@ -13,6 +13,8 @@ This document records what `kb-cli v0.4.3` actually supports. It is intentionall
 | `kb build-wiki` | Generate Markdown wiki pages and indexes. |
 | `kb status [--dry-run] [--json] [--unprocessed]` | Refresh `processing/manifest.json`, print JSON summary, or list unprocessed raw files. |
 | `kb compile [--new\|--file PATH] [--dry-run]` | Generate compile queue/proposal files for future LLM wiki maintenance without calling an LLM. |
+| `kb sync-wiki [--dry-run] [--json]` | Link source front matter in `wiki/**/*.md` back to manifest entries. |
+| `kb lint-static [--dry-run] [--json] [--strict]` | Check broken WikiLinks, orphan pages, missing source front matter, empty pages, and duplicate titles. |
 | `kb repl` | Start a simple interactive shell. |
 | `kb list-models` | List configured LLM models. |
 | `kb show-model` | Show the active model configuration. |
@@ -56,7 +58,7 @@ This is cross-platform because the workflow is implemented inside the Rust CLI, 
 
 ## Manifest / Status
 
-`kb status` is implemented in v0.4.3:
+`kb status` is implemented in v0.4.4:
 
 ```bash
 kb --kb-path /path/to/kb status
@@ -75,7 +77,7 @@ The manifest is not a stable external API yet; treat it as a local project file 
 
 ## Compile planning
 
-`kb compile` is implemented in v0.4.3 as a planning command only. It may write:
+`kb compile` is implemented in v0.4.4 as a planning command only. It may write:
 
 ```text
 processing/compile_queue.json
@@ -84,15 +86,28 @@ processing/proposals/compile_plan_<timestamp>.md
 
 It does not call an LLM, does not edit `wiki/`, and does not mark manifest entries as fully compiled. Treat the generated proposal as a review artifact for a human or future AI maintainer.
 
+## Static wiki lint
+
+`kb lint-static` is implemented in v0.4.4 as a deterministic local Markdown health check. It does not call an LLM and does not rewrite `wiki/`.
+
+```bash
+kb --kb-path /path/to/kb lint-static
+kb --kb-path /path/to/kb lint-static --dry-run
+kb --kb-path /path/to/kb lint-static --json
+kb --kb-path /path/to/kb lint-static --strict
+```
+
+Reports are written under `outputs/reports/` unless `--dry-run` is used.
+
 ## Current non-goals
 
-Do not assume the following exist in `v0.4.3`:
+Do not assume the following exist in `v0.4.4`:
 
 ```text
 global --format json
 autonomous compile execution
 query
-lint
+semantic LLM lint
 vector search
 full RAG
 semantic retrieval

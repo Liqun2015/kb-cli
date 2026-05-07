@@ -3,6 +3,7 @@ pub mod compile;
 pub mod extract_metadata;
 pub mod init;
 pub mod ingest;
+pub mod lint_static;
 pub mod manifest;
 pub mod model;
 pub mod model_config;

@@ -32,6 +32,8 @@ enum Commands {
     Compile(commands::compile::CompileArgs),
     #[command(about = "Sync wiki page source front matter back into processing/manifest.json")]
     SyncWiki(commands::sync_wiki::SyncWikiArgs),
+    #[command(about = "Run static wiki health checks for links, orphans, and source front matter")]
+    LintStatic(commands::lint_static::LintStaticArgs),
     #[command(about = "Refresh manifest and show raw-file status")]
     Status(commands::manifest::StatusArgs),
     #[command(about = "Extract metadata from papers")]
@@ -71,6 +73,7 @@ fn main() -> anyhow::Result<()> {
         Some(Commands::BuildWiki) => commands::build_wiki::execute(cli.kb_path.as_deref()),
         Some(Commands::Compile(args)) => commands::compile::execute(cli.kb_path.as_deref(), args),
         Some(Commands::SyncWiki(args)) => commands::sync_wiki::execute(cli.kb_path.as_deref(), args),
+        Some(Commands::LintStatic(args)) => commands::lint_static::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Status(args)) => commands::manifest::execute(cli.kb_path.as_deref(), args),
         Some(Commands::ExtractMetadata { force }) => commands::extract_metadata::execute(cli.kb_path.as_deref(), *force),
         Some(Commands::Repl) => commands::repl::execute(),
@@ -90,6 +93,7 @@ fn main() -> anyhow::Result<()> {
             println!("  compile [--new|--file PATH] [--dry-run]  Plan LLM wiki compilation");
             println!("  status [--dry-run] [--json] [--unprocessed]  Refresh manifest and show raw-file status");
             println!("  sync-wiki [--dry-run] [--json]  Link wiki front matter back to manifest");
+            println!("  lint-static [--dry-run] [--json] [--strict]  Check broken links, orphans, and source front matter");
             println!("  list-models                 List all configured models");
             println!("  show-model                  Show current model");
             println!("  add-model                   Add a new model");

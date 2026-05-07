@@ -181,7 +181,7 @@ fn build_queue(mode: &str, entries: Vec<ManifestEntry>) -> CompileQueue {
         .collect::<Vec<_>>();
 
     CompileQueue {
-        schema_version: "0.4.3".to_string(),
+        schema_version: "0.4.4".to_string(),
         generated_by: "kb-cli".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         mode: mode.to_string(),

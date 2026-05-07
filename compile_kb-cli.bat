@@ -8,3 +8,5 @@ kb --help
 kb --kb-path "D:\github\LLM-wiki\quantum" status
 kb --kb-path "D:\github\LLM-wiki\quantum" compile --new --dry-run
 kb --kb-path "D:\github\LLM-wiki\quantum" compile --new
+kb --kb-path "D:\github\LLM-wiki\quantum" lint-static --dry-run
+kb --kb-path "D:\github\LLM-wiki\quantum" lint-static

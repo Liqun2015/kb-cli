@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.4.4 - Static wiki lint
+
+- Added `kb lint-static` for deterministic Markdown health checks under `wiki/`.
+- The static lint pass checks broken `[[WikiLinks]]`, orphan pages, missing source front matter, empty/near-empty pages, and duplicate titles.
+- Added `--dry-run`, `--json`, and `--strict` modes for linting.
+- Lint reports are written to `outputs/reports/lint_static_<timestamp>.md`.
+- Added `docs/lint-static.md` and updated README/agent boundary notes.
+
 ## v0.4.3 - Sync wiki source links back to manifest
 
 - Added `kb sync-wiki` to scan Markdown front matter under `wiki/` and update `processing/manifest.json`.
