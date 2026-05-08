@@ -316,7 +316,7 @@ pub fn execute_validate_model(id: Option<&str>) -> Result<()> {
 
             println!();
             println!("Note: Network validation is not implemented.");
-            println!("To test connectivity, use 'repl' mode and try 'ask' command.");
+            println!("REPL mode is deterministic and does not test LLM connectivity.");
         }
         None => {
             println!("No model to validate.");

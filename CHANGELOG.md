@@ -1,5 +1,31 @@
 # Changelog
 
+## v0.5.4 - Clean script helpers
+
+- Removed broad knowledge-base workflow wrapper scripts from `scripts/` to avoid confusion with compiling the Rust executable.
+- Added `scripts/build_release.bat` for the Windows Rust verification/build flow.
+- Added `scripts/build_release.sh` for the macOS/Linux Rust verification/build flow.
+- Added `scripts/README.md` to define what belongs in the scripts directory.
+- Kept the review-first Git helper scripts.
+- Updated quickstart and platform docs to prefer explicit `kb ...` command sequences for knowledge-base workflows.
+- No query behavior, REPL behavior, LLM calls, embeddings, vector search, RAG, or autonomous editing changed.
+
+## v0.5.3 - Remove ambiguous REPL LLM-like commands
+
+- Removed LLM-like command patterns from the experimental `kb repl` parser instead of merely rejecting them at runtime.
+- Removed REPL branches and helper functions for ambiguous natural-language/LLM-style commands.
+- Updated CLI/shell boundary documentation so placeholder LLM command names are no longer advertised.
+- Kept `kb>` as a deterministic command shell only.
+- No LLM calls, embeddings, vector search, RAG, autonomous editing, or hidden natural-language command interpretation were added.
+
+## v0.5.2 - CLI / Shell / LLM boundary
+
+- Added `docs/cli-shell-principle.md` to define the relationship between batch mode, interactive shell mode, and future LLM-assisted modes.
+- Documented that `kb ...` is deterministic batch mode and `kb>` must remain a deterministic command shell rather than an implicit LLM chat interface.
+- Documented that future LLM behavior must be introduced through a deliberately designed explicit interface.
+- Disabled LLM-like requests inside the current experimental `kb repl`; they now explain the boundary instead of calling a model.
+- No embeddings, vector search, RAG, saved answers, autonomous wiki editing, or hidden LLM calls were added.
+
 ## v0.5.1 - README workflow wording clarity
 
 - Clarified the README's Karpathy-style workflow sentence.

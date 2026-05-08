@@ -2,7 +2,7 @@
 
 This guide is for macOS, Linux, and other Unix-like shells such as `bash` and `zsh`.
 
-Current version: `v0.5.1`
+Current version: `v0.5.4`
 
 ## 1. Install Rust once
 
@@ -101,30 +101,31 @@ processing/proposals/prepare_plan_<timestamp>.md
 processing/proposals/prepare_agent_prompt_<timestamp>.md
 ```
 
-## 6. Run the shell helper
+## 6. Build kb-cli itself when needed
 
-From the project root:
-
-```bash
-chmod +x scripts/build_llm_wiki.sh
-scripts/build_llm_wiki.sh "$HOME/github/LLM-wiki/quantum"
-```
-
-Useful flags:
+From the project root, use the deterministic release-build helper:
 
 ```bash
-scripts/build_llm_wiki.sh "$HOME/github/LLM-wiki/quantum" --copy
-scripts/build_llm_wiki.sh "$HOME/github/LLM-wiki/quantum" --move
-scripts/build_llm_wiki.sh "$HOME/github/LLM-wiki/quantum" --recursive
-scripts/build_llm_wiki.sh "$HOME/github/LLM-wiki/quantum" --dry-run
-scripts/build_llm_wiki.sh "$HOME/github/LLM-wiki/quantum" --no-install
+chmod +x scripts/build_release.sh
+scripts/build_release.sh
 ```
 
-The helper delegates to:
+This helper runs:
 
-```bash
-kb --kb-path <target> bootstrap --copy
+```text
+cargo fmt --check
+cargo test
+cargo check
+cargo build --release
 ```
+
+It compiles `kb-cli` itself and writes the executable to:
+
+```text
+target/release/kb
+```
+
+For knowledge-base workflows, prefer explicit `kb ...` commands instead of broad wrapper scripts.
 
 ## 7. Recommended verification flow
 
@@ -189,12 +190,12 @@ Quote it:
 kb --kb-path "$HOME/My Knowledge Bases/quantum" bootstrap --copy
 ```
 
-### Permission denied when running the helper
+### Permission denied when running a script
 
 Run:
 
 ```bash
-chmod +x scripts/build_llm_wiki.sh
+chmod +x scripts/build_release.sh scripts/git_safe_push.sh
 ```
 
 ## 11. Open in Obsidian

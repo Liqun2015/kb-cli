@@ -42,13 +42,12 @@ impl IntentParser {
         None
     }
 
-    /// Check if LLM is required
+    /// Check if LLM is required.
+    ///
+    /// The deterministic `kb>` shell does not expose any LLM-triggering intent.
     #[allow(dead_code)]
-    pub fn requires_llm(&self, intent: &Intent) -> bool {
-        matches!(
-            intent,
-            Intent::AskQuestion | Intent::SummarizePapers | Intent::SummarizeNotes
-        )
+    pub fn requires_llm(&self, _intent: &Intent) -> bool {
+        false
     }
 
     /// Extract search query
@@ -63,22 +62,6 @@ impl IntentParser {
                     }
                     if let Some(query) = input.strip_prefix(&pattern.to_lowercase()) {
                         return Some(query.trim().to_string());
-                    }
-                }
-                None
-            }
-            Intent::AskQuestion | Intent::ExplainConcept => {
-                // Handle various question patterns
-                let patterns = [
-                    "ask ", "question ", "tell me about ", "explain ", "what is ", "how do ", "how does ",
-                    "how to ", "how can ", "how would ", "how should ", "why ", "when ", "which ", "define ", "describe "
-                ];
-                for pattern in &patterns {
-                    if let Some(question) = input.strip_prefix(pattern) {
-                        return Some(question.trim().to_string());
-                    }
-                    if let Some(question) = input.strip_prefix(&pattern.to_lowercase()) {
-                        return Some(question.trim().to_string());
                     }
                 }
                 None
@@ -127,12 +110,11 @@ mod tests {
     }
 
     #[test]
-    fn test_parse_ask() {
+    fn test_free_form_llm_like_text_is_not_parsed() {
         let parser = IntentParser::new();
-        assert!(matches!(
-            parser.parse("ask what is t-junction"),
-            Some(Intent::AskQuestion)
-        ));
+        assert_eq!(parser.parse("ask what is t-junction"), None);
+        assert_eq!(parser.parse("summarize papers"), None);
+        assert_eq!(parser.parse("explain transformation thermotics"), None);
     }
 
     #[test]
@@ -147,7 +129,7 @@ mod tests {
     #[test]
     fn test_requires_llm() {
         let parser = IntentParser::new();
-        assert!(parser.requires_llm(&Intent::AskQuestion));
         assert!(!parser.requires_llm(&Intent::ListPapers));
+        assert!(!parser.requires_llm(&Intent::SearchPapers));
     }
 }

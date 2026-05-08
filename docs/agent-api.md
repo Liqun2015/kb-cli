@@ -1,6 +1,6 @@
 # Agent/API Boundary Notes
 
-This document records what `kb-cli v0.5.1` actually supports. It is intentionally conservative.
+This document records what `kb-cli v0.5.4` actually supports. It is intentionally conservative.
 
 ## Implemented CLI commands
 
@@ -23,6 +23,14 @@ This document records what `kb-cli v0.5.1` actually supports. It is intentionall
 | `kb switch-model <id>` | Switch the active model. |
 | `kb delete-model <id>` | Delete a model configuration. |
 | `kb validate-model [id]` | Validate local model configuration fields. |
+
+## CLI / shell / LLM boundary
+
+`kb ...` is batch mode. The `kb>` prompt is interactive shell mode. Core knowledge-base commands should have a one-to-one deterministic mapping between the two modes.
+
+`kb>` is not an LLM chat interface. It must not silently interpret free-form natural language as an LLM request. Future LLM behavior must be introduced only through a deliberately designed explicit interface. Do not reserve or advertise placeholder LLM command names inside the deterministic shell before that design exists.
+
+In `v0.5.4`, the existing `kb repl` command is treated as an early shell experiment. Ambiguous LLM-like command patterns are not parsed by the shell. See `docs/cli-shell-principle.md`.
 
 ## Three-layer LLM Wiki model
 
@@ -122,7 +130,7 @@ Current behavior:
 
 ## Current non-goals
 
-Do not assume the following exist in `v0.5.1`:
+Do not assume the following exist in `v0.5.4`:
 
 ```text
 global --format json

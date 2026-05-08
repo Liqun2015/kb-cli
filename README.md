@@ -1,10 +1,10 @@
 # kb-cli
 
-> **v0.5.1 note:** README wording has been clarified around the Karpathy-style workflow. `kb query` remains a deterministic local keyword search over `wiki/**/*.md`; it does not use an LLM, embeddings, vector search, or RAG.
+> **v0.5.4 note:** `scripts/` has been cleaned up. The old broad knowledge-base workflow wrappers were removed to avoid confusion with compiling the Rust executable. `scripts/build_release.*` now builds `kb-cli`; `scripts/git_safe_push.*` remains the review-first Git helper.
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.5.1`
+> Current version: `v0.5.4`
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, use `kb prepare` to generate reviewable task materials, maintain Markdown knowledge pages under `wiki/`, and constrain future human/AI maintainers through the `rules/` layer.
 
@@ -78,6 +78,19 @@ kb lint-static
 
 Until full autonomous prepare is implemented, users can use the generated `processing/proposals/prepare_plan_*.md` and `processing/proposals/prepare_agent_prompt_*.md` files plus the generated `rules/` files as instructions for Claude Code, ChatGPT, or another coding/knowledge agent to update the Markdown wiki manually under Git review.
 
+## CLI / Shell / LLM Boundary
+
+`kb` batch commands and the future `kb>` shell should share the same deterministic command semantics. The shell is a repeated command interface, not a hidden LLM chat surface.
+
+```text
+kb --kb-path ./quantum query thermal cloak
+≈
+kb> use ./quantum
+kb> query thermal cloak
+```
+
+LLM-assisted behavior must not be triggered implicitly from free-form text in `kb>`. Future LLM behavior must be introduced only through a deliberately designed, explicit top-level interface. See `docs/cli-shell-principle.md`.
+
 ## Platform Quick Starts
 
 Use the guide that matches your shell:
@@ -90,11 +103,38 @@ docs/platform-notes.md          Path and wrapper-script policy
 docs/git-workflow.md            Review-first Git commit/push workflow
 docs/release-checklist.md       Small-release checklist
 docs/query.md                   Local keyword query skeleton
+docs/cli-shell-principle.md     Batch mode / shell mode / LLM boundary
 ```
 
 ## Current Scope
 
 This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, a manifest registry under `processing/manifest.json`, static linting, and deterministic keyword search over `wiki/`. It still does **not** provide full RAG, vector search, embeddings, or autonomous LLM/wiki preparation. `kb prepare` currently plans and documents the prepare work; it does not perform LLM edits by itself.
+
+## What Changed in v0.5.4
+
+`v0.5.4` cleans up `scripts/` so only small, deterministic, low-confusion developer helpers remain. This release does not change query behavior, REPL behavior, LLM boundaries, or knowledge-base command semantics.
+
+Main changes:
+
+- Removed the old broad knowledge-base workflow wrapper scripts from `scripts/`.
+- Added `scripts/build_release.bat` for Windows release builds.
+- Added `scripts/build_release.sh` for macOS/Linux release builds.
+- Added `scripts/README.md` to define what belongs in `scripts/`.
+- Kept `scripts/git_safe_push.bat` and `scripts/git_safe_push.sh` as review-first Git helpers.
+- Updated README and platform docs to prefer explicit `kb ...` command sequences for knowledge-base workflows.
+- No LLM calls, embeddings, vector search, RAG, autonomous editing, or hidden natural-language command interpretation were added.
+
+## What Changed in v0.5.2
+
+`v0.5.2` establishes the CLI / shell / LLM boundary before expanding interactive features. It also disables LLM-like requests inside the current experimental REPL so the shell does not silently become a chat interface.
+
+Main changes:
+
+- Added `docs/cli-shell-principle.md`.
+- Documented that `kb ...` is batch mode and `kb>` is deterministic interactive shell mode.
+- Documented that future LLM behavior must use a deliberately designed explicit interface.
+- Disabled LLM-like requests inside `kb repl`; they now explain the boundary instead of calling a model.
+- Kept query deterministic and local.
 
 ## What Changed in v0.5.1
 
@@ -163,7 +203,6 @@ Main changes:
 
 - Added `docs/unix-quickstart.md` for macOS/Linux users.
 - Added `docs/platform-notes.md` to define how platform differences should be handled.
-- Added `scripts/build_llm_wiki.sh` as a thin Unix shell wrapper around the Rust CLI.
 - Updated `docs/cross-platform-quickstart.md` so Windows and Unix paths are both first-class examples.
 - Updated `docs/windows-quickstart.md` to align with the v0.4.7 cross-platform documentation set.
 - Kept the Rust core workflow unchanged.
@@ -177,12 +216,6 @@ docs/cross-platform-quickstart.md
 docs/platform-notes.md
 ```
 
-Recommended macOS/Linux helper usage:
-
-```bash
-chmod +x scripts/build_llm_wiki.sh
-scripts/build_llm_wiki.sh "$HOME/github/LLM-wiki/quantum"
-```
 
 ## What Changed in v0.4.6.2
 
@@ -498,18 +531,20 @@ kb --kb-path /path/to/kb prepare --new --limit 5
 
 `prepare` currently writes planning files only. It does not call an LLM and does not modify `wiki/`.
 
-## Windows Helper Script
+## Developer Helper Scripts
 
-Windows users can also use the bundled wrapper script:
+The `scripts/` directory only contains small developer helpers. To compile `kb-cli` itself on Windows:
 
 ```bat
-scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum"
+scripts\build_release.bat
 ```
 
-This script delegates the real work to the cross-platform Rust command:
+For knowledge-base workflows, prefer explicit `kb ...` commands rather than broad wrapper scripts:
 
 ```bat
-kb --kb-path <target> bootstrap --copy
+kb --kb-path "D:\github\LLM-wiki\quantum" bootstrap --copy
+kb --kb-path "D:\github\LLM-wiki\quantum" lint-static
+kb --kb-path "D:\github\LLM-wiki\quantum" query thermal cloak
 ```
 
 ## Knowledge Base Layout
@@ -619,18 +654,18 @@ It is ignored by Git. Start from the example file if needed:
 cp .model_config.example.json .model_config.json
 ```
 
-Model-switch request/response files are also ignored:
+Model-switch request/response files are also ignored because earlier experimental integrations used them and future explicit LLM commands may reuse a similar boundary:
 
 ```text
 .model_switch_input.json
 .model_switch_output.json
 ```
 
-Each new REPL LLM request writes a `request_id` to `.model_switch_input.json`; matching output should include the same `request_id` to avoid stale responses.
+Since `v0.5.3`, `kb>` does not write LLM requests and no longer parses ambiguous LLM-like shell commands. Future LLM behavior must be designed as an explicit interface.
 
 ## Notes for Future Agents
 
-`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM prepare execution, semantic LLM lint, saved query answers, or full RAG exists in `v0.5.1`.
+`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM prepare execution, semantic LLM lint, saved query answers, or full RAG exists in `v0.5.4`.
 
 ## License
 

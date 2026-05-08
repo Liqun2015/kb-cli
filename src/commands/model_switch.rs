@@ -14,9 +14,10 @@ const DEFAULT_INPUT_FILE: &str = ".model_switch_input.json";
 
 /// Model-Switch bridge module.
 ///
-/// The bridge is file based: `kb repl` writes a request file and an external
-/// model-switch process may write a response file. Each request includes a
-/// request_id so the CLI does not accidentally display a stale response.
+/// The bridge is file based and reserved for a future explicit LLM command
+/// boundary. In v0.5.3, `kb repl` does not call this bridge. Each request
+/// includes a request_id so future callers do not accidentally display stale
+/// responses.
 
 #[derive(serde::Deserialize, Debug)]
 struct ModelSwitchOutput {
@@ -140,6 +141,7 @@ pub fn read_output(expected_request_id: Option<&str>) -> Result<Option<String>> 
 /// 1. Write input file.
 /// 2. External model-switch handles processing.
 /// 3. Read a matching output file if it already exists.
+#[allow(dead_code)]
 pub fn get_llm_response(question: &str, auto_write: bool) -> Result<String> {
     let request_id = if auto_write {
         Some(write_input(question)?)

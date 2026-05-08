@@ -43,7 +43,7 @@ enum Commands {
         #[arg(long, help = "Overwrite existing metadata file")]
         force: bool,
     },
-    #[command(about = "Enter REPL mode for interactive knowledge base management")]
+    #[command(about = "Enter deterministic interactive shell mode")]
     Repl,
     #[command(about = "List all configured models")]
     ListModels,
@@ -104,7 +104,7 @@ fn main() -> anyhow::Result<()> {
             println!("  switch-model <id>           Switch to a different model");
             println!("  delete-model <id>           Delete a model");
             println!("  validate-model [id]         Validate model configuration");
-            println!("  repl                        Enter interactive REPL mode");
+            println!("  repl                        Enter deterministic interactive shell mode");
             Ok(())
         }
     }

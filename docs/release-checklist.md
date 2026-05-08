@@ -9,7 +9,7 @@ Before editing, write down the release purpose in one sentence.
 Good examples:
 
 ```text
-v0.5.1 keeps the local keyword query skeleton file-based and deterministic, with a small README wording clarification release on top of v0.5.0.
+v0.5.4 cleans up scripts so build helpers compile kb-cli itself and broad knowledge-base workflow wrappers are removed.
 v0.4.7 only improves cross-platform onboarding docs.
 ```
 
@@ -29,7 +29,7 @@ CHANGELOG.md
 For standard releases, use normal SemVer such as:
 
 ```toml
-version = "0.5.1"
+version = "0.5.4"
 ```
 
 ## 3. Run local checks
@@ -41,6 +41,16 @@ cargo fmt --check
 cargo test
 cargo check
 cargo build --release
+```
+
+Or use the bundled build helper:
+
+```bat
+scripts\build_release.bat
+```
+
+```bash
+scripts/build_release.sh
 ```
 
 Also check the CLI help text:
@@ -70,18 +80,18 @@ Review both the unstaged and staged diff.
 Manual form:
 
 ```bash
-git commit -m "v0.5.1 README workflow wording clarity"
+git commit -m "v0.5.4 clean script helpers"
 git push
 ```
 
 Or use the helper scripts:
 
 ```bat
-scripts\git_safe_push.bat "v0.5.1 README workflow wording clarity"
+scripts\git_safe_push.bat "v0.5.4 clean script helpers"
 ```
 
 ```bash
-scripts/git_safe_push.sh "v0.5.1 README workflow wording clarity"
+scripts/git_safe_push.sh "v0.5.4 clean script helpers"
 ```
 
 ## 6. Keep release notes honest

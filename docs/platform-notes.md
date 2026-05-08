@@ -2,7 +2,11 @@
 
 `kb-cli` is designed so the Rust CLI stays cross-platform and the platform-specific differences stay in documentation and small wrapper scripts.
 
-Current version: `v0.5.1`
+Current version: `v0.5.4`
+
+## Related architecture document
+
+The batch-mode / shell-mode boundary is defined in `docs/cli-shell-principle.md`. Platform wrapper scripts must not bypass that boundary.
 
 ## Core policy
 
@@ -49,19 +53,17 @@ kb --kb-path ./quantum status
 
 ## Wrapper scripts
 
-Windows helper:
+The `scripts/` directory should remain small and deterministic. In v0.5.4 it contains only:
 
 ```text
-scripts/build_llm_wiki.bat
+scripts/build_release.bat   Windows Rust release build helper
+scripts/build_release.sh    macOS/Linux Rust release build helper
+scripts/git_safe_push.bat   Windows review-first Git helper
+scripts/git_safe_push.sh    macOS/Linux review-first Git helper
+scripts/README.md           Script policy and usage notes
 ```
 
-macOS/Linux helper:
-
-```text
-scripts/build_llm_wiki.sh
-```
-
-Both helpers should remain thin wrappers around the Rust CLI. They should not become independent implementations of the knowledge-base workflow.
+Knowledge-base workflows should be documented as explicit `kb ...` command sequences rather than hidden inside broad wrapper scripts. This avoids confusing "build the Rust executable" with "build or initialize a knowledge base."
 
 ## Release check
 

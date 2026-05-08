@@ -2,7 +2,7 @@
 
 This guide is written for PowerShell on Windows. The safest workflow is still the cross-platform Rust CLI; the batch file is only a convenience wrapper. For macOS/Linux, use `docs/unix-quickstart.md`.
 
-Current version: `v0.5.1`
+Current version: `v0.5.4`
 
 ## 1. Install Rust once
 
@@ -88,7 +88,7 @@ kb --kb-path "D:\github\LLM-wiki\quantum" lint-static --dry-run
 kb --kb-path "D:\github\LLM-wiki\quantum" lint-static --preview
 ```
 
-## 5. Recommended v0.5.1 verification flow
+## 5. Recommended v0.5.4 verification flow
 
 After bootstrapping or after an AI/human edits `wiki\`, run:
 
@@ -106,29 +106,30 @@ Open the generated lint report here:
 D:\github\LLM-wiki\quantum\outputs\reports\lint_static_<timestamp>.md
 ```
 
-## 6. Use the batch helper when desired
+## 6. Build kb-cli itself when needed
 
-From the project root:
-
-```powershell
-scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum"
-```
-
-Useful flags:
+From the project root, use the deterministic release-build helper:
 
 ```powershell
-scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --copy
-scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --move
-scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --recursive
-scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --dry-run
-scripts\build_llm_wiki.bat "D:\github\LLM-wiki\quantum" --force-metadata
+scripts\build_release.bat
 ```
 
-The helper delegates to:
+This helper runs:
 
-```powershell
-kb --kb-path <target> bootstrap --copy
+```text
+cargo fmt --check
+cargo test
+cargo check
+cargo build --release
 ```
+
+It compiles `kb-cli` itself and writes the executable to:
+
+```text
+target\release\kb.exe
+```
+
+For knowledge-base workflows, prefer explicit `kb ...` commands instead of broad wrapper scripts.
 
 ## 7. Run tests before release
 

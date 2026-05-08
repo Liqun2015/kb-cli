@@ -3,7 +3,6 @@ use std::path::PathBuf;
 use anyhow::Result;
 
 use crate::commands::init::get_kb_path;
-use crate::commands::model_switch;
 use crate::commands::model_config::ModelManager;
 use crate::intent::{IntentParser, Intent};
 
@@ -12,9 +11,10 @@ pub fn execute() -> Result<()> {
     let kb_path = get_kb_path(None);
     let parser = IntentParser::new();
 
-    println!("CLI Knowledge Base Assistant");
+    println!("kb deterministic interactive shell");
     println!("Knowledge base: {}", kb_path.display());
     println!("Type 'help' for available commands or 'exit' to quit");
+    println!("Note: kb> is a deterministic command shell, not an LLM chat interface.");
     println!();
 
     let stdin = std::io::stdin();
@@ -112,34 +112,6 @@ fn execute_intent(kb_path: &PathBuf, parser: &IntentParser, intent: &Intent, inp
             println!("Run 'kb build-wiki' in bash mode to build wiki pages.");
         }
 
-        // Commands requiring LLM
-        Intent::AskQuestion => {
-            if let Some(question) = parser.extract_query(input, intent) {
-                ask_question(&question);
-            } else {
-                println!("Usage: ask <question>");
-            }
-        }
-
-        Intent::SummarizePapers => {
-            summarize_papers();
-        }
-
-        Intent::SummarizeNotes => {
-            summarize_notes();
-        }
-
-        Intent::ExplainConcept => {
-            if let Some(concept) = parser.extract_query(input, intent) {
-                explain_concept(&concept);
-            } else {
-                println!("Usage: explain <concept>");
-            }
-        }
-
-        Intent::GenerateOutline => {
-            println!("Outline generation feature coming soon.");
-        }
 
         // === Model Management Commands ===
         Intent::ListModel => {
@@ -198,20 +170,14 @@ fn print_help() {
     println!("    help                   Show this help");
     println!("    exit                   Exit REPL");
     println!();
-    println!("  Commands requiring LLM:");
-    println!("    ask <question>         Ask a question");
-    println!("    explain <concept>      Explain a concept");
-    println!("    summarize papers       Summarize papers");
-    println!("    summarize notes        Summarize notes");
-    println!("    what is <term>         Define a term");
-    println!("    how to <action>        Get help with something");
+    println!("  Boundary:");
+    println!("    kb> is a deterministic command shell, not an LLM chat interface.");
+    println!("    Free-form natural-language or LLM-style requests are not shell commands.");
     println!();
     println!("Usage examples:");
     println!("  kb> search diffusion");
-    println!("  kb> ask what are the key open questions in this knowledge base?");
-    println!("  kb> explain transformation thermotics");
-    println!("  kb> summarize papers");
     println!("  kb> list papers");
+    println!("  kb> list notes");
     println!("  kb> help");
 }
 
@@ -367,72 +333,6 @@ fn search_notes(kb_path: &PathBuf, query: &str) {
     }
 }
 
-fn ask_question(question: &str) {
-    println!("\nQuestion: '{}'", question);
-
-    // Always write the request first. If no matching response exists yet,
-    // model_switch reports the request id and output path instead of showing a
-    // stale answer from an earlier request.
-    match model_switch::get_llm_response(question, true) {
-        Ok(response) => {
-            println!("\nResponse:");
-            println!("{}", response);
-        }
-        Err(e) => {
-            eprintln!("\nError getting LLM response: {}", e);
-        }
-    }
-}
-
-fn summarize_papers() {
-    println!("\nSummarizing recent papers...");
-
-    let prompt = "Please summarize the recent papers in this knowledge base. \
-                   Focus on key findings, methodologies, and open questions.";
-
-    match model_switch::get_llm_response(prompt, true) {
-        Ok(response) => {
-            println!("\nSummary:");
-            println!("{}", response);
-        }
-        Err(e) => {
-            eprintln!("\nError generating summary: {}", e);
-        }
-    }
-}
-
-fn summarize_notes() {
-    println!("\nSummarizing notes...");
-
-    let prompt = "Please summarize the key notes and reference materials in the knowledge base. \
-                   Highlight the main topics and concepts covered.";
-
-    match model_switch::get_llm_response(prompt, true) {
-        Ok(response) => {
-            println!("\nSummary:");
-            println!("{}", response);
-        }
-        Err(e) => {
-            eprintln!("\nError generating summary: {}", e);
-        }
-    }
-}
-
-fn explain_concept(concept: &str) {
-    println!("\nExplaining concept: '{}'", concept);
-
-    let prompt = format!("Please explain the concept of '{}' in the context of this knowledge base.", concept);
-
-    match model_switch::get_llm_response(&prompt, true) {
-        Ok(response) => {
-            println!("\nExplanation:");
-            println!("{}", response);
-        }
-        Err(e) => {
-            eprintln!("\nError explaining concept: {}", e);
-        }
-    }
-}
 
 // === Model Management Functions ===
 
@@ -875,7 +775,7 @@ fn validate_model_internal(id: Option<&str>) {
                     println!();
                     println!("Status: Configuration looks valid");
                     println!("Note: Network connectivity not tested in this validation.");
-                    println!("To test LLM functionality, use 'ask' command in REPL mode.");
+                    println!("Note: REPL mode is deterministic and does not test LLM functionality.");
                 }
                 None => {
                     println!("\nNo model to validate.");

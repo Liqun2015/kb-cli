@@ -14,12 +14,6 @@ pub enum Intent {
     ExtractMetadata,
     BuildWiki,
 
-    // Commands requiring LLM
-    AskQuestion,
-    SummarizePapers,
-    SummarizeNotes,
-    ExplainConcept,
-    GenerateOutline,
 
     // === Model Management Commands ===
     ListModel,
@@ -95,46 +89,6 @@ impl KeywordPattern {
             (r"^update\s+wiki$", Intent::BuildWiki),
             (r"^rebuild\s+wiki$", Intent::BuildWiki),
 
-            // Ask a question (requires LLM)
-            (r"^ask\s+", Intent::AskQuestion),
-            (r"^question\s+", Intent::AskQuestion),
-            (r"^tell\s+me\s+about\s+", Intent::AskQuestion),
-            (r"^explain\s+", Intent::AskQuestion),
-            (r"^what\s+is\s+", Intent::AskQuestion),
-            (r"^how\s+(do|does|to|can|would|should)\s+", Intent::AskQuestion),
-            (r"^why\s+", Intent::AskQuestion),
-            (r"^when\s+", Intent::AskQuestion),
-            (r"^which\s+", Intent::AskQuestion),
-            (r"^define\s+", Intent::AskQuestion),
-            (r"^describe\s+", Intent::AskQuestion),
-            (r"^compare\s+", Intent::AskQuestion),
-
-            // Summarize papers (requires LLM)
-            (r"^summarize\s+papers?$", Intent::SummarizePapers),
-            (r"^summarise\s+papers?$", Intent::SummarizePapers),
-            (r"^summary\s+papers?$", Intent::SummarizePapers),
-            (r"^sum\s+papers?$", Intent::SummarizePapers),
-            (r"^papers?\s+summary$", Intent::SummarizePapers),
-            (r"^papers?\s+summar(y|ise)$", Intent::SummarizePapers),
-
-            // Summarize notes (requires LLM)
-            (r"^summarize\s+notes?$", Intent::SummarizeNotes),
-            (r"^summarise\s+notes?$", Intent::SummarizeNotes),
-            (r"^summary\s+notes?$", Intent::SummarizeNotes),
-            (r"^sum\s+notes?$", Intent::SummarizeNotes),
-            (r"^notes?\s+summary$", Intent::SummarizeNotes),
-            (r"^notes?\s+summar(y|ise)$", Intent::SummarizeNotes),
-
-            // Explain concept (requires LLM)
-            (r"^explain\s+concept\s+", Intent::ExplainConcept),
-            (r"^what\s+(is|are)\s+", Intent::ExplainConcept),
-            (r"^define\s+", Intent::ExplainConcept),
-
-            // Generate outline (requires LLM)
-            (r"^generate\s+outline", Intent::GenerateOutline),
-            (r"^create\s+outline", Intent::GenerateOutline),
-            (r"^outline\s+", Intent::GenerateOutline),
-
             // === Model Management Commands ===
             (r"^list\s+models?", Intent::ListModel),
             (r"^models?$", Intent::ListModel),
@@ -170,11 +124,6 @@ impl KeywordPattern {
             Intent::Initialize => "Initialize knowledge base",
             Intent::ExtractMetadata => "Extract paper metadata",
             Intent::BuildWiki => "Build Wiki pages",
-            Intent::AskQuestion => "Ask a question (requires LLM)",
-            Intent::SummarizePapers => "Summarize papers (requires LLM)",
-            Intent::SummarizeNotes => "Summarize notes (requires LLM)",
-            Intent::ExplainConcept => "Explain concept (requires LLM)",
-            Intent::GenerateOutline => "Generate outline (requires LLM)",
             // === Model Management ===
             Intent::ListModel => "List all configured models",
             Intent::ShowModel => "Show current model details",
@@ -185,17 +134,12 @@ impl KeywordPattern {
         }
     }
 
-    /// Check if intent requires LLM
+    /// Check if intent requires LLM.
+    ///
+    /// In the deterministic `kb>` shell, no parsed intent requires LLM execution.
     #[allow(dead_code)]
-    pub fn is_llm_required(intent: &Intent) -> bool {
-        matches!(
-            intent,
-            Intent::AskQuestion
-                | Intent::SummarizePapers
-                | Intent::SummarizeNotes
-                | Intent::ExplainConcept
-                | Intent::GenerateOutline
-        )
+    pub fn is_llm_required(_intent: &Intent) -> bool {
+        false
     }
 }
 
@@ -211,9 +155,8 @@ mod tests {
 
     #[test]
     fn test_is_llm_required() {
-        assert!(KeywordPattern::is_llm_required(&Intent::AskQuestion));
-        assert!(KeywordPattern::is_llm_required(&Intent::SummarizePapers));
         assert!(!KeywordPattern::is_llm_required(&Intent::ListPapers));
+        assert!(!KeywordPattern::is_llm_required(&Intent::SearchPapers));
         assert!(!KeywordPattern::is_llm_required(&Intent::Help));
     }
 }

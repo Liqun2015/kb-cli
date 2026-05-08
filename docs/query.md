@@ -2,7 +2,7 @@
 
 `kb query` searches local Markdown pages under `wiki/` using deterministic keyword matching.
 
-This query skeleton was introduced in v0.5.0 and remains intentionally small and inspectable in v0.5.1.
+This query skeleton was introduced in v0.5.0 and remains intentionally small and inspectable in v0.5.4.
 
 ## What it does
 

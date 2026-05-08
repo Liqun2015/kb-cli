@@ -431,9 +431,9 @@ KnowledgeBase/
     └── papers_metadata.json
 ```
 
-## Model-Switch Integration
+## CLI / Shell / LLM Boundary
 
-The REPL writes LLM requests to `.model_switch_input.json`. External model-switch tooling may write responses to `.model_switch_output.json` with the same `request_id`.
+`kb>` is treated as a deterministic command shell, not an LLM chat interface. Future LLM behavior must use a deliberately designed explicit interface after the architecture is intentionally decided.
 
 ---
 

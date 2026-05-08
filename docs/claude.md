@@ -2,7 +2,7 @@
 
 ## Current version
 
-`kb-cli v0.5.1`
+`kb-cli v0.5.4`
 
 ## Core goal
 
@@ -57,6 +57,23 @@ switch-model
 delete-model
 validate-model
 ```
+
+## CLI / shell / LLM boundary
+
+Preserve the deterministic boundary between batch mode, shell mode, and future LLM modes.
+
+Required principles:
+
+- `kb ...` is batch mode.
+- `kb>` is interactive shell mode.
+- Core knowledge-base commands must map one-to-one across batch and shell modes.
+- `kb>` is not an LLM chat interface.
+- Do not interpret free-form natural language inside `kb>` as an LLM request.
+- Do not call any LLM API implicitly from `kb>`.
+- Future LLM behavior must be introduced only through a deliberately designed explicit interface; do not advertise placeholder LLM command names before that design exists.
+- Do not write a separate business-logic implementation for shell mode; shell mode should dispatch to the same command handlers used by batch mode.
+
+See `docs/cli-shell-principle.md`.
 
 ## Do not invent undocumented features
 
@@ -135,7 +152,7 @@ README and docs must describe only implemented behavior. Do not list future comm
 Prepare planning work starts in v0.4.x. Small compatible improvements should increment the patch version:
 
 ```text
-0.4.0 -> 0.4.1 -> 0.4.2 -> 0.4.3 -> 0.4.4 -> 0.4.5 -> 0.4.6 -> 0.4.7 -> 0.4.8 -> 0.5.0 -> 0.5.1
+0.4.0 -> 0.4.1 -> 0.4.2 -> 0.4.3 -> 0.4.4 -> 0.4.5 -> 0.4.6 -> 0.4.7 -> 0.4.8 -> 0.5.0 -> 0.5.1 -> 0.5.2 -> 0.5.3 -> 0.5.4
 ```
 
-The next major implementation phase after v0.5.1 should refine query ergonomics carefully, then consider saved queries or semantic LLM linting only after the deterministic path is stable.
+The next major implementation phase after v0.5.4 should refine query ergonomics carefully, then consider saved queries or semantic LLM linting only after the deterministic path is stable.
