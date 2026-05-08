@@ -2,7 +2,7 @@
 
 This guide is written for PowerShell on Windows. The safest workflow is still the cross-platform Rust CLI; the batch file is only a convenience wrapper. For macOS/Linux, use `docs/unix-quickstart.md`.
 
-Current version: `v0.4.8`
+Current version: `v0.5.1`
 
 ## 1. Install Rust once
 
@@ -88,7 +88,7 @@ kb --kb-path "D:\github\LLM-wiki\quantum" lint-static --dry-run
 kb --kb-path "D:\github\LLM-wiki\quantum" lint-static --preview
 ```
 
-## 5. Recommended v0.4.8 verification flow
+## 5. Recommended v0.5.1 verification flow
 
 After bootstrapping or after an AI/human edits `wiki\`, run:
 
@@ -97,6 +97,7 @@ kb --kb-path "D:\github\LLM-wiki\quantum" status
 kb --kb-path "D:\github\LLM-wiki\quantum" sync-wiki --dry-run
 kb --kb-path "D:\github\LLM-wiki\quantum" sync-wiki
 kb --kb-path "D:\github\LLM-wiki\quantum" lint-static
+kb --kb-path "D:\github\LLM-wiki\quantum" query thermal cloak
 ```
 
 Open the generated lint report here:

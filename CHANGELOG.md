@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.5.1 - README workflow wording clarity
+
+- Clarified the README's Karpathy-style workflow sentence.
+- Documented `kb prepare` as generating reviewable task materials rather than directly preparing final `wiki/` pages.
+- Clarified that `wiki/` stores maintained Markdown knowledge pages and `rules/` constrains future human/AI maintainers.
+- No query behavior, LLM calls, embeddings, vector search, RAG, or autonomous LLM execution was added.
+
+## v0.5.0 - Query skeleton
+
+- Added `kb query` for deterministic local keyword search over `wiki/**/*.md`.
+- Query searches titles, relative paths, and Markdown bodies with simple AND semantics across terms.
+- Added `--limit`, `--snippets`, `--json`, and `--title-only` options.
+- Added `docs/query.md` to document the query boundary and usage examples.
+- Updated README, agent boundary notes, and developer guardrails for v0.5.0.
+- No LLM calls, embeddings, vector search, RAG, semantic reranking, saved answers, or background indexing were added.
+
 ## v0.4.8 - Developer workflow helpers
 
 - Added `scripts/git_safe_push.bat` for Windows users who want a review-first `git status` / `git diff` / `git add` / `git diff --cached` / `git commit` / `git push` flow.

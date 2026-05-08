@@ -1,12 +1,12 @@
 # kb-cli
 
-> **v0.4.8 note:** Developer workflow helpers are now included. This release adds safe Git push scripts for Windows and Unix, plus review-first Git and release-checklist documentation.
+> **v0.5.1 note:** README wording has been clarified around the Karpathy-style workflow. `kb query` remains a deterministic local keyword search over `wiki/**/*.md`; it does not use an LLM, embeddings, vector search, or RAG.
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.4.8`
+> Current version: `v0.5.1`
 
-`kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, prepare Markdown pages under `wiki/` for AI maintenance, and constrain future AI maintainers through a generated `rules/` layer.
+`kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, use `kb prepare` to generate reviewable task materials, maintain Markdown knowledge pages under `wiki/`, and constrain future human/AI maintainers through the `rules/` layer.
 
 ## How does the LLM maintain Markdown pages?
 
@@ -60,11 +60,15 @@ kb prepare --new
 kb prepare --file raw/papers/example.pdf
 ```
 
-Full LLM-driven writing and durable query saving are planned for later stages:
+Local keyword query is now available:
 
 ```bash
-kb query "your question" --save
+kb query thermal cloak
+kb query "thermal cloak" --limit 5
+kb query thermal cloak --json
 ```
+
+Durable saved answers and LLM-assisted query synthesis are planned for later stages.
 
 Static wiki linting is now available:
 
@@ -85,11 +89,45 @@ docs/cross-platform-quickstart.md  Shared command flow
 docs/platform-notes.md          Path and wrapper-script policy
 docs/git-workflow.md            Review-first Git commit/push workflow
 docs/release-checklist.md       Small-release checklist
+docs/query.md                   Local keyword query skeleton
 ```
 
 ## Current Scope
 
-This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, and a manifest registry under `processing/manifest.json`. It still does **not** provide full RAG, vector search, or autonomous LLM/wiki preparation. `kb prepare` currently plans and documents the prepare work; it does not perform LLM edits by itself.
+This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, a manifest registry under `processing/manifest.json`, static linting, and deterministic keyword search over `wiki/`. It still does **not** provide full RAG, vector search, embeddings, or autonomous LLM/wiki preparation. `kb prepare` currently plans and documents the prepare work; it does not perform LLM edits by itself.
+
+## What Changed in v0.5.1
+
+`v0.5.1` is a documentation clarity release. It does not change query behavior or add any LLM functionality.
+
+Main changes:
+
+- Clarified the README description of the Karpathy-style workflow.
+- Made the role of `kb prepare` explicit: it generates reviewable task materials, not final wiki pages.
+- Clarified that `wiki/` contains maintained Markdown knowledge pages and `rules/` constrains future human/AI maintainers.
+
+## What Changed in v0.5.0
+
+`v0.5.0` adds the first query skeleton. It is intentionally simple: local Markdown keyword search over `wiki/**/*.md`, with no LLM calls and no semantic retrieval.
+
+Main changes:
+
+- Added `kb query` for local keyword search.
+- Added AND-style matching across query terms.
+- Added lightweight scoring from title, path, body, and snippet matches.
+- Added `--limit`, `--snippets`, `--json`, and `--title-only`.
+- Added `docs/query.md`.
+
+Useful query commands:
+
+```bash
+kb query thermal cloak
+kb query thermal cloak --limit 5
+kb query thermal cloak --snippets 3
+kb query thermal cloak --title-only
+kb query thermal cloak --json
+```
+
 
 ## What Changed in v0.4.8
 
@@ -519,6 +557,7 @@ KnowledgeBase/
 | `kb prepare [--new\|--file PATH] [--dry-run\|--preview]` | implemented skeleton | Generate `processing/prepare_queue.json` and reviewable prepare proposals without calling an LLM. |
 | `kb sync-wiki [--dry-run\|--preview] [--json]` | implemented skeleton | Read `source_ids` / `source_files` front matter from `wiki/**/*.md` and update manifest `wiki_pages`. |
 | `kb lint-static [--dry-run\|--preview\|--no-report] [--json] [--strict]` | implemented skeleton | Check broken WikiLinks, orphan pages, missing source front matter, empty pages, and duplicate titles. |
+| `kb query <terms...> [--limit N] [--snippets N] [--json] [--title-only]` | implemented skeleton | Search `wiki/**/*.md` with local keyword matching. |
 | `kb repl` | implemented | Start a simple interactive shell. |
 | `kb list-models` | implemented | List configured LLM models. |
 | `kb show-model` | implemented | Show the current model configuration. |
@@ -533,7 +572,6 @@ These are planned directions, not current features:
 
 ```text
 autonomous AI prepare execution  # `kb prepare` currently plans work only
-kb query                         # Query the prepared wiki and optionally save durable answers
 semantic LLM lint                # Deeper checks for contradictions, stale claims, weak organization
 AI apply logic using the manifest
 vector search / RAG / JSON agent API
@@ -592,7 +630,7 @@ Each new REPL LLM request writes a `request_id` to `.model_switch_input.json`; m
 
 ## Notes for Future Agents
 
-`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM prepare execution, `query`, semantic LLM lint, or full RAG exists in `v0.4.8`.
+`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM prepare execution, semantic LLM lint, saved query answers, or full RAG exists in `v0.5.1`.
 
 ## License
 

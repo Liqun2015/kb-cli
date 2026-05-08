@@ -1,5 +1,6 @@
 pub mod build_wiki;
 pub mod prepare;
+pub mod query;
 pub mod extract_metadata;
 pub mod init;
 pub mod ingest;

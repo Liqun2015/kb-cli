@@ -1,6 +1,6 @@
 # Agent/API Boundary Notes
 
-This document records what `kb-cli v0.4.8` actually supports. It is intentionally conservative.
+This document records what `kb-cli v0.5.1` actually supports. It is intentionally conservative.
 
 ## Implemented CLI commands
 
@@ -15,6 +15,7 @@ This document records what `kb-cli v0.4.8` actually supports. It is intentionall
 | `kb prepare [--new\|--file PATH] [--dry-run\|--preview]` | Generate prepare queue/proposal files for future LLM wiki maintenance without calling an LLM. |
 | `kb sync-wiki [--dry-run\|--preview] [--json]` | Link source front matter in `wiki/**/*.md` back to manifest entries. |
 | `kb lint-static [--dry-run\|--preview\|--no-report] [--json] [--strict]` | Check broken WikiLinks, orphan pages, missing source front matter, empty pages, and duplicate titles. |
+| `kb query <terms...> [--limit N] [--snippets N] [--json] [--title-only]` | Search `wiki/**/*.md` with deterministic local keyword matching. |
 | `kb repl` | Start a simple interactive shell. |
 | `kb list-models` | List configured LLM models. |
 | `kb show-model` | Show the active model configuration. |
@@ -58,7 +59,7 @@ This is cross-platform because the workflow is implemented inside the Rust CLI, 
 
 ## Manifest / Status
 
-`kb status` is implemented in v0.4.8:
+`kb status` is implemented:
 
 ```bash
 kb --kb-path /path/to/kb status
@@ -77,7 +78,7 @@ The manifest is not a stable external API yet; treat it as a local project file 
 
 ## Prepare planning
 
-`kb prepare` is implemented in v0.4.8 as a planning command only. It may write:
+`kb prepare` is implemented as a planning command only. It may write:
 
 ```text
 processing/prepare_queue.json
@@ -89,7 +90,7 @@ It does not call an LLM, does not edit `wiki/`, and does not mark manifest entri
 
 ## Static wiki lint
 
-`kb lint-static` is implemented in v0.4.8 as a deterministic local Markdown health check. It does not call an LLM and does not rewrite `wiki/`.
+`kb lint-static` is implemented as a deterministic local Markdown health check. It does not call an LLM and does not rewrite `wiki/`.
 
 ```bash
 kb --kb-path /path/to/kb lint-static
@@ -100,18 +101,37 @@ kb --kb-path /path/to/kb lint-static --strict
 
 Reports are written under `outputs/reports/` unless `--dry-run`, `--preview`, or `--no-report` is used. `--no-report` is specific to `lint-static`.
 
+
+## Query skeleton
+
+`kb query` is implemented in v0.5.0 as deterministic local keyword search over `wiki/**/*.md`.
+
+```bash
+kb --kb-path /path/to/kb query thermal cloak
+kb --kb-path /path/to/kb query thermal cloak --limit 5
+kb --kb-path /path/to/kb query thermal cloak --json
+kb --kb-path /path/to/kb query thermal cloak --title-only
+```
+
+Current behavior:
+- Scans Markdown files under `wiki/`.
+- Matches query terms with AND semantics.
+- Searches page titles, relative paths, and Markdown bodies by default.
+- Prints ranked local results with snippets.
+- Does not call an LLM, use embeddings, build a vector index, or perform RAG.
+
 ## Current non-goals
 
-Do not assume the following exist in `v0.4.8`:
+Do not assume the following exist in `v0.5.1`:
 
 ```text
 global --format json
 autonomous prepare execution
-query
 semantic LLM lint
 vector search
 full RAG
 semantic retrieval
+saved query answers
 add-paper
 list-papers
 list-notes

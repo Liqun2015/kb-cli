@@ -2,7 +2,7 @@
 
 This guide is for macOS, Linux, and other Unix-like shells such as `bash` and `zsh`.
 
-Current version: `v0.4.8`
+Current version: `v0.5.1`
 
 ## 1. Install Rust once
 
@@ -135,6 +135,7 @@ kb --kb-path "$HOME/github/LLM-wiki/quantum" status
 kb --kb-path "$HOME/github/LLM-wiki/quantum" sync-wiki --dry-run
 kb --kb-path "$HOME/github/LLM-wiki/quantum" sync-wiki
 kb --kb-path "$HOME/github/LLM-wiki/quantum" lint-static
+kb --kb-path "$HOME/github/LLM-wiki/quantum" query thermal cloak
 ```
 
 Open the generated lint report under:

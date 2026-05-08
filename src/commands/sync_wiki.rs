@@ -147,7 +147,7 @@ fn sync_manifest_from_wiki(
     summary.unmatched_sources = unmatched.into_iter().collect();
 
     if !dry_run {
-        manifest.schema_version = "0.4.7".to_string();
+        manifest.schema_version = "0.5.0".to_string();
         manifest.generated_by = "kb-cli".to_string();
         manifest.updated_at = chrono::Utc::now().to_rfc3339();
         fs::write(manifest_path, serde_json::to_string_pretty(manifest)?)?;

@@ -6,7 +6,7 @@ This guide gives the shared workflow. For platform-specific details, see:
 - `docs/unix-quickstart.md`
 - `docs/platform-notes.md`
 
-Current version: `v0.4.8`
+Current version: `v0.5.1`
 
 ## 1. Install `kb`
 
@@ -147,6 +147,12 @@ For linting without writing a report:
 
 ```bash
 kb --kb-path /path/to/literature-folder lint-static --no-report
+```
+
+Then run a local keyword query over the prepared wiki:
+
+```bash
+kb --kb-path /path/to/literature-folder query thermal cloak
 ```
 
 ## 10. Open in Obsidian

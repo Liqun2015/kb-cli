@@ -1,6 +1,6 @@
 # Release Checklist
 
-This checklist is for small local releases such as `v0.4.x`. It is deliberately conservative.
+This checklist is for small local releases such as `v0.4.x` or `v0.5.x`. It is deliberately conservative.
 
 ## 1. Confirm the scope
 
@@ -9,7 +9,7 @@ Before editing, write down the release purpose in one sentence.
 Good examples:
 
 ```text
-v0.4.8 only adds safe Git helper scripts and workflow docs.
+v0.5.1 keeps the local keyword query skeleton file-based and deterministic, with a small README wording clarification release on top of v0.5.0.
 v0.4.7 only improves cross-platform onboarding docs.
 ```
 
@@ -29,7 +29,7 @@ CHANGELOG.md
 For standard releases, use normal SemVer such as:
 
 ```toml
-version = "0.4.8"
+version = "0.5.1"
 ```
 
 ## 3. Run local checks
@@ -49,6 +49,7 @@ Also check the CLI help text:
 kb --help
 kb prepare --help
 kb lint-static --help
+kb query --help
 ```
 
 ## 4. Review file changes
@@ -69,18 +70,18 @@ Review both the unstaged and staged diff.
 Manual form:
 
 ```bash
-git commit -m "v0.4.8 developer workflow helpers"
+git commit -m "v0.5.1 README workflow wording clarity"
 git push
 ```
 
 Or use the helper scripts:
 
 ```bat
-scripts\git_safe_push.bat "v0.4.8 developer workflow helpers"
+scripts\git_safe_push.bat "v0.5.1 README workflow wording clarity"
 ```
 
 ```bash
-scripts/git_safe_push.sh "v0.4.8 developer workflow helpers"
+scripts/git_safe_push.sh "v0.5.1 README workflow wording clarity"
 ```
 
 ## 6. Keep release notes honest
