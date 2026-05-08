@@ -2,7 +2,7 @@
 
 `kb-cli` is designed so the Rust CLI stays cross-platform and the platform-specific differences stay in documentation and small wrapper scripts.
 
-Current version: `v0.4.7`
+Current version: `v0.4.8`
 
 ## Core policy
 
@@ -75,3 +75,14 @@ cargo build --release
 ```
 
 When possible, also smoke-test the quick-start examples on Windows PowerShell and a Unix-like shell.
+
+## Git helper scripts
+
+Review-first Git helper scripts are platform-specific wrappers around the same manual workflow:
+
+```text
+scripts/git_safe_push.bat   Windows CMD/PowerShell
+scripts/git_safe_push.sh    macOS/Linux bash or zsh
+```
+
+These scripts are intentionally thin. They should not hide diffs, skip review pauses, rewrite history, or force-push.

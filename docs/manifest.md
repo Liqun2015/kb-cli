@@ -1,6 +1,6 @@
 # Manifest Tracking
 
-`kb-cli v0.4.7` maintains a lightweight raw-file registry:
+`kb-cli v0.4.8` maintains a lightweight raw-file registry:
 
 ```text
 processing/manifest.json

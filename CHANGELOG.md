@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.4.8 - Developer workflow helpers
+
+- Added `scripts/git_safe_push.bat` for Windows users who want a review-first `git status` / `git diff` / `git add` / `git diff --cached` / `git commit` / `git push` flow.
+- Added `scripts/git_safe_push.sh` with the same two-review flow for macOS/Linux users.
+- Added `docs/git-workflow.md` to document safe commit and push habits for this project.
+- Added `docs/release-checklist.md` for small local releases.
+- Updated README documentation links and version markers to `v0.4.8`.
+- No query, vector search, embeddings, RAG, or autonomous LLM execution was added.
+
 ## v0.4.7 - Cross-platform quickstart polish
 
 - Added `docs/unix-quickstart.md` for macOS/Linux users.

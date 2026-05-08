@@ -2,7 +2,7 @@
 
 This guide is written for PowerShell on Windows. The safest workflow is still the cross-platform Rust CLI; the batch file is only a convenience wrapper. For macOS/Linux, use `docs/unix-quickstart.md`.
 
-Current version: `v0.4.7`
+Current version: `v0.4.8`
 
 ## 1. Install Rust once
 
@@ -88,7 +88,7 @@ kb --kb-path "D:\github\LLM-wiki\quantum" lint-static --dry-run
 kb --kb-path "D:\github\LLM-wiki\quantum" lint-static --preview
 ```
 
-## 5. Recommended v0.4.7 verification flow
+## 5. Recommended v0.4.8 verification flow
 
 After bootstrapping or after an AI/human edits `wiki\`, run:
 

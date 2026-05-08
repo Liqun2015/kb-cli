@@ -1,6 +1,6 @@
 # Agent/API Boundary Notes
 
-This document records what `kb-cli v0.4.7` actually supports. It is intentionally conservative.
+This document records what `kb-cli v0.4.8` actually supports. It is intentionally conservative.
 
 ## Implemented CLI commands
 
@@ -58,7 +58,7 @@ This is cross-platform because the workflow is implemented inside the Rust CLI, 
 
 ## Manifest / Status
 
-`kb status` is implemented in v0.4.7:
+`kb status` is implemented in v0.4.8:
 
 ```bash
 kb --kb-path /path/to/kb status
@@ -77,7 +77,7 @@ The manifest is not a stable external API yet; treat it as a local project file 
 
 ## Prepare planning
 
-`kb prepare` is implemented in v0.4.7 as a planning command only. It may write:
+`kb prepare` is implemented in v0.4.8 as a planning command only. It may write:
 
 ```text
 processing/prepare_queue.json
@@ -89,7 +89,7 @@ It does not call an LLM, does not edit `wiki/`, and does not mark manifest entri
 
 ## Static wiki lint
 
-`kb lint-static` is implemented in v0.4.7 as a deterministic local Markdown health check. It does not call an LLM and does not rewrite `wiki/`.
+`kb lint-static` is implemented in v0.4.8 as a deterministic local Markdown health check. It does not call an LLM and does not rewrite `wiki/`.
 
 ```bash
 kb --kb-path /path/to/kb lint-static
@@ -102,7 +102,7 @@ Reports are written under `outputs/reports/` unless `--dry-run`, `--preview`, or
 
 ## Current non-goals
 
-Do not assume the following exist in `v0.4.7`:
+Do not assume the following exist in `v0.4.8`:
 
 ```text
 global --format json

@@ -6,7 +6,7 @@ This guide gives the shared workflow. For platform-specific details, see:
 - `docs/unix-quickstart.md`
 - `docs/platform-notes.md`
 
-Current version: `v0.4.7`
+Current version: `v0.4.8`
 
 ## 1. Install `kb`
 
@@ -168,3 +168,26 @@ Before asking an AI agent to maintain the Wiki, review:
 ```text
 /path/to/literature-folder/rules/LLM_WIKI_SCHEMA.md
 ```
+
+## Review and push changes
+
+For project changes, use the review-first Git workflow:
+
+```text
+docs/git-workflow.md
+docs/release-checklist.md
+```
+
+Windows:
+
+```bat
+scripts\git_safe_push.bat "your commit message"
+```
+
+macOS/Linux:
+
+```bash
+chmod +x scripts/git_safe_push.sh
+scripts/git_safe_push.sh "your commit message"
+```
+

@@ -1,10 +1,10 @@
 # kb-cli
 
-> **v0.4.7 note:** Cross-platform onboarding is now balanced across Windows, macOS, and Linux. This release adds a Unix quick start, a platform-notes document, and a thin `scripts/build_llm_wiki.sh` helper.
+> **v0.4.8 note:** Developer workflow helpers are now included. This release adds safe Git push scripts for Windows and Unix, plus review-first Git and release-checklist documentation.
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.4.7`
+> Current version: `v0.4.8`
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, prepare Markdown pages under `wiki/` for AI maintenance, and constrain future AI maintainers through a generated `rules/` layer.
 
@@ -83,11 +83,39 @@ docs/windows-quickstart.md      PowerShell and .bat helper
 docs/unix-quickstart.md         macOS/Linux bash or zsh
 docs/cross-platform-quickstart.md  Shared command flow
 docs/platform-notes.md          Path and wrapper-script policy
+docs/git-workflow.md            Review-first Git commit/push workflow
+docs/release-checklist.md       Small-release checklist
 ```
 
 ## Current Scope
 
 This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, and a manifest registry under `processing/manifest.json`. It still does **not** provide full RAG, vector search, or autonomous LLM/wiki preparation. `kb prepare` currently plans and documents the prepare work; it does not perform LLM edits by itself.
+
+## What Changed in v0.4.8
+
+`v0.4.8` is a developer workflow stabilization release before `v0.5.0`. It deliberately does not add query, vector search, embeddings, RAG, or autonomous LLM execution. The goal is to make local changes easier to review, commit, push, and release safely.
+
+Main changes:
+
+- Added `scripts/git_safe_push.bat` for Windows.
+- Added `scripts/git_safe_push.sh` for macOS/Linux.
+- Added `docs/git-workflow.md` to document the review-first Git workflow.
+- Added `docs/release-checklist.md` for small local release preparation.
+- Updated README and docs index links to include the Git workflow and release checklist.
+- Kept the Rust core workflow unchanged.
+
+Recommended Windows helper usage:
+
+```bat
+scripts\git_safe_push.bat "v0.4.8 developer workflow helpers"
+```
+
+Recommended macOS/Linux helper usage:
+
+```bash
+chmod +x scripts/git_safe_push.sh
+scripts/git_safe_push.sh "v0.4.8 developer workflow helpers"
+```
 
 ## What Changed in v0.4.7
 
@@ -564,7 +592,7 @@ Each new REPL LLM request writes a `request_id` to `.model_switch_input.json`; m
 
 ## Notes for Future Agents
 
-`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM prepare execution, `query`, semantic LLM lint, or full RAG exists in `v0.4.7`.
+`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM prepare execution, `query`, semantic LLM lint, or full RAG exists in `v0.4.8`.
 
 ## License
 
