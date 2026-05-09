@@ -1,6 +1,6 @@
 # Agent/API Boundary Notes
 
-This document records what `kb-cli v0.5.10` actually supports. It is intentionally conservative.
+This document records what `kb-cli v0.6.0.1` actually supports. It is intentionally conservative.
 
 ## Implemented CLI commands
 
@@ -16,12 +16,17 @@ This document records what `kb-cli v0.5.10` actually supports. It is intentional
 | `kb sync-wiki [--dry-run\|--preview] [--json]` | Link source front matter in `wiki/**/*.md` back to manifest entries. |
 | `kb lint-static [--dry-run\|--preview\|--no-report] [--json] [--strict]` | Check broken WikiLinks, orphan pages, missing source front matter, empty pages, and duplicate titles. |
 | `kb query <terms...> [--limit N] [--snippets N] [--json] [--title-only]` | Search `wiki/**/*.md` with deterministic local keyword matching. |
+| `kb links [--unresolved|--ambiguous|--resolved] [--json]` | Scan WikiLinks and deterministic link-resolution hints. |
 | `kb grep <pattern> [--path PATH] [--regex] [--json]` | Search text-like files with Rust-native line-level matching. |
 | `kb extract-text [--dry-run|--preview] [--force] [--json]` | Extract plain text from supported source files into `processing/text/` with deterministic best-effort methods. |
 | `kb refs [--path PATH] [--citations] [--json]` | Scan extracted text for deterministic reference hints such as headings, bibliography entries, DOI values, and optional citation markers. |
+| `kb refs-index [--path PATH] [--dry-run|--preview] [--json]` | Build bibliographic index relation candidates between extracted references and local papers. |
+| `kb refs-graph [--json|--mermaid|--dot] [--dry-run]` | Export bibliographic relation candidates as graph data for third-party visualization. |
+| `kb keywords [terms...] [--terms-file PATH] [--dry-run] [--json]` | Detect keyword/topic co-occurrence candidates among extracted text files. |
 | `kb tasks [--dry-run|--preview] [--json]` | Generate deferred human/LLM/agent task handoff lists under `LLM/tasks/`. |
 | `kb memory --task-id ID --summary TEXT` | Append completed-task audit memory under `LLM/memory/completed_tasks.md`. |
-| `kb repl` | Start a simple interactive shell. |
+| `kb health [--dry-run|--preview] [--json] [--strict]` | Summarize deterministic LLM Wiki and literature-relation health. |
+| `kb shell` | Start deterministic interactive shell mode. |
 | `kb list-models` | List configured LLM models. |
 | `kb show-model` | Show the active model configuration. |
 | `kb add-model ...` | Add a model configuration. |
@@ -42,7 +47,7 @@ Do not ask an LLM to infer file lists, keyword matches, reference hints, missing
 
 `kb>` is not an LLM chat interface. It must not silently interpret free-form natural language as an LLM request. Future LLM behavior must be introduced only through a deliberately designed explicit interface. Do not reserve or advertise placeholder LLM command names inside the deterministic shell before that design exists.
 
-In `v0.5.10`, the existing `kb repl` command is treated as an early shell experiment. Ambiguous LLM-like command patterns are not parsed by the shell. See `docs/cli-shell-principle.md`.
+In `v0.6.0.1`, `kb shell` is the deterministic shell entry point. It delegates only known structured `kb` commands to batch-mode `kb` semantics and remains outside LLM chat behavior. Unknown input is a safe no-op. See `docs/cli-shell-principle.md` and `docs/shell.md`.
 
 ## Three-layer LLM Wiki model
 
@@ -265,3 +270,20 @@ Use `kb links` for deterministic WikiLink extraction and resolution hints. The c
 Third-party graph skills and tools should use `docs/third-party-skills/` as the guidance source for relationship status, visual style, JSON fields, evidence preservation, and human-review requirements.
 
 Confirmed bibliographic index relations should render as solid edges. Candidate and ambiguous relations should render as dashed edges. Missing or unresolved references should render as hollow nodes.
+
+
+## `kb refs-graph`
+
+`kb refs-graph` exports bibliographic index relation candidates into graph data for third-party skills. It is deterministic and must not call an LLM or confirm uncertain citation identities.
+
+
+## `kb keywords`
+
+`kb keywords` detects keyword/topic co-occurrence candidates among extracted text files. It is deterministic and must not call an LLM or infer scientific idea relations.
+
+Manager LLMs may use its output to assign bounded Worker LLM tasks for semantic review. Worker LLMs must keep evidence lines and file lists intact.
+
+
+## `kb health`
+
+`kb health` provides a deterministic relationship-health dashboard for Manager LLM sessions and review tools. It reads existing project directories and reports, then emits status, counts, checks, and deferred task hints. It does not execute Worker tasks or call an LLM.

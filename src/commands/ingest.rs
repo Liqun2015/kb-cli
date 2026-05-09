@@ -7,28 +7,16 @@ use walkdir::{DirEntry, WalkDir};
 
 #[derive(Debug, Clone, Args)]
 pub struct IngestArgs {
-    #[arg(
-        long,
-        help = "Copy source files into raw/ subfolders. This is the default safe mode."
-    )]
+    #[arg(long, help = "Copy source files into raw/ subfolders. This is the default safe mode.")]
     pub copy: bool,
 
-    #[arg(
-        long = "move",
-        help = "Move source files into raw/ subfolders instead of copying them."
-    )]
+    #[arg(long = "move", help = "Move source files into raw/ subfolders instead of copying them.")]
     pub move_files: bool,
 
-    #[arg(
-        long,
-        help = "Scan subdirectories recursively. Generated/project folders such as raw, wiki, .git, and target are skipped."
-    )]
+    #[arg(long, help = "Scan subdirectories recursively. Generated/project folders such as raw, wiki, .git, and target are skipped.")]
     pub recursive: bool,
 
-    #[arg(
-        long,
-        help = "Print planned ingest actions without copying or moving files."
-    )]
+    #[arg(long, help = "Print planned ingest actions without copying or moving files.")]
     pub dry_run: bool,
 
     #[arg(long, help = "Alias for --dry-run.")]
@@ -46,22 +34,13 @@ pub struct BootstrapArgs {
     #[command(flatten)]
     pub ingest: IngestArgs,
 
-    #[arg(
-        long = "force-init",
-        help = "Pass --force to init before ingesting files."
-    )]
+    #[arg(long = "force-init", help = "Pass --force to init before ingesting files.")]
     pub force_init: bool,
 
-    #[arg(
-        long = "force-metadata",
-        help = "Overwrite existing papers_metadata.json during metadata extraction."
-    )]
+    #[arg(long = "force-metadata", help = "Overwrite existing papers_metadata.json during metadata extraction.")]
     pub force_metadata: bool,
 
-    #[arg(
-        long = "no-ingest",
-        help = "Run init, metadata extraction, and wiki build without organizing root files."
-    )]
+    #[arg(long = "no-ingest", help = "Run init, metadata extraction, and wiki build without organizing root files.")]
     pub no_ingest: bool,
 
     #[arg(long = "skip-metadata", help = "Skip PDF metadata extraction.")]
@@ -206,10 +185,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &IngestArgs) -> Result<()> {
                 println!(
                     "  Skipping duplicate content: {} -> {}",
                     file.display(),
-                    primary_dest
-                        .strip_prefix(&kb_path)
-                        .unwrap_or(&primary_dest)
-                        .display()
+                    primary_dest.strip_prefix(&kb_path).unwrap_or(&primary_dest).display()
                 );
                 summary.skipped += 1;
                 continue;
@@ -330,9 +306,7 @@ fn collect_source_files(kb_path: &Path, recursive: bool) -> Result<Vec<PathBuf>>
     let mut files = Vec::new();
 
     if recursive {
-        let walker = WalkDir::new(kb_path)
-            .into_iter()
-            .filter_entry(|entry| should_descend(entry));
+        let walker = WalkDir::new(kb_path).into_iter().filter_entry(|entry| should_descend(entry));
         for entry in walker.filter_map(|entry| entry.ok()) {
             if entry.file_type().is_file() {
                 files.push(entry.path().to_path_buf());
@@ -421,16 +395,7 @@ fn is_inside_managed_dir(kb_path: &Path, file: &Path) -> bool {
 
     matches!(
         first.as_str(),
-        "raw"
-            | "wiki"
-            | "rules"
-            | "processing"
-            | "references"
-            | "outputs"
-            | "logs"
-            | ".git"
-            | ".obsidian"
-            | "target"
+        "raw" | "wiki" | "rules" | "processing" | "references" | "outputs" | "logs" | ".git" | ".obsidian" | "target"
     )
 }
 
@@ -439,16 +404,10 @@ fn classify_file(path: &Path) -> SourceKind {
     match ext.as_str() {
         "pdf" => SourceKind::Paper,
         "md" | "markdown" | "txt" | "doc" | "docx" | "rtf" | "html" | "htm" => SourceKind::Note,
-        "png" | "jpg" | "jpeg" | "gif" | "webp" | "svg" | "bmp" | "tif" | "tiff" => {
-            SourceKind::Image
-        }
-        "csv" | "tsv" | "xlsx" | "xls" | "json" | "jsonl" | "xml" | "yaml" | "yml" | "parquet" => {
-            SourceKind::Dataset
-        }
+        "png" | "jpg" | "jpeg" | "gif" | "webp" | "svg" | "bmp" | "tif" | "tiff" => SourceKind::Image,
+        "csv" | "tsv" | "xlsx" | "xls" | "json" | "jsonl" | "xml" | "yaml" | "yml" | "parquet" => SourceKind::Dataset,
         "zip" | "rar" | "7z" | "tar" | "gz" | "bz2" | "xz" => SourceKind::Archive,
-        "rs" | "py" | "js" | "ts" | "tsx" | "jsx" | "java" | "c" | "cpp" | "h" | "hpp" | "go"
-        | "rb" | "php" | "swift" | "kt" | "scala" | "r" | "m" | "jl" | "lua" | "pl" | "sql"
-        | "toml" => SourceKind::Repo,
+        "rs" | "py" | "js" | "ts" | "tsx" | "jsx" | "java" | "c" | "cpp" | "h" | "hpp" | "go" | "rb" | "php" | "swift" | "kt" | "scala" | "r" | "m" | "jl" | "lua" | "pl" | "sql" | "toml" => SourceKind::Repo,
         _ => SourceKind::Other,
     }
 }
@@ -461,11 +420,8 @@ fn extension(path: &Path) -> String {
         .to_lowercase()
 }
 
-fn resolve_destination_path(
-    source: &Path,
-    dest_dir: &Path,
-    file_name: &str,
-) -> Result<Option<PathBuf>> {
+
+fn resolve_destination_path(source: &Path, dest_dir: &Path, file_name: &str) -> Result<Option<PathBuf>> {
     let primary_dest = dest_dir.join(file_name);
     if !primary_dest.exists() {
         return Ok(Some(primary_dest));

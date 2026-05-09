@@ -1,6 +1,6 @@
 # CLI / Shell Principle
 
-Current version: `v0.5.10`
+Current version: `v0.6.0.4`
 
 This document records the boundary between batch mode, interactive shell mode, and future LLM-assisted modes.
 
@@ -26,7 +26,7 @@ For example:
 kb --kb-path ./quantum query thermal cloak
 ```
 
-should map to a future shell flow like:
+maps to shell mode like:
 
 ```text
 kb> use ./quantum
@@ -84,18 +84,15 @@ filesystem changes / reports / output
 
 This keeps behavior consistent and testable.
 
-## Current v0.5.10 status
+## Current v0.6.0.1 status
 
-`kb query` is the first deterministic local query skeleton.
+`kb shell` is the deterministic shell entry point.
 
-The existing interactive `kb repl` command is treated as an early shell experiment. Since v0.5.3, ambiguous LLM-like command patterns have been removed from the shell parser.
+The shell handles only session commands directly (`use`, `pwd`, `clear`, `help`, `exit`). Known knowledge-base commands are delegated back to the same batch-mode `kb` executable with the current `--kb-path` value. This preserves one-to-one command semantics without creating a separate business-logic stack.
 
-Future work should either:
+Unknown input is a safe no-op. The final `else` branch in shell parsing must return safely; it must not become a natural-language interpretation step, LLM fallback, model call, agent trigger, shell escape, or arbitrary command executor.
 
-1. refactor `kb repl` into the final deterministic shell design; or
-2. introduce a clearer `kb shell` command that follows this document.
-
-Until then, do not expand the shell into a natural-language LLM chat surface.
+`kb repl` is retained only as a compatibility alias. Documentation should prefer `kb shell`.
 
 ## Non-goals for the shell layer
 
@@ -112,4 +109,4 @@ background indexing
 network servers
 ```
 
-The shell should remain a predictable local command interface.
+The shell should remain a predictable local command interface. Its safety value comes from rejecting unknown input rather than trying to be clever.

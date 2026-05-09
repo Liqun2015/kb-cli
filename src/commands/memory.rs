@@ -8,48 +8,25 @@ use serde::Serialize;
 
 #[derive(Debug, Clone, Args)]
 pub struct MemoryArgs {
-    #[arg(
-        long = "task-id",
-        value_name = "ID",
-        help = "Completed task id, usually from LLM/tasks/*.md"
-    )]
+    #[arg(long = "task-id", value_name = "ID", help = "Completed task id, usually from LLM/tasks/*.md")]
     pub task_id: Option<String>,
 
-    #[arg(
-        long,
-        value_name = "TITLE",
-        help = "Short title for the completed work"
-    )]
+    #[arg(long, value_name = "TITLE", help = "Short title for the completed work")]
     pub title: Option<String>,
 
     #[arg(long, value_name = "TEXT", help = "Short completion summary")]
     pub summary: Option<String>,
 
-    #[arg(
-        long = "file",
-        value_name = "PATH",
-        help = "File touched or produced by the completed task. Repeat for multiple files."
-    )]
+    #[arg(long = "file", value_name = "PATH", help = "File touched or produced by the completed task. Repeat for multiple files.")]
     pub files: Vec<String>,
 
-    #[arg(
-        long = "source-task",
-        value_name = "PATH",
-        help = "Optional source task report under LLM/tasks/"
-    )]
+    #[arg(long = "source-task", value_name = "PATH", help = "Optional source task report under LLM/tasks/")]
     pub source_task: Option<PathBuf>,
 
-    #[arg(
-        long,
-        value_name = "TEXT",
-        help = "Optional follow-up note or unresolved issue"
-    )]
+    #[arg(long, value_name = "TEXT", help = "Optional follow-up note or unresolved issue")]
     pub follow_up: Vec<String>,
 
-    #[arg(
-        long,
-        help = "Preview the memory entry without writing LLM/memory/completed_tasks.md"
-    )]
+    #[arg(long, help = "Preview the memory entry without writing LLM/memory/completed_tasks.md")]
     pub dry_run: bool,
 
     #[arg(long, help = "Alias for --dry-run")]
@@ -114,9 +91,7 @@ fn build_record(kb_path: &Path, args: &MemoryArgs, dry_run: bool) -> Result<Memo
         .as_ref()
         .map(|s| s.trim())
         .filter(|s| !s.is_empty())
-        .ok_or_else(|| {
-            anyhow!("kb memory requires --summary. Record what was completed for future review.")
-        })?
+        .ok_or_else(|| anyhow!("kb memory requires --summary. Record what was completed for future review."))?
         .to_string();
 
     let title = args

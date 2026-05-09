@@ -2,7 +2,7 @@
 
 ## Current version
 
-`kb-cli v0.5.10`
+`kb-cli v0.6.0.1`
 
 ## Core goal
 
@@ -38,11 +38,21 @@ rules/LINT_POLICY.md
 
 ## Implemented commands
 
+For the canonical command overview, inputs, outputs, LLM boundaries, and deferred-work rules, read:
+
+```text
+docs/commands.md
+docs/task-lifecycle.md
+```
+
+Current implemented commands include:
+
 ```text
 init
 ingest
 bootstrap
 extract-metadata
+extract-text
 build-wiki
 status
 prepare
@@ -50,9 +60,12 @@ sync-wiki
 lint-static
 query
 grep
-extract-text
+links
 refs
-repl
+refs-index
+tasks
+memory
+shell
 list-models
 show-model
 add-model
@@ -74,9 +87,9 @@ Required principles:
 - Do not interpret free-form natural language inside `kb>` as an LLM request.
 - Do not call any LLM API implicitly from `kb>`.
 - Future LLM behavior must be introduced only through a deliberately designed explicit interface; do not advertise placeholder LLM command names before that design exists.
-- Do not write a separate business-logic implementation for shell mode; shell mode should dispatch to the same command handlers used by batch mode.
+- Do not write a separate business-logic implementation for shell mode; shell mode should preserve batch-mode command semantics. The current implementation delegates only known structured shell commands back to the same `kb` binary; unknown input must return safely.
 
-See `docs/cli-shell-principle.md`.
+See `docs/cli-shell-principle.md` and `docs/shell.md`.
 
 ## Do not invent undocumented features
 
@@ -270,3 +283,31 @@ When updating third-party skill / visualization support, preserve the relationsh
 - uncertain relations must preserve evidence and human-review markers.
 
 Do not let a graph export or visualization step silently convert uncertain relations into confirmed ones.
+
+
+## v0.5.12 graph export rule
+
+Use `kb refs-graph` only as a deterministic export step. Do not ask it to infer scientific idea relations, confirm candidate bibliographic identities, query online DOI services, or rewrite wiki pages.
+
+
+## v0.5.12 keyword/topic rule
+
+Use `kb keywords` only as a deterministic evidence scanner for keyword/topic co-occurrence. Do not make it infer scientific idea relations, merge concepts, rewrite wiki pages, or call an LLM. Shared keywords are candidates, not conclusions.
+
+
+## Health command rule
+
+`kb health` is a deterministic dashboard command for Manager LLM sessions. It may summarize missing evidence, reports, and deferred work, but it must not call an LLM, fix files automatically, or certify uncertain bibliographic identities.
+
+
+## Strict shell safety rule
+
+When editing `kb shell`, keep it as a strict whitelist command shell.
+
+- Do not interpret unknown input.
+- Do not add an LLM fallback to the final `else` branch.
+- Do not execute arbitrary shell commands from unknown input.
+- Do not guess Manager LLM intent from free-form text.
+- Unknown input should return safely with a short no-action message.
+
+The shell is valuable because it is safe and boring. Its job is to execute explicit structured commands, not to be clever.

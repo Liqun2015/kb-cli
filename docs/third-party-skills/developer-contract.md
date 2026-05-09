@@ -1,6 +1,6 @@
 # Third-party Skill Developer Contract
 
-Current version: `v0.5.10.2`
+Current version: `v0.6.0.4`
 
 This document states what third-party skills and tools may assume about LLM Wiki relationship data.
 

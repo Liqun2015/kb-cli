@@ -1,6 +1,6 @@
 # Third-party Skills
 
-Current version: `v0.5.10.2`
+Current version: `v0.6.0.4`
 
 This directory records stable Markdown skill specifications for third-party skills and tools, graph views, web frontends, Obsidian-like plugins, Claude Code projects, Manager LLM workflows, and Worker LLMs that interact with LLM Wiki relationship data.
 

@@ -1,6 +1,6 @@
 # Literature Relationship Core Principle
 
-Current version: `v0.5.10.2`
+Current version: `v0.6.0.4`
 
 LLM Wiki is not merely a local document archive.
 
@@ -133,7 +133,7 @@ kb memory
     Records which relationship tasks were completed and what remains unresolved.
 ```
 
-Future commands such as `kb refs-index`, `kb refs-review`, `kb keywords`, and `kb relation-tasks` should continue this pattern.
+`kb keywords` begins the keyword/topic relation layer by finding deterministic co-occurrence candidates. Future commands such as `kb refs-review`, `kb relation-tasks`, and explicit Worker LLM workflows should continue this pattern.
 
 ## Non-goals
 

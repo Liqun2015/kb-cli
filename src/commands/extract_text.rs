@@ -9,18 +9,10 @@ use walkdir::WalkDir;
 
 #[derive(Debug, Clone, Args)]
 pub struct ExtractTextArgs {
-    #[arg(
-        long,
-        value_name = "PATH",
-        help = "A file or directory to extract. Defaults to raw/papers/."
-    )]
+    #[arg(long, value_name = "PATH", help = "A file or directory to extract. Defaults to raw/papers/.")]
     pub path: Option<PathBuf>,
 
-    #[arg(
-        long = "output-dir",
-        value_name = "DIR",
-        help = "Output directory relative to the knowledge base. Defaults to processing/text/."
-    )]
+    #[arg(long = "output-dir", value_name = "DIR", help = "Output directory relative to the knowledge base. Defaults to processing/text/.")]
     pub output_dir: Option<PathBuf>,
 
     #[arg(long, help = "Preview extraction plan without writing text files")]
@@ -32,11 +24,7 @@ pub struct ExtractTextArgs {
     #[arg(long, help = "Overwrite existing extracted text files")]
     pub force: bool,
 
-    #[arg(
-        long,
-        default_value_t = 0,
-        help = "Maximum number of files to process. Use 0 for no limit."
-    )]
+    #[arg(long, default_value_t = 0, help = "Maximum number of files to process. Use 0 for no limit.")]
     pub limit: usize,
 
     #[arg(long, help = "Print a machine-readable JSON extraction report")]
@@ -101,10 +89,7 @@ fn run_extract_text(kb_path: &Path, args: &ExtractTextArgs) -> Result<ExtractTex
     };
 
     if !input_path.exists() {
-        return Err(anyhow!(
-            "input path does not exist: {}",
-            input_path.display()
-        ));
+        return Err(anyhow!("input path does not exist: {}", input_path.display()));
     }
 
     let sources = collect_sources(&input_path, args.limit)?;
@@ -170,10 +155,7 @@ fn run_extract_text(kb_path: &Path, args: &ExtractTextArgs) -> Result<ExtractTex
                     output_path: Some(relative_path_string(kb_path, &output_path)),
                     status: "failed".to_string(),
                     bytes_written: 0,
-                    message: format!(
-                        "{}; leave for future explicit OCR/LLM-assisted stage if needed",
-                        err
-                    ),
+                    message: format!("{}; leave for future explicit OCR/LLM-assisted stage if needed", err),
                 });
             }
         }
@@ -237,17 +219,14 @@ fn extract_source_text(path: &Path) -> Result<String> {
         .to_ascii_lowercase();
 
     match ext.as_str() {
-        "txt" | "md" => {
-            fs::read_to_string(path).with_context(|| format!("could not read {}", path.display()))
-        }
+        "txt" | "md" => fs::read_to_string(path).with_context(|| format!("could not read {}", path.display())),
         "pdf" => extract_pdf_text(path),
         _ => Err(anyhow!("unsupported source type")),
     }
 }
 
 fn extract_pdf_text(path: &Path) -> Result<String> {
-    let doc =
-        Document::load(path).with_context(|| format!("could not load PDF {}", path.display()))?;
+    let doc = Document::load(path).with_context(|| format!("could not load PDF {}", path.display()))?;
     let pages = doc.get_pages().keys().copied().collect::<Vec<_>>();
     if pages.is_empty() {
         return Ok(String::new());
@@ -261,11 +240,7 @@ fn extract_pdf_text(path: &Path) -> Result<String> {
 fn output_path_for(kb_path: &Path, output_dir: &Path, source: &Path) -> PathBuf {
     let rel = source.strip_prefix(kb_path).unwrap_or(source);
     let mut filename = rel.to_string_lossy().replace('\\', "__").replace('/', "__");
-    if filename.ends_with(".pdf")
-        || filename.ends_with(".PDF")
-        || filename.ends_with(".md")
-        || filename.ends_with(".txt")
-    {
+    if filename.ends_with(".pdf") || filename.ends_with(".PDF") || filename.ends_with(".md") || filename.ends_with(".txt") {
         if let Some(idx) = filename.rfind('.') {
             filename.truncate(idx);
         }

@@ -10,24 +10,13 @@ use walkdir::WalkDir;
 
 #[derive(Debug, Clone, Args)]
 pub struct RefsIndexArgs {
-    #[arg(
-        long,
-        value_name = "PATH",
-        help = "Text file or directory to scan. Defaults to processing/text/."
-    )]
+    #[arg(long, value_name = "PATH", help = "Text file or directory to scan. Defaults to processing/text/.")]
     pub path: Option<PathBuf>,
 
-    #[arg(
-        long,
-        default_value_t = 100,
-        help = "Maximum number of relation rows to print. Use 0 for no limit."
-    )]
+    #[arg(long, default_value_t = 100, help = "Maximum number of relation rows to print. Use 0 for no limit.")]
     pub limit: usize,
 
-    #[arg(
-        long,
-        help = "Preview relation indexing without writing processing/refs/refs_index_*.md"
-    )]
+    #[arg(long, help = "Preview relation indexing without writing processing/refs/refs_index_*.md")]
     pub dry_run: bool,
 
     #[arg(long, help = "Alias for --dry-run")]
@@ -180,10 +169,7 @@ fn run_refs_index(kb_path: &Path, args: &RefsIndexArgs) -> Result<RefsIndexRepor
 
     let relation_count = all_relations.len();
     let returned_relations = if args.limit > 0 {
-        all_relations
-            .into_iter()
-            .take(args.limit)
-            .collect::<Vec<_>>()
+        all_relations.into_iter().take(args.limit).collect::<Vec<_>>()
     } else {
         all_relations
     };
@@ -244,7 +230,10 @@ fn load_local_papers(kb_path: &Path) -> Result<Vec<LocalPaper>> {
         let doi = metadata
             .and_then(|m| m.doi.clone())
             .or_else(|| extract_doi(&filename));
-        let title_tokens = title.as_deref().map(tokenize_for_match).unwrap_or_default();
+        let title_tokens = title
+            .as_deref()
+            .map(tokenize_for_match)
+            .unwrap_or_default();
         let filename_tokens = tokenize_for_match(&stem);
 
         papers.push(LocalPaper {
@@ -316,20 +305,10 @@ fn match_reference(reference: &ReferenceEntry, local_papers: &[LocalPaper]) -> I
             .collect::<Vec<_>>();
         if doi_matches.len() == 1 {
             let paper = doi_matches[0];
-            return relation_for_paper(
-                "confirmed",
-                reference,
-                paper,
-                "doi_exact",
-                1.0,
-                false,
-                notes,
-            );
+            return relation_for_paper("confirmed", reference, paper, "doi_exact", 1.0, false, notes);
         }
         if doi_matches.len() > 1 {
-            notes.push(
-                "The DOI matches multiple local papers. Human review is required.".to_string(),
-            );
+            notes.push("The DOI matches multiple local papers. Human review is required.".to_string());
             return relation_for_candidates(
                 "ambiguous",
                 reference,
@@ -340,17 +319,13 @@ fn match_reference(reference: &ReferenceEntry, local_papers: &[LocalPaper]) -> I
                 notes,
             );
         }
-        notes.push(
-            "DOI was found in the reference, but no local paper has the same DOI.".to_string(),
-        );
+        notes.push("DOI was found in the reference, but no local paper has the same DOI.".to_string());
     }
 
     let reference_tokens = tokenize_for_match(&reference.raw);
     let mut scored = local_papers
         .iter()
-        .filter_map(|paper| {
-            score_paper_match(&reference.raw, &reference_tokens, paper).map(|score| (paper, score))
-        })
+        .filter_map(|paper| score_paper_match(&reference.raw, &reference_tokens, paper).map(|score| (paper, score)))
         .collect::<Vec<_>>();
 
     scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
@@ -370,12 +345,7 @@ fn match_reference(reference: &ReferenceEntry, local_papers: &[LocalPaper]) -> I
                 source_text_file: reference.source_text_file.clone(),
                 source_line: reference.line,
                 reference_text: reference.raw.clone(),
-                matched_by: if reference.doi.is_some() {
-                    "doi_missing"
-                } else {
-                    "no_match"
-                }
-                .to_string(),
+                matched_by: if reference.doi.is_some() { "doi_missing" } else { "no_match" }.to_string(),
                 score: 0.0,
                 notes: evidence_notes,
             },
@@ -407,19 +377,8 @@ fn match_reference(reference: &ReferenceEntry, local_papers: &[LocalPaper]) -> I
     }
 
     let paper = scored[0].0;
-    notes.push(
-        "Candidate match was inferred from title/filename tokens and needs human confirmation."
-            .to_string(),
-    );
-    relation_for_paper(
-        "candidate",
-        reference,
-        paper,
-        "title_or_filename_tokens",
-        best_score,
-        true,
-        notes,
-    )
+    notes.push("Candidate match was inferred from title/filename tokens and needs human confirmation.".to_string());
+    relation_for_paper("candidate", reference, paper, "title_or_filename_tokens", best_score, true, notes)
 }
 
 fn relation_for_paper(
@@ -480,11 +439,7 @@ fn relation_for_candidates(
     }
 }
 
-fn score_paper_match(
-    reference_text: &str,
-    reference_tokens: &BTreeSet<String>,
-    paper: &LocalPaper,
-) -> Option<f64> {
+fn score_paper_match(reference_text: &str, reference_tokens: &BTreeSet<String>, paper: &LocalPaper) -> Option<f64> {
     let reference_norm = normalize_text(reference_text);
 
     if let Some(title) = &paper.title {
@@ -505,10 +460,7 @@ fn score_paper_match(
     }
 }
 
-fn token_overlap_score(
-    reference_tokens: &BTreeSet<String>,
-    candidate_tokens: &BTreeSet<String>,
-) -> f64 {
+fn token_overlap_score(reference_tokens: &BTreeSet<String>, candidate_tokens: &BTreeSet<String>) -> f64 {
     if candidate_tokens.is_empty() {
         return 0.0;
     }
@@ -544,12 +496,7 @@ fn build_deferred_review_tasks(relations: &[IndexRelation]) -> Vec<DeferredRevie
             relation.source_line,
             relation.status,
             relation.evidence.score,
-            relation
-                .evidence
-                .reference_text
-                .chars()
-                .take(180)
-                .collect::<String>()
+            relation.evidence.reference_text.chars().take(180).collect::<String>()
         ));
     }
 
@@ -583,10 +530,7 @@ fn render_markdown_report(report: &RefsIndexReport) -> String {
     out.push_str(&format!("- Generated at: `{}`\n", report.generated_at));
     out.push_str(&format!("- Search path: `{}`\n", report.search_path));
     out.push_str(&format!("- Local papers: `{}`\n", report.local_papers));
-    out.push_str(&format!(
-        "- Reference entries: `{}`\n",
-        report.reference_entries
-    ));
+    out.push_str(&format!("- Reference entries: `{}`\n", report.reference_entries));
     out.push_str(&format!("- Relations: `{}`\n\n", report.relation_count));
 
     out.push_str("## Counts\n\n");
@@ -618,14 +562,7 @@ fn render_markdown_report(report: &RefsIndexReport) -> String {
                 target,
                 relation.evidence.score,
                 relation.review_required,
-                escape_table_cell(
-                    &relation
-                        .evidence
-                        .reference_text
-                        .chars()
-                        .take(160)
-                        .collect::<String>()
-                )
+                escape_table_cell(&relation.evidence.reference_text.chars().take(160).collect::<String>())
             ));
         }
         out.push('\n');
@@ -677,9 +614,7 @@ fn print_report(report: &RefsIndexReport) {
 
     if report.relations.is_empty() {
         println!("No bibliographic index relation candidates found.");
-        println!(
-            "Run `kb extract-text` and `kb refs` first, or pass --path to scan existing text."
-        );
+        println!("Run `kb extract-text` and `kb refs` first, or pass --path to scan existing text.");
         return;
     }
 
@@ -749,10 +684,9 @@ fn has_extension(path: &Path, exts: &[&str]) -> bool {
 }
 
 fn extract_doi(text: &str) -> Option<String> {
-    doi_regex().ok().and_then(|re| {
-        re.find(text)
-            .map(|hit| hit.as_str().trim_end_matches('.').to_string())
-    })
+    doi_regex()
+        .ok()
+        .and_then(|re| re.find(text).map(|hit| hit.as_str().trim_end_matches('.').to_string()))
 }
 
 fn doi_regex() -> Result<Regex> {
@@ -794,35 +728,9 @@ fn push_token(tokens: &mut BTreeSet<String>, stopwords: &HashSet<&'static str>, 
 
 fn stopwords() -> HashSet<&'static str> {
     [
-        "with",
-        "from",
-        "into",
-        "that",
-        "this",
-        "using",
-        "used",
-        "based",
-        "analysis",
-        "study",
-        "paper",
-        "journal",
-        "research",
-        "method",
-        "methods",
-        "results",
-        "model",
-        "models",
-        "effect",
-        "effects",
-        "system",
-        "systems",
-        "thermal",
-        "energy",
-        "materials",
-        "science",
-        "engineering",
-        "elsevier",
-        "springer",
+        "with", "from", "into", "that", "this", "using", "used", "based", "analysis", "study", "paper",
+        "journal", "research", "method", "methods", "results", "model", "models", "effect", "effects",
+        "system", "systems", "thermal", "energy", "materials", "science", "engineering", "elsevier", "springer",
     ]
     .into_iter()
     .collect()
@@ -830,13 +738,7 @@ fn stopwords() -> HashSet<&'static str> {
 
 fn normalize_text(text: &str) -> String {
     text.chars()
-        .map(|ch| {
-            if ch.is_alphanumeric() {
-                ch.to_ascii_lowercase()
-            } else {
-                ' '
-            }
-        })
+        .map(|ch| if ch.is_alphanumeric() { ch.to_ascii_lowercase() } else { ' ' })
         .collect::<String>()
         .split_whitespace()
         .collect::<Vec<_>>()

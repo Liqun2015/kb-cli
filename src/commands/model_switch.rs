@@ -48,14 +48,11 @@ pub fn write_input(question: &str) -> Result<String> {
 
     // Get current model info and add to context.
     let context_opt = if let Some(model) = manager.get_current_model() {
-        Some(
-            serde_json::json!({
-                "model_id": model.id,
-                "model_name": model.name,
-                "model_url": model.url
-            })
-            .to_string(),
-        )
+        Some(serde_json::json!({
+            "model_id": model.id,
+            "model_name": model.name,
+            "model_url": model.url
+        }).to_string())
     } else {
         None
     };
@@ -266,10 +263,7 @@ mod tests {
 
     #[test]
     fn test_default_values() {
-        assert_eq!(
-            get_default_model_url(),
-            "http://scc.ustc.edu.cn/portal/api/ask"
-        );
+        assert_eq!(get_default_model_url(), "http://scc.ustc.edu.cn/portal/api/ask");
         assert_eq!(get_api_key_env(), "DEEPSEEK_API_USTC");
         assert_eq!(get_input_file(), ".model_switch_input.json");
         assert_eq!(get_output_file(), ".model_switch_output.json");

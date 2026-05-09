@@ -12,14 +12,17 @@ scripts\build_release.bat
 scripts/build_release.sh
 ```
 
-These run the local Rust verification/build flow:
+These run the local Rust formatting/verification/build flow:
 
 ```text
+cargo fmt
 cargo fmt --check
 cargo test
 cargo check
 cargo build --release
 ```
+
+`cargo fmt` is run first on purpose. Formatting is deterministic mechanical maintenance. After the script succeeds, review any formatting-only edits with `git diff` before committing.
 
 They are for compiling `kb-cli` itself. They do not initialize or modify a knowledge base.
 
@@ -39,3 +42,7 @@ These show `git status`, `git diff`, then `git diff --cached` before committing 
 
 Do not add broad workflow automation here unless it is clearly deterministic, easy to audit, and unlikely to be confused with building the Rust executable.
 Knowledge-base workflows should be documented as explicit `kb ...` command sequences rather than hidden inside large wrapper scripts.
+
+## Lockfile behavior
+
+The release scripts run Cargo normally. If `Cargo.lock` is absent, Cargo will generate it locally. Review the generated lockfile before committing.

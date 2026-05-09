@@ -1,6 +1,6 @@
 # Claude Code Generation Skill for Third-party Graph Tools
 
-Current version: `v0.5.10.2`
+Current version: `v0.6.0.4`
 
 This skill is intended for developers who want Claude Code or another coding agent to generate a third-party visualization or inspection tool for LLM Wiki literature relationships.
 

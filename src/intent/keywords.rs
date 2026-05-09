@@ -14,6 +14,7 @@ pub enum Intent {
     ExtractMetadata,
     BuildWiki,
 
+
     // === Model Management Commands ===
     ListModel,
     ShowModel,
@@ -33,20 +34,25 @@ impl KeywordPattern {
             // Exit commands
             (r"^(exit|quit|q|bye)$", Intent::Exit),
             (r"^(quit|exit|bye)\s+", Intent::Exit),
+
             // Help commands
             (r"^(help|h|\?)$", Intent::Help),
             (r"^(help|h|\?)\s+", Intent::Help),
+
             // Clear screen commands
             (r"^(clear|cls)$", Intent::Clear),
             (r"^(clear|cls)\s+", Intent::Clear),
+
             // List papers
             (r"^list\s+(papers|paper|pdf|pdfs)$", Intent::ListPapers),
             (r"^papers$", Intent::ListPapers),
             (r"^show\s+(papers|paper|pdf|pdfs)$", Intent::ListPapers),
+
             // List notes
             (r"^list\s+(notes|note|docs|documents)$", Intent::ListNotes),
             (r"^notes$", Intent::ListNotes),
             (r"^show\s+(notes|note|docs|documents)$", Intent::ListNotes),
+
             // Search papers
             (r"^search\s+", Intent::SearchPapers),
             (r"^find\s+", Intent::SearchPapers),
@@ -54,29 +60,35 @@ impl KeywordPattern {
             (r"^lookup\s+", Intent::SearchPapers),
             (r"^search\s+papers?\s+", Intent::SearchPapers),
             (r"^find\s+papers?\s+", Intent::SearchPapers),
+
             // Search notes
             (r"^search\s+notes?\s+", Intent::SearchNotes),
             (r"^find\s+notes?\s+", Intent::SearchNotes),
+
             // Set knowledge base path
             (r"^set\s+kb\s+", Intent::SetKnowledgeBase),
             (r"^change\s+kb\s+", Intent::SetKnowledgeBase),
             (r"^set\s+knowledge(-|\s)?base\s+", Intent::SetKnowledgeBase),
             (r"^cd\s+", Intent::SetKnowledgeBase),
+
             // Initialize
             (r"^init$", Intent::Initialize),
             (r"^init\s+", Intent::Initialize),
             (r"^initialize$", Intent::Initialize),
+
             // Extract metadata
             (r"^extract-metadata$", Intent::ExtractMetadata),
             (r"^extract\s+metadata$", Intent::ExtractMetadata),
             (r"^extract\s+meta$", Intent::ExtractMetadata),
             (r"^extract$", Intent::ExtractMetadata),
+
             // Build Wiki
             (r"^build-wiki$", Intent::BuildWiki),
             (r"^build\s+wiki$", Intent::BuildWiki),
             (r"^generate\s+wiki$", Intent::BuildWiki),
             (r"^update\s+wiki$", Intent::BuildWiki),
             (r"^rebuild\s+wiki$", Intent::BuildWiki),
+
             // === Model Management Commands ===
             (r"^list\s+models?", Intent::ListModel),
             (r"^models?$", Intent::ListModel),
@@ -137,10 +149,7 @@ mod tests {
 
     #[test]
     fn test_description() {
-        assert_eq!(
-            KeywordPattern::description(&Intent::Help),
-            "Show help information"
-        );
+        assert_eq!(KeywordPattern::description(&Intent::Help), "Show help information");
         assert_eq!(KeywordPattern::description(&Intent::Exit), "Exit REPL");
     }
 

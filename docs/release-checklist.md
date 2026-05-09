@@ -37,6 +37,7 @@ version = "0.5.7"
 Recommended:
 
 ```bash
+cargo fmt
 cargo fmt --check
 cargo test
 cargo check
@@ -64,6 +65,11 @@ kb links --help
 kb grep --help
 kb extract-text --help
 kb refs --help
+kb refs-index --help
+kb refs-graph --help
+kb keywords --help
+kb health --help
+kb shell --help
 kb tasks --help
 kb memory --help
 ```
@@ -111,6 +117,10 @@ For v0.5.10 and later, also smoke-test:
 
 ```bash
 kb refs-index --help
+kb refs-graph --help
+kb keywords --help
+kb health --help
+kb shell --help
 kb refs-index --dry-run
 ```
 
@@ -127,3 +137,30 @@ docs/third-party-skills/relation-graph-examples.md
 docs/third-party-skills/developer-contract.md
 docs/third-party-skills/claude-code-generation-skill.md
 ```
+
+## Documentation convergence check
+
+For documentation convergence releases, especially `v0.5.10.3` and later, review:
+
+```text
+docs/commands.md
+docs/task-lifecycle.md
+docs/command-classification.md
+docs/llm-command-guide.md
+docs/llm-hierarchy.md
+docs/literature-relationships.md
+```
+
+Confirm that each command has a clear ability, input area, output area, LLM boundary, and deferred-work rule.
+
+For graph-export releases, smoke-test:
+
+```bash
+kb refs-graph --dry-run
+kb keywords --dry-run
+kb refs-graph --json --dry-run
+```
+
+## Cargo.lock note
+
+If the downloaded source package does not include `Cargo.lock`, run `cargo check` or `cargo build --release` once to generate a fresh local lockfile. This avoids stale transitive locks from fast-moving Windows crates. Review the generated `Cargo.lock` with `git diff` before committing.

@@ -1,3 +1,77 @@
+## v0.6.0.4 - Shell Windows path parsing test fix
+
+- Fixed `split_shell_words` so quoted Windows paths preserve backslashes, for example `use "D:\github\llm-wiki\quantum"`.
+- The strict shell remains a whitelist command shell: unknown input is still a safe no-op and is not interpreted as natural language.
+- No LLM call, no shell command execution, no command behavior expansion, and no Wiki auto-editing was added.
+
+## v0.6.0.1 - Strict shell safety rule
+
+## v0.6.0.3 - links compile fix
+
+- Fixed a `kb links` compile error caused by an outdated local variable name in the link scan report summary.
+- `pages_scanned` now uses the actual scanned Markdown page collection.
+- No command behavior changes, no LLM calls, no new features.
+
+
+## v0.6.0.2 - Cargo lockfile compatibility fix
+
+- Removed the stale generated `Cargo.lock` from the distributed source package.
+- This avoids a Windows dependency resolution failure where the lockfile pinned `windows-strings` to `0.5.2`, while the available crates.io index resolves `windows-strings` to `0.5.1`.
+- `cargo check` / `cargo build` will regenerate a fresh local `Cargo.lock` on the developer machine.
+- After a successful local build, review and commit the generated `Cargo.lock` if this project is being managed as an application repository.
+
+- Tightened `kb shell` into a strict whitelist command shell.
+- Unknown input now returns safely with a no-action message instead of being delegated as arbitrary batch input.
+- Added shell whitelist tests for known structured commands and rejected free-form text.
+- Updated `docs/shell.md`, `docs/cli-shell-principle.md`, `docs/commands.md`, `docs/agent-api.md`, and `docs/claude.md` with the final-else safe-return rule.
+- Reaffirmed that `kb shell` is not an LLM chat interface and must not guess Manager LLM intent.
+
+## v0.6.0 - Deterministic shell skeleton
+
+- Added `kb shell` as the deterministic interactive command shell.
+- Kept `kb repl` only as a compatibility alias; documentation should prefer `kb shell`.
+- Shell session commands: `use`, `pwd`, `clear`, `help`, and `exit`.
+- Ordinary shell input is delegated to the same batch-mode `kb` executable with the current `--kb-path`, preserving one-to-one command semantics.
+- Added `docs/shell.md` and updated CLI/shell/LLM boundary documentation.
+- Reinforced that `kb>` is not an LLM chat interface and must not implicitly interpret free-form natural language.
+
+## v0.5.13 - Health / relation-health skeleton
+
+- Added `kb health` as a deterministic LLM Wiki relationship-health dashboard.
+- The command summarizes raw papers, extracted text files, wiki pages, refs reports, refs-index reports, refs-graph exports, keyword reports, task files, memory files, lint reports, and third-party skill docs.
+- Reports are written under `outputs/reports/health_*.md` unless `--dry-run` / `--preview` is used.
+- Added `docs/health.md`.
+- `kb health` emits deferred task hints for missing text extraction, uncertain bibliographic index review, keyword/topic review, and initial wiki drafting.
+- The command does not call an LLM, run OCR, confirm bibliographic identity, repair files, create wiki pages, or decide scientific idea relations.
+
+## v0.5.12 - Keywords skeleton
+
+- Added `kb keywords` as a deterministic keyword/topic co-occurrence scanner over extracted text.
+- Added `docs/keywords.md`.
+- `kb keywords` scans `processing/text/` by default and can use explicit terms, a terms file, or deterministic auto-extracted candidate terms.
+- Reports are written under `processing/keywords/keywords_*.md` unless `--dry-run` / `--preview` is used.
+- `kb init` now creates `processing/keywords/`.
+- `kb tasks` now detects keyword/topic candidate reports and prepares a Keyword Topic Relation Worker handoff.
+- The command emits keyword/topic relations as candidates only; shared terms are evidence, not confirmed scientific idea relations.
+- No LLM call, vector search, semantic idea inference, topic merge, or autonomous Wiki rewrite was added.
+
+## v0.5.10.4 - README Manager/Worker maintenance loop clarification
+
+- Updated the README section "How does the LLM maintain Markdown pages?" to show the intended hierarchy: Manager LLM -> deterministic kb-cli commands -> Worker LLM / human reviewer -> Git review -> wiki and LLM/memory records.
+- Clarified that Manager LLM sessions should scout with `kb query`, `kb grep`, `kb extract-text`, `kb refs`, `kb refs-index`, `kb links`, `kb lint-static`, and `kb tasks` before delegating semantic work.
+- Clarified that Worker LLMs receive bounded tasks with goal, requirements, file list, evidence lines, expected output, and review rules.
+- Reaffirmed that humans remain the final guarantee for uncertain bibliographic index relations.
+- No command behavior, LLM call, OCR, vector search, autonomous worker execution, or Wiki auto-editing was added.
+
+## v0.5.10.3 - Documentation convergence and command overview
+
+- Added `docs/commands.md` as the central command map for humans, Manager LLM sessions, Worker LLM tasks, and future third-party skills.
+- Added `docs/task-lifecycle.md` to define the `LLM/tasks/` to `LLM/memory/` handoff and review lifecycle.
+- Documented command categories, inputs, outputs, LLM boundaries, and deferred-work expectations.
+- Clarified task statuses such as `pending`, `assigned`, `in_progress`, `needs_human`, `blocked`, `completed`, and `rejected`.
+- Kept the build-helper improvement: `scripts/build_release.bat` and `scripts/build_release.sh` now run `cargo fmt` before `cargo fmt --check`.
+- Updated script documentation, README navigation, and release checklist guidance.
+
 ## v0.5.10.2 - Third-party skills guidance
 
 - Renamed `docs/third-party-tools/` to `docs/third-party-skills/` to make the directory usable as a reusable skill specification area, not merely a tool-documentation folder.

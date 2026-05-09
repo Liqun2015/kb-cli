@@ -10,24 +10,13 @@ use walkdir::WalkDir;
 
 #[derive(Debug, Clone, Args)]
 pub struct RefsArgs {
-    #[arg(
-        long,
-        value_name = "PATH",
-        help = "Text file or directory to scan. Defaults to processing/text/."
-    )]
+    #[arg(long, value_name = "PATH", help = "Text file or directory to scan. Defaults to processing/text/.")]
     pub path: Option<PathBuf>,
 
-    #[arg(
-        long,
-        default_value_t = 200,
-        help = "Maximum number of reference hints to print. Use 0 for no limit."
-    )]
+    #[arg(long, default_value_t = 200, help = "Maximum number of reference hints to print. Use 0 for no limit.")]
     pub limit: usize,
 
-    #[arg(
-        long,
-        help = "Also scan for in-text citation markers such as [1] and (Smith 2020). This can be noisy."
-    )]
+    #[arg(long, help = "Also scan for in-text citation markers such as [1] and (Smith 2020). This can be noisy.")]
     pub citations: bool,
 
     #[arg(long, help = "Print a machine-readable JSON reference scan report")]
@@ -263,15 +252,11 @@ struct RefPatterns {
 impl RefPatterns {
     fn new() -> Result<Self> {
         Ok(Self {
-            heading: Regex::new(
-                r"(?i)^\s*(references|bibliography|works cited|参考文献|参考资料|文献)\s*$",
-            )?,
+            heading: Regex::new(r"(?i)^\s*(references|bibliography|works cited|参考文献|参考资料|文献)\s*$")?,
             numbered_entry: Regex::new(r"^\s*(\[\s*\d+\s*\]|\d+\s*[\.)])\s+\S+")?,
             doi: Regex::new(r"(?i)\b10\.\d{4,9}/[-._;()/:A-Z0-9]+\b")?,
             numeric_citation: Regex::new(r"\[(?:\s*\d+\s*(?:[-,;]\s*\d+\s*)*)\]")?,
-            author_year: Regex::new(
-                r"\([A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’-]+(?:\s+et\s+al\.)?(?:,\s*|\s+)(?:19|20)\d{2}[a-z]?\)",
-            )?,
+            author_year: Regex::new(r"\([A-Z][A-Za-zÀ-ÖØ-öø-ÿ'’-]+(?:\s+et\s+al\.)?(?:,\s*|\s+)(?:19|20)\d{2}[a-z]?\)")?,
         })
     }
 }

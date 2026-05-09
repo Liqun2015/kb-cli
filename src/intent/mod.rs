@@ -2,8 +2,8 @@ pub mod keywords;
 
 pub use keywords::Intent;
 
-use crate::intent::keywords::KeywordPattern;
 use regex::Regex;
+use crate::intent::keywords::KeywordPattern;
 
 /// Intent parser
 /// Identifies user intent from input (direct commands vs LLM requirements)
@@ -55,14 +55,7 @@ impl IntentParser {
         match intent {
             Intent::SearchPapers | Intent::SearchNotes => {
                 // Handle various search patterns
-                let patterns = [
-                    "search ",
-                    "find ",
-                    "grep ",
-                    "lookup ",
-                    "search papers ",
-                    "search notes ",
-                ];
+                let patterns = ["search ", "find ", "grep ", "lookup ", "search papers ", "search notes "];
                 for pattern in &patterns {
                     if let Some(query) = input.strip_prefix(pattern) {
                         return Some(query.trim().to_string());
@@ -81,16 +74,7 @@ impl IntentParser {
     pub fn extract_model_id(&self, input: &str, intent: &Intent) -> Option<String> {
         match intent {
             Intent::SwitchModel | Intent::DeleteModel | Intent::ValidateModel => {
-                let patterns = [
-                    "switch model ",
-                    "switch to ",
-                    "use model ",
-                    "delete model ",
-                    "remove model ",
-                    "del model ",
-                    "validate model ",
-                    "test model ",
-                ];
+                let patterns = ["switch model ", "switch to ", "use model ", "delete model ", "remove model ", "del model ", "validate model ", "test model "];
                 for pattern in &patterns {
                     if let Some(id) = input.strip_prefix(pattern) {
                         return Some(id.trim().to_string());

@@ -1,10 +1,12 @@
 # LLM Command Guide
 
-Current version: `v0.5.10.2`
+Current version: `v0.6.0.4`
 
 This document is the operating guide for the top-level Manager LLM, Claude Code sessions, and human operators who use `kb-cli` as a structured command layer.
 
 The LLM that uses these commands is the highest-level coordinator. It is not the same role as a lower-level Worker LLM that receives a bounded task from `LLM/tasks/`. See `docs/llm-hierarchy.md`.
+
+For the canonical command map and lifecycle vocabulary, see `docs/commands.md` and `docs/task-lifecycle.md`.
 
 The key idea is simple:
 
@@ -46,6 +48,9 @@ Use `kb-cli` commands to collect that evidence, then hand bounded evidence to th
 | `kb grep` | Find exact lines and structure traces | selected text paths | stdout / JSON | inspect keywords, fields, DOI traces, TODOs | interpretation |
 | `kb extract-text` | Extract direct text where possible | `raw/papers/` or chosen files | `processing/text/` | read PDF contents | OCR/layout repair |
 | `kb refs` | Scan reference hints | `processing/text/` | stdout / JSON | reconcile references or build citation maps | semantic reconciliation |
+| `kb refs-index` | Build bibliographic index relation candidates | `processing/text/`, `raw/papers/`, metadata | `processing/refs/` | review citation/index relations | human identity confirmation |
+| `kb refs-graph` | Export bibliographic relation candidates as graph data | `processing/refs/refs_index_*.md` | `processing/refs/refs_graph_*.json` / `.mmd` / `.dot` | visualize relation certainty | human review of uncertain edges |
+| `kb keywords` | Detect keyword/topic co-occurrence candidates | `processing/text/` | `processing/keywords/keywords_*.md` / JSON | find topic-level evidence | semantic meaning / idea relations |
 | `kb tasks` | Generate deferred work lists | project state | `LLM/tasks/` | assign work to an LLM/agent | execution of tasks |
 | `kb memory` | Record completed task outcomes | operator input | `LLM/memory/` | inspect project history | validation of quality |
 
@@ -222,7 +227,7 @@ This rule keeps the project fast, auditable, and LLM-efficient.
 Manager LLMs should run `kb links`, `kb links --unresolved`, and `kb links --ambiguous` before assigning link-repair work to a Worker LLM. Worker LLMs should receive the concrete source pages, line numbers, candidate targets, and requirements instead of guessing link problems from memory.
 
 
-## Using `kb refs-index`
+## Using `kb refs-index` and `kb refs-graph`
 
 Before asking a Worker LLM to reason about a literature network, the Manager LLM should run:
 
@@ -230,6 +235,7 @@ Before asking a Worker LLM to reason about a literature network, the Manager LLM
 kb extract-text
 kb refs
 kb refs-index
+kb refs-graph
 ```
 
 The Manager LLM should treat `confirmed` rows as high-confidence evidence and route `candidate`, `ambiguous`, and `missing` rows to human review or bounded Worker LLM preparation. Worker LLMs may normalize strings and organize evidence, but they must not be treated as the final guarantee for bibliographic identity.
@@ -238,3 +244,17 @@ The Manager LLM should treat `confirmed` rows as high-confidence evidence and ro
 ## Third-party graph handoff
 
 When the Manager LLM prepares data for graph visualization or third-party skill generation, it should preserve relationship status and evidence. Use `docs/third-party-skills/` as the visual and JSON guidance source.
+
+
+## Using `kb keywords`
+
+Use `kb keywords` after `kb extract-text` when the Manager LLM needs second-level literature relationship evidence: shared terms, devices, methods, models, or topics.
+
+```bash
+kb keywords
+kb keywords thermal cloak metamaterial
+kb keywords --terms-file references/thermal_terms.txt
+kb keywords --json
+```
+
+The command returns candidate keyword/topic relations only. A Worker LLM may review whether the shared terms are scientifically meaningful, but it must preserve file lists and evidence lines and must not promote candidates into scientific idea relations without review.

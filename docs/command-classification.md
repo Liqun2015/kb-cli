@@ -235,3 +235,60 @@ See `docs/llm-hierarchy.md` for the full hierarchy.
 ## Third-party skill guidance
 
 Third-party graph and visualization guidance belongs under `docs/third-party-skills/`. These documents are not runtime commands; they define how external tools and skills should interpret relationship certainty and review status.
+
+## Command map and lifecycle references
+
+The canonical command overview is maintained in:
+
+```text
+docs/commands.md
+```
+
+Task status and handoff rules are maintained in:
+
+```text
+docs/task-lifecycle.md
+```
+
+When adding a new command, update `docs/commands.md` with its ability, input area, output area, LLM boundary, and deferred-work rule. If the command creates or consumes handoff tasks, also update `docs/task-lifecycle.md` when status semantics change.
+
+
+## v0.5.12: `kb refs-graph` classification
+
+`kb refs-graph` is a deterministic text/reference processing command. It exports graph data from existing `refs-index` reports.
+
+- It may read `processing/refs/refs_index_*.md`.
+- It may write `processing/refs/refs_graph_*.json`, `.mmd`, or `.dot`.
+- It must preserve `status`, `evidence`, `visual`, and `needs_human_review` fields.
+- It must not call LLM APIs, perform online DOI lookup, confirm candidate matches, or rewrite wiki pages.
+- Uncertain graph edges remain deferred human-review tasks.
+
+
+## v0.5.12: `kb keywords` classification
+
+`kb keywords` is a deterministic text/reference processing command. It detects keyword/topic co-occurrence candidates among extracted text files and writes reviewable evidence to `processing/keywords/`.
+
+It must not call an LLM, infer scientific idea relations, merge topics, rewrite wiki pages, or treat shared keywords as confirmed relationships.
+
+When keyword/topic candidates are found, unresolved semantic interpretation should be handed to a Manager LLM and bounded Worker task.
+
+
+## Health / reporting commands
+
+`kb health` is a deterministic Manager LLM dashboard command. It summarizes relationship-network completeness, review backlog, and missing reports. It must not call an LLM, repair files, or claim scientific relationships. When hard work remains, it should emit bounded deferred task hints and point the user to `kb tasks`.
+
+
+## v0.5.13: `kb health` classification
+
+`kb health` belongs to the health / reporting category. It is deterministic and Manager-LLM-facing. It summarizes relationship-network completeness, missing reports, review backlog, and deferred task hints. It must not call an LLM, repair files, confirm bibliographic identity, or decide scientific idea relations.
+
+## v0.6.0.1: `kb shell` classification
+
+`kb shell` belongs to the interactive shell category.
+
+- It is deterministic.
+- It is not an LLM chat interface.
+- It handles only session commands directly: `use`, `pwd`, `clear`, `help`, and `exit`.
+- Known knowledge-base commands should map to batch-mode commands with the current `--kb-path`.
+- Unknown input must return safely without interpretation, LLM calls, shell escapes, or arbitrary execution.
+- It is suitable for Manager LLM sessions that need to repeatedly run structured commands before assigning bounded work to Worker LLMs.
