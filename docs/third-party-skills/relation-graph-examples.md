@@ -1,6 +1,6 @@
 # Relation Graph Examples
 
-Current version: `v0.6.0.4`
+Current version: `v0.6.2`
 
 These examples show how third-party skills and tools should display bibliographic index relations.
 

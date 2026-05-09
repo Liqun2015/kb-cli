@@ -294,3 +294,15 @@ Manager LLMs may use its output to assign bounded Worker LLM tasks for semantic 
 Global bibliographic index relations stay under `processing/refs/`. Topic-specific causal, method, evidence, idea, and importance relations belong under `topics/<topic>/`.
 
 Do not ask a Worker LLM to store topic-level interpretation in `processing/refs/`. If a topic-specific relation is uncertain, create or update a bounded task under `topics/<topic>/tasks/` or `LLM/tasks/`, and record accepted decisions under `topics/<topic>/memory/` or `LLM/memory/`.
+
+## Topic schema notes
+
+As of `v0.6.2`, topic-specific relationship records should follow:
+
+```text
+docs/topic-relation-schema.md
+docs/literature-importance-schema.md
+docs/third-party-skills/topic-graph-schema.md
+```
+
+These documents are schema contracts for future Manager LLM, Worker LLM, and third-party skill integrations. They are not executable APIs yet.

@@ -1,6 +1,6 @@
 # Third-party Skills
 
-Current version: `v0.6.0.4`
+Current version: `v0.6.2`
 
 This directory records stable Markdown skill specifications for third-party skills and tools, graph views, web frontends, Obsidian-like plugins, Claude Code projects, Manager LLM workflows, and Worker LLMs that interact with LLM Wiki relationship data.
 
@@ -42,3 +42,13 @@ topics/<topic>/graph/topic_graph.json   topic-specific relationship overlay
 ```
 
 Global graphs should primarily show citation/index candidates. Topic graphs may show causal, method, evidence, idea, and topic-local importance relations, but they must preserve relation status, evidence, and human-review markers.
+
+## Topic graph skill schema
+
+`v0.6.2` adds:
+
+```text
+docs/third-party-skills/topic-graph-schema.md
+```
+
+Third-party visualizers should treat global bibliographic graphs and topic-specific overlays as separate layers. Topic-local causal, method, evidence, idea, and importance fields must not be silently merged into the global reference index.

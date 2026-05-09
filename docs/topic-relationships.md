@@ -1,6 +1,6 @@
 # Topic Relationship Overlay Roadmap
 
-Current version: `v0.6.1`
+Current version: `v0.6.2`
 
 This document defines the first practical V2 step for LLM Wiki: keep global bibliographic index relations global, and store topic-specific interpretive relationships under `topics/<topic>/`.
 
@@ -212,3 +212,36 @@ kb topic tasks <topic>       Generate bounded Worker LLM / human review tasks fo
 ```
 
 These commands should remain deterministic. They should prepare evidence and tasks for Manager LLM and Worker LLM workflows, not silently make semantic conclusions.
+
+## Schema documents added in v0.6.2
+
+The topic overlay roadmap is implemented through a small set of conservative schema documents:
+
+```text
+docs/topic-relation-schema.md
+    Defines topic-local directed relation records, relation types, status values, evidence requirements, and causal-relation caution rules.
+
+docs/literature-importance-schema.md
+    Defines global vs topic-local importance, importance levels, reason tags, review expectations, and optional score guidance.
+
+docs/topic-v2-roadmap.md
+    Records the incremental V2 route so the project does not jump directly into an over-ambitious universal causal graph.
+
+docs/third-party-skills/topic-graph-schema.md
+    Defines how third-party graph tools and skills should read and render topic overlays.
+```
+
+Manager LLMs should use these documents as navigation and schema constraints before assigning Worker LLMs to write `topics/<topic>/relations/*.md` or `topics/<topic>/importance.md`.
+
+## Conservative implementation rule
+
+At this stage, topic relations are records and candidates, not automatic truth.
+
+```text
+Rust commands discover evidence.
+Manager LLM organizes bounded tasks.
+Worker LLM proposes topic relations with evidence.
+Humans confirm high-impact causal, contradiction, bibliographic identity, and core-literature decisions.
+```
+
+Do not treat a topic relation schema as permission to auto-generate a causal graph.

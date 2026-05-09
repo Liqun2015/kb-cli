@@ -318,3 +318,15 @@ The shell is valuable because it is safe and boring. Its job is to execute expli
 Global bibliographic index relations stay under `processing/refs/`. Topic-specific causal, method, evidence, idea, and importance relations belong under `topics/<topic>/`.
 
 Do not ask a Worker LLM to store topic-level interpretation in `processing/refs/`. If a topic-specific relation is uncertain, create or update a bounded task under `topics/<topic>/tasks/` or `LLM/tasks/`, and record accepted decisions under `topics/<topic>/memory/` or `LLM/memory/`.
+
+## v0.6.2 topic schema guardrail
+
+Before adding topic-level relationship features, read:
+
+```text
+docs/topic-relation-schema.md
+docs/literature-importance-schema.md
+docs/topic-v2-roadmap.md
+```
+
+Do not implement a universal causal graph. Do not auto-confirm causal, contradiction, improvement, or core-literature relations. Topic relations under `topics/<topic>/` must remain reviewable records with evidence and status fields.

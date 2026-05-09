@@ -1,6 +1,6 @@
 # LLM Command Guide
 
-Current version: `v0.6.1`
+Current version: `v0.6.2`
 
 This document is the operating guide for the top-level Manager LLM, Claude Code sessions, and human operators who use `kb-cli` as a structured command layer.
 
@@ -275,3 +275,25 @@ Use this order:
 ```
 
 `processing/refs/` remains the global bibliographic layer. `topics/<topic>/` is the topic-local interpretation layer.
+
+## Topic schema rule added in v0.6.2
+
+When the Manager LLM is working inside a concrete topic, it should read these files before assigning Worker LLM tasks:
+
+```text
+docs/topic-relationships.md
+docs/topic-relation-schema.md
+docs/literature-importance-schema.md
+docs/topic-v2-roadmap.md
+```
+
+The Manager LLM should then inspect:
+
+```text
+topics/<topic>/scope.md
+topics/<topic>/literature.md
+topics/<topic>/importance.md
+topics/<topic>/relations/
+```
+
+Worker LLMs should not invent new relation types unless the Manager LLM explicitly updates the schema. Use `unknown` with evidence when unsure.

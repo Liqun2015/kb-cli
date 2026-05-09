@@ -217,3 +217,16 @@ topics/<topic>/   topic-local causal, method, evidence, idea, and importance rel
 ```
 
 Before adding topic-specific commands, read `docs/topic-relationships.md`. Future commands such as `kb topic init`, `kb topic status`, and `kb topic graph` should be deterministic scaffolding commands that help Manager LLMs and humans maintain topic overlays without silently making causal or scientific-idea claims.
+
+## Topic schema foundation added in v0.6.2
+
+`v0.6.2` does not add a new executable command. It adds schema documents that constrain future topic-level commands and Worker LLM tasks:
+
+```text
+docs/topic-relation-schema.md
+docs/literature-importance-schema.md
+docs/topic-v2-roadmap.md
+docs/third-party-skills/topic-graph-schema.md
+```
+
+Future commands such as `kb topic`, `kb relation-review`, or topic graph exporters should follow these schemas instead of inventing new relation fields ad hoc.

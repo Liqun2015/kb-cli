@@ -4,7 +4,7 @@
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.6.1`
+> Current version: `v0.6.2`
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, use `kb prepare` to generate reviewable task materials, maintain Markdown knowledge pages under `wiki/`, and constrain future human/AI maintainers through the `rules/` layer.
 
@@ -16,6 +16,8 @@ Before adding new commands, read the command map and lifecycle docs:
 docs/commands.md          What each command does, what it reads/writes, and whether it may use LLM behavior
 docs/task-lifecycle.md    How LLM/tasks/ and LLM/memory/ should be used from pending work to completed memory
 docs/topic-relationships.md  How topic-specific relationship overlays under topics/<topic>/ should be organized
+docs/topic-relation-schema.md  Controlled fields for topic-local directed relation records
+docs/literature-importance-schema.md  Lightweight global/topic-local literature importance schema
 ```
 
 The intended pattern is:
@@ -58,7 +60,7 @@ topics/<topic>/
 
 This distinction is important. A citation relation such as `Paper A cites Paper B` is global. But relations such as `Paper A motivates Paper B for thermal metamaterials`, `Paper A improves Paper B under this topic`, or `Paper A is core literature for this topic` are topic-dependent. They should be stored in the corresponding topic overlay rather than mixed into the global reference index.
 
-The first V2 goal is therefore conservative: maintain reviewable topic-centered literature relationship overlays, not a universal causal knowledge graph. See `docs/topic-relationships.md`.
+The first V2 goal is therefore conservative: maintain reviewable topic-centered literature relationship overlays, not a universal causal knowledge graph. See `docs/topic-relationships.md`, `docs/topic-relation-schema.md`, `docs/literature-importance-schema.md`, and `docs/topic-v2-roadmap.md`.
 
 ## How does the LLM maintain Markdown pages?
 
@@ -307,6 +309,21 @@ docs/shell.md                   Deterministic `kb shell` usage, whitelist behavi
 
 This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, a manifest registry under `processing/manifest.json`, static linting, and deterministic keyword search over `wiki/`, WikiLink scanning, Rust-native line-level grep, best-effort text extraction into `processing/text/`, reference-hint scanning over extracted text, bibliographic index relation candidate building, deterministic refs graph export, third-party graph visualization skill guidance, a command overview map, a task lifecycle guide, deferred task handoff reports under `LLM/tasks/`, and completed-task memory records under `LLM/memory/`, and the `topics/` directory plus topic-relationship roadmap for future topic-specific overlays. It still does **not** provide full RAG, vector search, embeddings, OCR, hidden LLM cleanup, or autonomous LLM/wiki preparation. `kb prepare` currently plans and documents the prepare work; it does not perform LLM edits by itself.
 
+
+## What Changed in v0.6.2
+
+`v0.6.2` adds the first topic-level schema foundation. It does not attempt to build a universal causal graph. Instead, it defines how a specific topic directory should record directed relation candidates, topic-local importance, evidence, review status, and third-party topic graph fields.
+
+New schema documents:
+
+```text
+docs/topic-v2-roadmap.md
+docs/topic-relation-schema.md
+docs/literature-importance-schema.md
+docs/third-party-skills/topic-graph-schema.md
+```
+
+The global layer remains unchanged: bibliographic index relations stay under `processing/refs/`. Topic-local causal, method, evidence, idea, and importance records should be kept under `topics/<topic>/`.
 
 ## What Changed in v0.6.1
 

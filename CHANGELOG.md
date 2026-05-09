@@ -1,3 +1,12 @@
+## v0.6.2 - Topic relation and importance schema foundation
+
+- Added `docs/topic-relation-schema.md` for topic-local directed relation records.
+- Added `docs/literature-importance-schema.md` for global vs topic-local importance.
+- Added `docs/topic-v2-roadmap.md` to keep the V2 direction conservative and incremental.
+- Added `docs/third-party-skills/topic-graph-schema.md` for topic graph visualizers and skills.
+- Clarified that global bibliographic index relations remain in `processing/refs/`, while topic-specific causal, method, evidence, idea, and importance records belong under `topics/<topic>/`.
+- No LLM calls, no causal inference engine, no automatic importance ranking, and no automatic topic graph generation were added.
+
 ## v0.6.1 - Topic relationship overlay roadmap
 
 - Added `docs/topic-relationships.md` as the roadmap for topic-specific literature relationship overlays.

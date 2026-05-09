@@ -2,7 +2,7 @@
 
 `kb-cli` is designed so the Rust CLI stays cross-platform and the platform-specific differences stay in documentation and small wrapper scripts.
 
-Current version: `v0.6.0.4`
+Current version: `v0.6.2`
 
 ## Related architecture document
 
