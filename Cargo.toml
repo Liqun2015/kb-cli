@@ -1,6 +1,6 @@
 [package]
 name = "kb-cli"
-version = "0.6.2"
+version = "0.6.3-1"
 edition = "2021"
 
 [dependencies]
@@ -18,4 +18,4 @@ name = "kb"
 path = "src/main.rs"
 
 [package.metadata.kb-cli]
-release_label = "v0.6.2"
+release_label = "v0.6.3.1"

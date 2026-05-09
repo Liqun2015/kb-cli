@@ -49,8 +49,19 @@ pub struct RefsGraphArgs {
 #[derive(Debug, Clone, Serialize)]
 struct VisualStyle {
     edge_style: String,
+    edge_arrow: String,
     source_node_style: String,
     target_node_style: String,
+    target_node_marker: String,
+    review_marker: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct NodeWeight {
+    importance_level: String,
+    importance_score: f64,
+    weight_source: String,
+    notes: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -60,6 +71,8 @@ struct GraphNode {
     node_type: String,
     status: String,
     source_path: Option<String>,
+    relation_layer: String,
+    weight: NodeWeight,
     visual: BTreeMap<String, String>,
     needs_human_review: bool,
     evidence: Vec<String>,
@@ -67,14 +80,19 @@ struct GraphNode {
 
 #[derive(Debug, Clone, Serialize)]
 struct GraphEdge {
+    id: String,
     source: String,
     target: String,
+    direction: String,
+    relation_layer: String,
     relation_type: String,
+    relation_label: String,
     status: String,
     confidence: f64,
     evidence: Vec<String>,
     visual: VisualStyle,
     needs_human_review: bool,
+    human_final_guarantee_required: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -100,6 +118,9 @@ struct DeferredGraphTask {
 #[derive(Debug, Clone, Serialize)]
 struct RefsGraphReport {
     schema_version: String,
+    graph_kind: String,
+    relation_layer: String,
+    direction_model: String,
     generated_by: String,
     generated_at: String,
     input_path: String,
@@ -193,15 +214,26 @@ fn run_refs_graph(kb_path: &Path, args: &RefsGraphArgs) -> Result<RefsGraphRepor
                 relation,
             );
 
+            let edge_status = relation.status.clone();
+            let edge_needs_review = relation.review_required || edge_status != "confirmed";
+            let edge_id = format!(
+                "edge::{}::{}::{}",
+                source_id, target_id, relation.source_line
+            );
             edges.push(GraphEdge {
+                id: edge_id,
                 source: source_id.clone(),
                 target: target_id,
-                relation_type: "bibliographic_index".to_string(),
-                status: relation.status.clone(),
+                direction: "source_cites_or_mentions_target".to_string(),
+                relation_layer: "global_bibliographic_index".to_string(),
+                relation_type: "cites_or_references".to_string(),
+                relation_label: "bibliographic index candidate".to_string(),
+                status: edge_status.clone(),
                 confidence: relation.score,
                 evidence: evidence_for_relation(relation),
-                visual: visual_for_status(&relation.status),
-                needs_human_review: relation.review_required || relation.status != "confirmed",
+                visual: visual_for_status(&edge_status),
+                needs_human_review: edge_needs_review,
+                human_final_guarantee_required: edge_needs_review,
             });
         }
     }
@@ -218,7 +250,10 @@ fn run_refs_graph(kb_path: &Path, args: &RefsGraphArgs) -> Result<RefsGraphRepor
     let deferred_tasks = build_deferred_tasks(&edges);
 
     Ok(RefsGraphReport {
-        schema_version: "0.5.11".to_string(),
+        schema_version: "refs-graph.v2.1".to_string(),
+        graph_kind: "global_bibliographic_index_graph".to_string(),
+        relation_layer: "processing/refs".to_string(),
+        direction_model: "directed_edges".to_string(),
         generated_by: "kb-cli refs-graph".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         input_path: relative_path_string(kb_path, &input_path),
@@ -435,14 +470,15 @@ fn ensure_source_node(
     relation: &ParsedRelation,
 ) {
     nodes.entry(id.to_string()).or_insert_with(|| {
-        let mut visual = BTreeMap::new();
-        visual.insert("node_style".to_string(), "filled".to_string());
+        let visual = node_visual("filled", "unknown");
         GraphNode {
             id: id.to_string(),
             label: label_from_path(&relation.source_text_file),
             node_type: "source_text".to_string(),
             status: "local".to_string(),
             source_path: Some(relation.source_text_file.clone()),
+            relation_layer: "global_bibliographic_index".to_string(),
+            weight: default_node_weight("source text node"),
             visual,
             needs_human_review: false,
             evidence: vec![format!("source text file: {}", relation.source_text_file)],
@@ -462,14 +498,15 @@ fn ensure_target_node(
     relation: &ParsedRelation,
 ) {
     nodes.entry(id.to_string()).or_insert_with(|| {
-        let mut visual = BTreeMap::new();
-        visual.insert("node_style".to_string(), node_style.to_string());
+        let visual = node_visual(node_style, "unknown");
         GraphNode {
             id: id.to_string(),
             label: label.to_string(),
             node_type: node_type.to_string(),
             status: status.to_string(),
             source_path: source_path.map(|s| s.to_string()),
+            relation_layer: "global_bibliographic_index".to_string(),
+            weight: default_node_weight("bibliographic graph node"),
             visual,
             needs_human_review,
             evidence: evidence_for_relation(relation),
@@ -481,19 +518,56 @@ fn visual_for_status(status: &str) -> VisualStyle {
     match status {
         "confirmed" => VisualStyle {
             edge_style: "solid".to_string(),
+            edge_arrow: "directed".to_string(),
             source_node_style: "filled".to_string(),
             target_node_style: "filled".to_string(),
+            target_node_marker: "normal".to_string(),
+            review_marker: None,
         },
         "missing" | "needs_human" => VisualStyle {
             edge_style: "dashed".to_string(),
+            edge_arrow: "directed".to_string(),
             source_node_style: "filled".to_string(),
             target_node_style: "hollow".to_string(),
+            target_node_marker: "unresolved".to_string(),
+            review_marker: Some("needs_human_review".to_string()),
         },
         _ => VisualStyle {
             edge_style: "dashed".to_string(),
+            edge_arrow: "directed".to_string(),
             source_node_style: "filled".to_string(),
             target_node_style: "filled".to_string(),
+            target_node_marker: "candidate".to_string(),
+            review_marker: Some("needs_human_review".to_string()),
         },
+    }
+}
+
+fn default_node_weight(note: &str) -> NodeWeight {
+    NodeWeight {
+        importance_level: "unknown".to_string(),
+        importance_score: 0.0,
+        weight_source: "not_ranked_by_refs_graph".to_string(),
+        notes: vec![note.to_string()],
+    }
+}
+
+fn node_visual(node_style: &str, importance_level: &str) -> BTreeMap<String, String> {
+    let (node_size, node_size_value) = node_size_for_importance(importance_level);
+    let mut visual = BTreeMap::new();
+    visual.insert("node_style".to_string(), node_style.to_string());
+    visual.insert("node_size".to_string(), node_size.to_string());
+    visual.insert("node_size_value".to_string(), node_size_value.to_string());
+    visual
+}
+
+fn node_size_for_importance(importance_level: &str) -> (&'static str, u32) {
+    match importance_level {
+        "core" => ("large", 36),
+        "important" => ("medium", 28),
+        "background" => ("small", 20),
+        "peripheral" => ("tiny", 14),
+        _ => ("default", 20),
     }
 }
 
@@ -615,12 +689,15 @@ fn render_dot(report: &RefsGraphReport) -> String {
             "box"
         };
         let style = if shape == "circle" { "" } else { "filled" };
+        let dot_size = dot_node_size(node);
         out.push_str(&format!(
-            "  \"{}\" [label=\"{}\", shape={}, style=\"{}\"];\n",
+            "  \"{}\" [label=\"{}\", shape={}, style=\"{}\", width={:.2}, height={:.2}];\n",
             escape_dot(&node.id),
             escape_dot(&node.label),
             shape,
-            style
+            style,
+            dot_size,
+            dot_size
         ));
     }
     for edge in &report.edges {
@@ -679,6 +756,16 @@ fn print_report(report: &RefsGraphReport) {
     println!("  confirmed relation        -> solid edge");
     println!("  candidate / ambiguous     -> dashed edge");
     println!("  missing / unresolved node -> hollow node");
+    println!("  literature importance     -> node size");
+}
+
+fn dot_node_size(node: &GraphNode) -> f64 {
+    let value = node
+        .visual
+        .get("node_size_value")
+        .and_then(|raw| raw.parse::<f64>().ok())
+        .unwrap_or(20.0);
+    (value / 24.0).clamp(0.45, 1.8)
 }
 
 fn node_id_from_path(path: &str) -> String {

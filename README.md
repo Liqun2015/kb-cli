@@ -4,7 +4,7 @@
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.6.2`
+> Current version: `v0.6.3.1`
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, use `kb prepare` to generate reviewable task materials, maintain Markdown knowledge pages under `wiki/`, and constrain future human/AI maintainers through the `rules/` layer.
 
@@ -43,6 +43,33 @@ The relationship network has three levels:
 3. **Scientific idea relations**: method transfer, mechanism similarity, theoretical inheritance, research gaps, and cross-domain inspiration. These should be handled through explicit Manager LLM / Worker LLM workflows with evidence and review.
 
 See `docs/literature-relationships.md`, `docs/topic-relationships.md`, and `docs/third-party-skills/`.
+
+
+## Directed graph export V2
+
+`kb refs-graph` now exports a conservative V2 graph shape for global bibliographic index relations. Edges are directed because a reference relation has orientation: a source paper or extracted source text cites, mentions, or points to a referenced paper or unresolved reference entry.
+
+The V2 export keeps this distinction narrow:
+
+```text
+processing/refs/refs_graph_*.json = global bibliographic index graph
+topics/<topic>/graph/             = future topic-specific causal / method / idea overlays
+```
+
+The global graph may include directed `cites_or_references` edges, relation status, confidence, evidence, human-review flags, and visual hints. It must not pretend to contain topic-specific causal conclusions.
+
+### Visual node-size protocol
+
+Starting in `v0.6.3.1`, graph visual protocols reserve node size for literature importance:
+
+```text
+node size  = literature importance
+edge style = relation certainty
+arrow      = relation direction
+hollow     = missing / unresolved reference
+```
+
+`kb refs-graph` does not rank literature yet. It only exports `unknown` / `default` node-size placeholders so third-party graph viewers and future `kb rank` or topic-local importance workflows can use the same interface without changing the graph contract.
 
 ## Topic-specific relationship overlays
 
@@ -309,6 +336,12 @@ docs/shell.md                   Deterministic `kb shell` usage, whitelist behavi
 
 This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, a manifest registry under `processing/manifest.json`, static linting, and deterministic keyword search over `wiki/`, WikiLink scanning, Rust-native line-level grep, best-effort text extraction into `processing/text/`, reference-hint scanning over extracted text, bibliographic index relation candidate building, deterministic refs graph export, third-party graph visualization skill guidance, a command overview map, a task lifecycle guide, deferred task handoff reports under `LLM/tasks/`, and completed-task memory records under `LLM/memory/`, and the `topics/` directory plus topic-relationship roadmap for future topic-specific overlays. It still does **not** provide full RAG, vector search, embeddings, OCR, hidden LLM cleanup, or autonomous LLM/wiki preparation. `kb prepare` currently plans and documents the prepare work; it does not perform LLM edits by itself.
 
+
+## What Changed in v0.6.3
+
+`v0.6.3` upgrades `kb refs-graph` output into a conservative V2 graph export. The global bibliographic graph now exposes directed edges, graph kind, relation layer, relation type, relation label, confidence, evidence, human-review flags, visual style hints, and placeholder node-weight fields.
+
+This is still the global bibliographic index layer. It does not infer topic-specific causal, method, evidence, or idea relations; those belong under `topics/<topic>/`.
 
 ## What Changed in v0.6.2
 

@@ -1,6 +1,6 @@
 # Topic V2 Roadmap
 
-Current version: `v0.6.2`
+Current version: `v0.6.3.1`
 
 This roadmap keeps the V2 direction practical. Earlier discussions introduced directed relations, node attributes, causal links, importance, and hybrid retrieval. Those ideas are useful, but the near-term goal must stay conservative.
 
@@ -58,7 +58,7 @@ scientific idea links
 
 Topic relationship overlay roadmap.
 
-### v0.6.2
+### v0.6.3
 
 Topic relation schema and literature importance schema.
 

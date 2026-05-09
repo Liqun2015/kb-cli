@@ -1,6 +1,6 @@
 # Relation Graph Visual Protocol
 
-Current version: `v0.6.2`
+Current version: `v0.6.3.1`
 
 This document defines the recommended visual protocol for third-party graph skills and tools that display LLM Wiki literature relationships.
 
@@ -12,7 +12,35 @@ Visual style must reflect relationship certainty.
 solid edge  = confirmed relationship
 dashed edge = candidate / uncertain relationship
 hollow node = unresolved, missing, or pending reference
+node size   = literature importance
 ```
+
+
+## Node-size rule
+
+`v0.6.3.1` reserves node size for literature importance.
+
+```text
+core literature       -> large node
+important literature  -> medium node
+background literature -> small node
+peripheral literature -> tiny / low-emphasis node
+unknown importance    -> default node size
+```
+
+This rule should be interpreted conservatively. A graph viewer may render node size from `visual.node_size` or `visual.node_size_value`, but it must not infer importance when the graph export says `importance_level: unknown`.
+
+`kb refs-graph` currently emits default / unknown placeholders only. Future `kb rank` or topic-local importance records may provide real importance levels and scores.
+
+Recommended mapping:
+
+| Importance level | `visual.node_size` | `visual.node_size_value` | Meaning |
+|---|---:|---:|---|
+| `core` | `large` | `36` | Core or classic literature for the graph context |
+| `important` | `medium` | `28` | Important but not necessarily foundational literature |
+| `background` | `small` | `20` | Useful background literature |
+| `peripheral` | `tiny` | `14` | Peripheral or low-emphasis literature |
+| `unknown` | `default` | `20` | Importance has not been ranked yet |
 
 ## Relation statuses
 
@@ -71,3 +99,23 @@ The hollow node represents a reference entry that exists in the source paper but
 Bibliographic index identity is not guaranteed by visual style alone.
 
 Different journals use different citation formats, and identical references may appear with different author abbreviations, journal abbreviations, page ranges, or title variants. Third-party skills and tools must preserve the `status`, `evidence`, and `needs_human_review` fields so a human reviewer can inspect the match.
+
+## Directed edge rule
+
+`v0.6.3` makes the direction rule explicit.
+
+```text
+confirmed global bibliographic relation -> solid directed arrow
+candidate / ambiguous relation          -> dashed directed arrow
+missing / unresolved target             -> dashed directed arrow to hollow node
+```
+
+A directed global edge means:
+
+```text
+source paper or extracted source text -> referenced paper candidate or unresolved reference entry
+```
+
+It does not mean topic-specific causality. Topic-local causal, method, evidence, and idea arrows belong to `topics/<topic>/graph/` overlays.
+
+Third-party visualizers may render arrows, arrowheads, labels, or edge badges, but they must preserve `direction`, `relation_type`, `status`, `evidence`, `needs_human_review`, and `human_final_guarantee_required`.

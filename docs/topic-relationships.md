@@ -1,6 +1,6 @@
 # Topic Relationship Overlay Roadmap
 
-Current version: `v0.6.2`
+Current version: `v0.6.3.1`
 
 This document defines the first practical V2 step for LLM Wiki: keep global bibliographic index relations global, and store topic-specific interpretive relationships under `topics/<topic>/`.
 
@@ -213,7 +213,7 @@ kb topic tasks <topic>       Generate bounded Worker LLM / human review tasks fo
 
 These commands should remain deterministic. They should prepare evidence and tasks for Manager LLM and Worker LLM workflows, not silently make semantic conclusions.
 
-## Schema documents added in v0.6.2
+## Schema documents added in v0.6.3
 
 The topic overlay roadmap is implemented through a small set of conservative schema documents:
 

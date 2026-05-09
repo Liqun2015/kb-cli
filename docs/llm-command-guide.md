@@ -1,6 +1,6 @@
 # LLM Command Guide
 
-Current version: `v0.6.2`
+Current version: `v0.6.3.1`
 
 This document is the operating guide for the top-level Manager LLM, Claude Code sessions, and human operators who use `kb-cli` as a structured command layer.
 
@@ -276,7 +276,7 @@ Use this order:
 
 `processing/refs/` remains the global bibliographic layer. `topics/<topic>/` is the topic-local interpretation layer.
 
-## Topic schema rule added in v0.6.2
+## Topic schema rule added in v0.6.3
 
 When the Manager LLM is working inside a concrete topic, it should read these files before assigning Worker LLM tasks:
 

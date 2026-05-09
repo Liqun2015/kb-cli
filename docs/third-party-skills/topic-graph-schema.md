@@ -1,6 +1,6 @@
 # Topic Graph Schema for Third-Party Skills
 
-Current version: `v0.6.2`
+Current version: `v0.6.3.1`
 
 This document extends the global relation graph protocol with topic-specific overlays.
 
@@ -51,7 +51,9 @@ Topic graph edges must include a `topic` field.
   "importance_score": 85,
   "visual": {
     "node_style": "filled",
-    "importance_ring": "core"
+    "importance_ring": "core",
+    "node_size": "large",
+    "node_size_value": "36"
   }
 }
 ```
@@ -91,9 +93,11 @@ candidate topic relation    -> dashed arrow
 ambiguous topic relation    -> dashed arrow with ambiguity marker
 needs_human relation        -> dashed arrow with review marker
 rejected relation           -> hidden by default or shown as gray rejected edge
-core topic paper            -> strong node ring
-background paper            -> normal node
-peripheral paper            -> low-emphasis node
+core topic paper            -> strong node ring + large node
+important topic paper       -> medium node
+background paper            -> small / normal node
+peripheral paper            -> tiny / low-emphasis node
+unknown importance          -> default node size
 missing / unresolved node   -> hollow node
 ```
 
@@ -109,3 +113,18 @@ needs-human-review layer
 ```
 
 Do not merge topic-local causal/method/idea relations into global bibliographic index relations.
+
+
+## Node-size rule for topic graphs
+
+Topic graph viewers should use node size to show topic-local literature importance. This is separate from the global bibliographic index relation layer.
+
+```text
+topic_importance: core        -> node_size: large
+topic_importance: important   -> node_size: medium
+topic_importance: background  -> node_size: small
+topic_importance: peripheral  -> node_size: tiny
+topic_importance: unknown     -> node_size: default
+```
+
+A paper may be globally important but topic-background, or globally obscure but topic-core. Third-party tools must not collapse global and topic-local importance into a single unlabelled score.

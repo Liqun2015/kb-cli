@@ -319,7 +319,7 @@ Global bibliographic index relations stay under `processing/refs/`. Topic-specif
 
 Do not ask a Worker LLM to store topic-level interpretation in `processing/refs/`. If a topic-specific relation is uncertain, create or update a bounded task under `topics/<topic>/tasks/` or `LLM/tasks/`, and record accepted decisions under `topics/<topic>/memory/` or `LLM/memory/`.
 
-## v0.6.2 topic schema guardrail
+## v0.6.3 topic schema guardrail
 
 Before adding topic-level relationship features, read:
 

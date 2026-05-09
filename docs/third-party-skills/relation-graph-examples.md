@@ -1,6 +1,6 @@
 # Relation Graph Examples
 
-Current version: `v0.6.2`
+Current version: `v0.6.3.1`
 
 These examples show how third-party skills and tools should display bibliographic index relations.
 
@@ -115,3 +115,42 @@ A topic relation can use a separate relation type:
 ```
 
 A scientific idea relation should normally be created by a Manager LLM / Worker LLM workflow and should keep source evidence.
+
+## 6. Node size for literature importance
+
+Input situation:
+
+```text
+Paper B has been reviewed as core literature for the current topic or future ranking output marks it as important.
+```
+
+Graph rendering:
+
+```text
+large node  = core literature
+medium node = important literature
+small node  = background literature
+hollow node = unresolved or missing reference
+```
+
+Recommended node fields:
+
+```json
+{
+  "id": "paper_b",
+  "label": "Paper B",
+  "weight": {
+    "importance_level": "core",
+    "importance_score": 92,
+    "weight_source": "topic_importance_review",
+    "notes": ["core method source for thermal-metamaterials"]
+  },
+  "visual": {
+    "node_style": "filled",
+    "node_size": "large",
+    "node_size_value": "36"
+  }
+}
+```
+
+`kb refs-graph` currently emits `importance_level: unknown` and `node_size: default`. Third-party tools should preserve these fields but must not treat unknown/default as a real importance judgment.

@@ -1,6 +1,6 @@
 # Third-party Skills
 
-Current version: `v0.6.2`
+Current version: `v0.6.3.1`
 
 This directory records stable Markdown skill specifications for third-party skills and tools, graph views, web frontends, Obsidian-like plugins, Claude Code projects, Manager LLM workflows, and Worker LLMs that interact with LLM Wiki relationship data.
 
@@ -27,6 +27,7 @@ confirmed relation        -> solid edge
 candidate / ambiguous     -> dashed edge
 missing / unresolved node -> hollow node
 needs human review        -> explicit review marker and evidence
+literature importance     -> node size
 ```
 
 Third-party skills should never silently convert uncertain relations into confirmed relations. Human review remains the final guarantee for bibliographic index identity.
@@ -45,10 +46,29 @@ Global graphs should primarily show citation/index candidates. Topic graphs may 
 
 ## Topic graph skill schema
 
-`v0.6.2` adds:
+`v0.6.3` adds:
 
 ```text
 docs/third-party-skills/topic-graph-schema.md
 ```
 
 Third-party visualizers should treat global bibliographic graphs and topic-specific overlays as separate layers. Topic-local causal, method, evidence, idea, and importance fields must not be silently merged into the global reference index.
+
+## V2 directed graph export
+
+`v0.6.3` upgrades the global `refs-graph` JSON shape so third-party skills can read directed bibliographic edges and placeholder node-weight fields.
+
+This does not introduce a universal causal graph. It only makes the existing global bibliographic index graph more explicit:
+
+```text
+source paper / extracted source text -> referenced paper candidate / unresolved reference
+```
+
+Topic-specific causal and method relations should still be read from `topics/<topic>/` overlays.
+
+
+## Node size and literature importance
+
+Graph skills should reserve node size for literature importance. Edge style represents certainty, arrow direction represents relation direction, hollow nodes represent unresolved references, and node size represents importance.
+
+`kb refs-graph` currently emits `unknown` / `default` importance placeholders only. Future ranking or topic-local importance data may set `core`, `important`, `background`, or `peripheral` values.

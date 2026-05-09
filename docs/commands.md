@@ -122,9 +122,9 @@ The guiding rule is simple:
 
 ### `kb refs-graph`
 
-- **Ability:** export bibliographic index relation candidates as graph data for third-party visualization.
+- **Ability:** export bibliographic index relation candidates as directed V2 graph data for third-party visualization.
 - **Primary input:** `processing/refs/refs_index_*.md`.
-- **Primary output:** `processing/refs/refs_graph_*.json`, optionally `.mmd` or `.dot`.
+- **Primary output:** `processing/refs/refs_graph_*.json`, optionally `.mmd` or `.dot`; JSON includes `graph_kind`, `direction_model`, directed edge fields, evidence, review flags, and placeholder node weights.
 - **Allows LLM:** no.
 - **Deferred work:** candidate / ambiguous / missing edges require human review; LLMs may help prepare evidence, but they do not guarantee bibliographic identity.
 
@@ -218,9 +218,9 @@ topics/<topic>/   topic-local causal, method, evidence, idea, and importance rel
 
 Before adding topic-specific commands, read `docs/topic-relationships.md`. Future commands such as `kb topic init`, `kb topic status`, and `kb topic graph` should be deterministic scaffolding commands that help Manager LLMs and humans maintain topic overlays without silently making causal or scientific-idea claims.
 
-## Topic schema foundation added in v0.6.2
+## Topic schema foundation added in v0.6.3
 
-`v0.6.2` does not add a new executable command. It adds schema documents that constrain future topic-level commands and Worker LLM tasks:
+`v0.6.3` does not add a new executable command. It adds schema documents that constrain future topic-level commands and Worker LLM tasks:
 
 ```text
 docs/topic-relation-schema.md

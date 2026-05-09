@@ -1,3 +1,23 @@
+## v0.6.3.1 - Graph visual node-size protocol
+
+- Added a visual protocol rule: literature importance is represented by node size.
+- Updated `kb refs-graph` JSON node visual fields to include `node_size` and `node_size_value`.
+- Bumped the graph export schema marker to `refs-graph.v2.1`.
+- Kept `refs-graph` conservative: global bibliographic graphs still output `unknown` / `default` importance placeholders and do not rank literature.
+- Updated third-party skill docs so graph viewers can render core, important, background, peripheral, and unknown literature with different node sizes.
+- Reaffirmed that future `kb rank` or topic-local importance files should provide real importance values; `refs-graph` only preserves the interface.
+- No LLM call, automatic importance ranking, topic causality inference, or Wiki auto-editing was added.
+
+## v0.6.3 - refs-graph V2 export fields
+
+- Upgraded `kb refs-graph` JSON output to `schema_version: refs-graph.v2.0`.
+- Added graph-level fields for `graph_kind`, `relation_layer`, and `direction_model`.
+- Added directed edge fields: `id`, `direction`, `relation_layer`, `relation_type`, `relation_label`, and `human_final_guarantee_required`.
+- Added node weight placeholders so graph consumers can distinguish current unknown importance from future ranking output.
+- Extended visual style hints with `edge_arrow`, `target_node_marker`, and optional `review_marker`.
+- Kept the scope conservative: this is still a global bibliographic index graph, not a topic-specific causal graph and not an LLM inference engine.
+- No LLM call, no topic graph generation, no automatic ranking, and no automatic relation confirmation were added.
+
 ## v0.6.2 - Topic relation and importance schema foundation
 
 - Added `docs/topic-relation-schema.md` for topic-local directed relation records.

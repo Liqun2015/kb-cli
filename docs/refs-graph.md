@@ -1,6 +1,6 @@
 # `kb refs-graph`
 
-Current version: `v0.6.2`
+Current version: `v0.6.3.1`
 
 `kb refs-graph` exports bibliographic index relation candidates as graph data for third-party visualization skills and tools.
 
@@ -71,6 +71,7 @@ confirmed relation        -> solid edge
 candidate / ambiguous     -> dashed edge
 missing / unresolved node -> hollow node
 needs human review        -> explicit evidence and review marker
+literature importance     -> node size
 ```
 
 ## What it can do well
@@ -95,3 +96,66 @@ needs human review        -> explicit evidence and review marker
 Uncertain graph edges remain tasks for a human reviewer, optionally prepared by a Manager LLM and Worker LLM.
 
 The final guarantee for bibliographic identity remains human review.
+
+## V2 JSON fields
+
+`v0.6.3` exports a conservative V2 graph shape. The goal is to make graph data easier for third-party skills and Manager LLM workflows to consume without pretending that the global bibliographic graph contains topic-specific causal knowledge.
+
+Graph-level fields include:
+
+```text
+schema_version: refs-graph.v2.1
+graph_kind: global_bibliographic_index_graph
+relation_layer: processing/refs
+direction_model: directed_edges
+```
+
+Node records include a lightweight `weight` object and visual size placeholders:
+
+```json
+{
+  "weight": {
+    "importance_level": "unknown",
+    "importance_score": 0.0,
+    "weight_source": "not_ranked_by_refs_graph",
+    "notes": ["bibliographic graph node"]
+  },
+  "visual": {
+    "node_style": "filled",
+    "node_size": "default",
+    "node_size_value": "20"
+  }
+}
+```
+
+`v0.6.3.1` reserves node circle size for literature importance. `kb refs-graph` does not rank literature yet; it only preserves the graph interface for future `kb rank` and topic-local importance data.
+
+This is only a placeholder for future ranking commands. `kb refs-graph` does not decide whether a paper is core, important, background, or peripheral.
+
+Edge records include directed relation fields:
+
+```json
+{
+  "direction": "source_cites_or_mentions_target",
+  "relation_layer": "global_bibliographic_index",
+  "relation_type": "cites_or_references",
+  "relation_label": "bibliographic index candidate",
+  "status": "candidate",
+  "confidence": 0.72,
+  "needs_human_review": true,
+  "human_final_guarantee_required": true
+}
+```
+
+For confirmed DOI-level matches, `human_final_guarantee_required` may be false. For candidate, ambiguous, missing, or needs-human cases, it must be true.
+
+## What V2 deliberately does not mean
+
+The V2 graph export does not mean LLM Wiki has a universal causal graph.
+
+```text
+Global refs graph: A cites / references / mentions B.
+Topic graph: A motivates / improves / contradicts / supports B within a specific topic.
+```
+
+Topic-specific causal, method, evidence, idea, and importance relations belong under `topics/<topic>/`, not in `processing/refs/`.

@@ -1,6 +1,6 @@
 # Literature Importance Schema
 
-Current version: `v0.6.2`
+Current version: `v0.6.3.1`
 
 This document defines a lightweight, reviewable way to record literature importance in LLM Wiki.
 
@@ -124,6 +124,20 @@ unknown
 ```
 
 Scores are aids for sorting, not final truth.
+
+## Visual mapping
+
+Graph tools should render literature importance as node size:
+
+```text
+core        -> large node
+important   -> medium node
+background  -> small node
+peripheral  -> tiny node
+unknown     -> default node
+```
+
+This is only a visual convention. It does not remove the need for evidence, review status, and topic context.
 
 ## Human review rule
 

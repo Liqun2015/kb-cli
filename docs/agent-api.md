@@ -297,7 +297,7 @@ Do not ask a Worker LLM to store topic-level interpretation in `processing/refs/
 
 ## Topic schema notes
 
-As of `v0.6.2`, topic-specific relationship records should follow:
+As of `v0.6.3`, topic-specific relationship records should follow:
 
 ```text
 docs/topic-relation-schema.md

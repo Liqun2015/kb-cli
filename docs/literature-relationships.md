@@ -1,6 +1,6 @@
 # Literature Relationship Core Principle
 
-Current version: `v0.6.2`
+Current version: `v0.6.3.1`
 
 LLM Wiki is not merely a local document archive.
 
@@ -185,7 +185,7 @@ The detailed third-party skill guidance lives in `docs/third-party-skills/`.
 
 This visual protocol is not cosmetic. It is part of the evidence and review model. Graph tools must not silently upgrade uncertain relations into confirmed relations.
 
-## v0.6.2 topic schema foundation
+## v0.6.3 topic schema foundation
 
 The topic relationship layer now has a conservative schema foundation:
 
