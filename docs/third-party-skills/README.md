@@ -1,0 +1,32 @@
+# Third-party Skills
+
+Current version: `v0.5.10.2`
+
+This directory records stable Markdown skill specifications for third-party skills and tools, graph views, web frontends, Obsidian-like plugins, Claude Code projects, Manager LLM workflows, and Worker LLMs that interact with LLM Wiki relationship data.
+
+LLM Wiki is a relationship-maintenance system. Its central object is not a single paper file, but the evolving, reviewable network among references.
+
+## Why this directory is called `third-party-skills`
+
+The documents here are not just documentation for one visualization tool. They are reusable skill contracts.
+
+A developer can hand this directory to Claude Code or another coding agent and ask it to generate a graph viewer, JSON importer, Mermaid exporter, Graphviz exporter, or review UI. The generated tool should follow the relationship-state, evidence, and human-review rules defined here.
+
+## Documents
+
+- `relation-graph-visual-protocol.md` defines the visual mapping from relationship status to graph style.
+- `relation-graph-json-schema.md` defines recommended JSON fields for graph exporters and visualization skills and tools.
+- `relation-graph-examples.md` gives concrete examples for confirmed, candidate, ambiguous, and missing relations.
+- `developer-contract.md` states what third-party skills and tools may assume and what they must not assume.
+- `claude-code-generation-skill.md` provides a direct promptable skill spec for Claude Code or similar coding agents.
+
+## Design summary
+
+```text
+confirmed relation        -> solid edge
+candidate / ambiguous     -> dashed edge
+missing / unresolved node -> hollow node
+needs human review        -> explicit review marker and evidence
+```
+
+Third-party skills should never silently convert uncertain relations into confirmed relations. Human review remains the final guarantee for bibliographic index identity.

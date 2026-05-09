@@ -1,4 +1,107 @@
+## v0.5.10.2 - Third-party skills guidance
+
+- Renamed `docs/third-party-tools/` to `docs/third-party-skills/` to make the directory usable as a reusable skill specification area, not merely a tool-documentation folder.
+- Added `claude-code-generation-skill.md`, a direct promptable skill spec for Claude Code or similar coding agents to generate graph viewers, importers, exporters, or review dashboards.
+- Kept the graph certainty protocol: confirmed relations render as solid edges, uncertain relations as dashed edges, and unresolved references as hollow nodes.
+- Preserved the evidence and human-review requirements for bibliographic index relations.
+- No new graph exporter is implemented in this release. Future `refs-graph` work should follow these skills.
+
 # Changelog
+
+## v0.5.10 - Bibliographic index relation candidates
+
+- Added `kb refs-index` as a deterministic bibliographic index relation candidate builder.
+- The command scans extracted text under `processing/text/` by default and matches reference entries against local papers in `raw/papers/`.
+- Relation statuses include `confirmed`, `candidate`, `ambiguous`, and `missing`.
+- Reports are written under `processing/refs/refs_index_*.md` unless `--dry-run` / `--preview` is used.
+- Candidate, ambiguous, and missing cases include a deferred human-review task because humans remain the final guarantee for uncertain bibliographic identity decisions.
+- No LLM call, OCR, online DOI lookup, autonomous citation graph construction, or Wiki rewriting was added.
+
+## v0.5.10 - Literature relationship core and Manager/Worker terminology
+
+- Standardized LLM hierarchy terminology to `Manager LLM` and `Worker LLM`.
+- Added `docs/literature-relationships.md` to make the central project principle explicit: LLM Wiki maintains relationships among references, not merely files.
+- Defined three relationship levels: bibliographic index relations, keyword/topic relations, and scientific idea relations.
+- Clarified that Rust-native commands extract bibliographic candidates, humans provide the final guarantee for uncertain index relations, and Manager/Worker LLM workflows handle higher-level semantic relationship work.
+- Updated README and LLM-related docs to use Manager/Worker terminology consistently.
+- No command behavior, LLM call, OCR, vector search, or autonomous relation repair was added.
+
+## v0.5.9 - Links skeleton
+
+- Added `kb links` as a deterministic WikiLink scanner over Markdown pages.
+- `kb links` extracts `[[Target]]`, `[[Target|Alias]]`, and `[[Target#Heading|Alias]]` links and classifies them as resolved, unresolved, or ambiguous.
+- Added `docs/links.md`.
+- Reports include deferred task hints for future Wiki Link Repair Agent work when unresolved or ambiguous links are found.
+- The command does not call an LLM, rewrite Wiki pages, create missing pages, rename files, or perform semantic link repair.
+
+## v0.5.8.4 - LLM hierarchy clarification
+
+- Added `docs/llm-hierarchy.md` to define the hierarchy between Manager LLMs and Worker LLMs.
+- Clarified that the LLM using structured `kb` commands is the highest-level coordinator: it scouts with deterministic commands, reads task files, delegates bounded work, checks results, and records completion memory.
+- Clarified that lower-level LLMs or Worker LLMs should execute specific handoff tasks rather than redefine workflow scope.
+- Updated LLM command, agent-skill, command-classification, Claude, and agent API docs to reflect the hierarchy.
+- No new command behavior, LLM call, OCR, vector search, or autonomous agent execution was added.
+
+
+## v0.5.8.3 - LLM structured command guide
+
+- Added `docs/llm-command-guide.md` as a practical operating guide for future LLM maintainers and Claude Code sessions.
+- Documented the principle that Rust-native `kb` commands scout first: search, inspect, extract, count, and report before hard semantic work is given to LLM/agent skills.
+- Added a command map for LLM operators covering `query`, `grep`, `extract-text`, `refs`, `tasks`, and `memory`.
+- Clarified how `LLM/tasks/` and `LLM/memory/` should be used as handoff and audit-memory areas.
+- Reinforced that this is a documentation-only polish release: no new command behavior, LLM call, OCR, vector search, or autonomous agent execution was added.
+
+## v0.5.8.2 - Completed task memory
+
+- Added `kb memory` for appending completed task records under `LLM/memory/completed_tasks.md`.
+- `kb init` now creates `LLM/memory/`.
+- Added `docs/memory.md` to document the completed-task audit-memory workflow.
+- Clarified that completed task memories are project-local records for later inspection, not hidden model memory.
+- No LLM, OCR, vector search, autonomous task execution, or semantic validation was added.
+
+## v0.5.8.1 - LLM task workspace path
+
+- Moved deterministic handoff reports from the generic `outputs/tasks/` location to the explicit LLM workbench path: `LLM/tasks/`.
+- `kb tasks` now writes Markdown reports to `LLM/tasks/` unless `--dry-run`/`--preview` is used.
+- `kb init` now creates `LLM/tasks/`.
+- Updated `docs/tasks.md`, `docs/command-classification.md`, and `docs/llm-agent-skills.md` to state that deterministic commands are the first scouting pass and that unresolved hard work should be handed upward to future explicit human/LLM/agent skills.
+- No OCR, LLM call, vector search, citation graph construction, autonomous Wiki editing, or hidden agent execution was added.
+
+## v0.5.8 - Deferred task handoff skeleton
+
+- Added `kb tasks` to generate deterministic LLM/agent handoff task lists.
+- Task groups include target agent, goal, requirements, file list, evidence, source command, and priority.
+- Current task groups cover PDF text conversion gaps, reference reconciliation candidates, Wiki source traceability gaps, and broken WikiLinks.
+- Added `docs/tasks.md`.
+- Reinforced the rule that deterministic commands should do one ability well and defer unresolved semantic work explicitly instead of hiding LLM behavior.
+- No OCR, LLM call, vector search, citation graph construction, autonomous Wiki editing, or hidden agent execution was added.
+
+## v0.5.7.1 - Deferred LLM/agent skill boundaries
+
+- Added `docs/llm-agent-skills.md` to document future explicit LLM/agent skill responsibilities.
+- Clarified that `kb extract-text` and `kb refs` should do simple deterministic work well, then clearly mark work that requires OCR, semantic repair, citation reconciliation, or LLM synthesis.
+- Updated `docs/extract-text.md` with tasks deferred to a future PDF Text Conversion Agent.
+- Updated `docs/refs.md` with tasks deferred to future Reference Reconciliation and Citation Graph Building agents.
+- Updated command-classification, agent boundary, and Claude guardrail docs so future versions do not hide LLM work inside deterministic commands.
+- No OCR, LLM call, vector search, reference graph generation, or autonomous wiki editing was added.
+
+## v0.5.7 - Refs skeleton
+
+- Added `kb refs` as a deterministic reference-hint scanner over extracted text.
+- Added `docs/refs.md`.
+- `kb refs` scans `processing/text/` by default and supports `--path`, `--limit`, `--citations`, and `--json`.
+- The scanner detects reference headings, numbered bibliography entries, DOI values, and optional citation-marker candidates.
+- `kb init` now creates `processing/refs/` as a future home for reference reports or graph exports.
+- No LLM, OCR, semantic citation reconciliation, vector search, or reference graph generation was added.
+
+## v0.5.6.1 - Command classification principle
+
+- Added `docs/command-classification.md` to classify commands into deterministic core, deterministic search/inspection, text conversion/source processing, task preparation, and explicit future LLM/agent commands.
+- Added `kb grep` as a Rust-native deterministic grep-like command for line-level text search.
+- Added `kb extract-text` as a deterministic best-effort text extraction command that writes to `processing/text/`.
+- Added `docs/grep.md` and `docs/extract-text.md`.
+- Clarified that `kb extract-text` is reserved as a future PDF Text Conversion Agent entry point, but OCR, LLM cleanup, layout repair, and agent behavior must be explicit future modes.
+- Reinforced that deterministic commands must not silently call LLM APIs or external grep/rg tools.
 
 ## v0.5.4 - Clean script helpers
 

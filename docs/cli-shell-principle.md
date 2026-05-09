@@ -1,6 +1,6 @@
 # CLI / Shell Principle
 
-Current version: `v0.5.4`
+Current version: `v0.5.10`
 
 This document records the boundary between batch mode, interactive shell mode, and future LLM-assisted modes.
 
@@ -84,7 +84,7 @@ filesystem changes / reports / output
 
 This keeps behavior consistent and testable.
 
-## Current v0.5.4 status
+## Current v0.5.10 status
 
 `kb query` is the first deterministic local query skeleton.
 

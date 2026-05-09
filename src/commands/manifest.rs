@@ -10,7 +10,10 @@ use walkdir::WalkDir;
 
 #[derive(Debug, Clone, Args)]
 pub struct StatusArgs {
-    #[arg(long, help = "Scan raw/ and print status without writing processing/manifest.json")]
+    #[arg(
+        long,
+        help = "Scan raw/ and print status without writing processing/manifest.json"
+    )]
     pub dry_run: bool,
 
     #[arg(long, help = "Alias for --dry-run.")]
@@ -19,7 +22,10 @@ pub struct StatusArgs {
     #[arg(long, help = "Print a machine-readable JSON status summary")]
     pub json: bool,
 
-    #[arg(long, help = "Print raw files that are not yet compiled into wiki pages")]
+    #[arg(
+        long,
+        help = "Print raw files that are not yet compiled into wiki pages"
+    )]
     pub unprocessed: bool,
 }
 
@@ -134,12 +140,26 @@ pub fn refresh_for_path(kb_path: &Path, dry_run: bool) -> Result<ManifestSummary
             let (first_seen_at, status, wiki_pages) = match old {
                 Some(old_entry) => {
                     if old_entry.status == "raw_missing" {
-                        (old_entry.first_seen_at, "raw_registered".to_string(), old_entry.wiki_pages)
-                    } else if old_entry.content_hash == content_hash || old_entry.content_hash.starts_with("fnv1a64:") {
-                        (old_entry.first_seen_at, old_entry.status, old_entry.wiki_pages)
+                        (
+                            old_entry.first_seen_at,
+                            "raw_registered".to_string(),
+                            old_entry.wiki_pages,
+                        )
+                    } else if old_entry.content_hash == content_hash
+                        || old_entry.content_hash.starts_with("fnv1a64:")
+                    {
+                        (
+                            old_entry.first_seen_at,
+                            old_entry.status,
+                            old_entry.wiki_pages,
+                        )
                     } else {
                         summary.changed_files += 1;
-                        (old_entry.first_seen_at, "raw_changed".to_string(), old_entry.wiki_pages)
+                        (
+                            old_entry.first_seen_at,
+                            "raw_changed".to_string(),
+                            old_entry.wiki_pages,
+                        )
                     }
                 }
                 None => {
@@ -204,7 +224,11 @@ pub fn refresh_for_path(kb_path: &Path, dry_run: bool) -> Result<ManifestSummary
 }
 
 pub fn print_summary(summary: &ManifestSummary, dry_run: bool) {
-    let label = if dry_run { "Manifest preview" } else { "Manifest refreshed" };
+    let label = if dry_run {
+        "Manifest preview"
+    } else {
+        "Manifest refreshed"
+    };
     println!("\n{label}:");
     println!("  total raw files : {}", summary.total);
     println!("  manifest entries: {}", summary.manifest_entries);
@@ -228,7 +252,9 @@ pub fn print_summary(summary: &ManifestSummary, dry_run: bool) {
     }
 
     if summary.unprocessed_files > 0 {
-        println!("\nNext: run `kb status --unprocessed` to list files awaiting future prepare work.");
+        println!(
+            "\nNext: run `kb status --unprocessed` to list files awaiting future prepare work."
+        );
     }
 }
 
@@ -344,13 +370,7 @@ impl Sha256 {
     fn new() -> Self {
         Self {
             state: [
-                0x6a09e667,
-                0xbb67ae85,
-                0x3c6ef372,
-                0xa54ff53a,
-                0x510e527f,
-                0x9b05688c,
-                0x1f83d9ab,
+                0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab,
                 0x5be0cd19,
             ],
             buffer: [0; 64],
@@ -489,20 +509,12 @@ const FNV_OFFSET_BASIS: u64 = 0xcbf29ce484222325;
 const FNV_PRIME: u64 = 0x00000100000001b3;
 
 const SHA256_K: [u32; 64] = [
-    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
-    0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
-    0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
-    0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
-    0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
-    0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
-    0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
-    0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
-    0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 ];

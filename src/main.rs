@@ -9,7 +9,13 @@ mod intent;
 #[command(name = "kb")]
 #[command(about = "A minimal CLI for local knowledge base management", long_about = None)]
 struct Cli {
-    #[arg(short = 'k', long = "kb-path", value_name = "PATH", global = true, help = "Knowledge base directory name or path (default: KnowledgeBase)")]
+    #[arg(
+        short = 'k',
+        long = "kb-path",
+        value_name = "PATH",
+        global = true,
+        help = "Knowledge base directory name or path (default: KnowledgeBase)"
+    )]
     kb_path: Option<PathBuf>,
     #[command(subcommand)]
     command: Option<Commands>,
@@ -19,7 +25,10 @@ struct Cli {
 enum Commands {
     #[command(about = "Initialize or ensure KnowledgeBase directory structure")]
     Init {
-        #[arg(long, help = "Re-create missing directories and generated bootstrap files when safe")]
+        #[arg(
+            long,
+            help = "Re-create missing directories and generated bootstrap files when safe"
+        )]
         force: bool,
     },
     #[command(about = "Organize source files into raw/ subfolders")]
@@ -28,10 +37,32 @@ enum Commands {
     Bootstrap(commands::ingest::BootstrapArgs),
     #[command(about = "Build Wiki from raw materials")]
     BuildWiki,
-    #[command(name = "prepare", alias = "compile", about = "Prepare LLM/wiki handoff artifacts from raw files without calling an LLM")]
+    #[command(
+        name = "prepare",
+        alias = "compile",
+        about = "Prepare LLM/wiki handoff artifacts from raw files without calling an LLM"
+    )]
     Prepare(commands::prepare::PrepareArgs),
     #[command(about = "Search wiki Markdown pages with local keyword matching")]
     Query(commands::query::QueryArgs),
+    #[command(
+        about = "Scan wiki Markdown pages for WikiLinks and deterministic link-resolution hints"
+    )]
+    Links(commands::links::LinksArgs),
+    #[command(
+        about = "Scan extracted text for reference headings, DOI values, and citation-pattern hints"
+    )]
+    Refs(commands::refs::RefsArgs),
+    #[command(
+        about = "Build bibliographic index relation candidates between reference entries and local papers"
+    )]
+    RefsIndex(commands::refs_index::RefsIndexArgs),
+    #[command(about = "Generate deferred LLM/agent task handoff lists from deterministic checks")]
+    Tasks(commands::tasks::TasksArgs),
+    #[command(about = "Append a completed task memory record under LLM/memory/")]
+    Memory(commands::memory::MemoryArgs),
+    #[command(about = "Search text files with Rust-native grep-like matching")]
+    Grep(commands::grep::GrepArgs),
     #[command(about = "Sync wiki page source front matter back into processing/manifest.json")]
     SyncWiki(commands::sync_wiki::SyncWikiArgs),
     #[command(about = "Run static wiki health checks for links, orphans, and source front matter")]
@@ -43,6 +74,10 @@ enum Commands {
         #[arg(long, help = "Overwrite existing metadata file")]
         force: bool,
     },
+    #[command(
+        about = "Extract plain text from supported source files with deterministic best-effort methods"
+    )]
+    ExtractText(commands::extract_text::ExtractTextArgs),
     #[command(about = "Enter deterministic interactive shell mode")]
     Repl,
     #[command(about = "List all configured models")]
@@ -52,17 +87,11 @@ enum Commands {
     #[command(about = "Add a new model configuration")]
     AddModel(commands::model::ModelArgs),
     #[command(about = "Switch to a different model")]
-    SwitchModel {
-        id: String,
-    },
+    SwitchModel { id: String },
     #[command(about = "Delete a model configuration")]
-    DeleteModel {
-        id: String,
-    },
+    DeleteModel { id: String },
     #[command(about = "Validate model configuration")]
-    ValidateModel {
-        id: Option<String>,
-    },
+    ValidateModel { id: Option<String> },
 }
 
 fn main() -> anyhow::Result<()> {
@@ -71,30 +100,60 @@ fn main() -> anyhow::Result<()> {
     match &cli.command {
         Some(Commands::Init { force }) => commands::init::execute(cli.kb_path.as_deref(), *force),
         Some(Commands::Ingest(args)) => commands::ingest::execute(cli.kb_path.as_deref(), args),
-        Some(Commands::Bootstrap(args)) => commands::ingest::execute_bootstrap(cli.kb_path.as_deref(), args),
+        Some(Commands::Bootstrap(args)) => {
+            commands::ingest::execute_bootstrap(cli.kb_path.as_deref(), args)
+        }
         Some(Commands::BuildWiki) => commands::build_wiki::execute(cli.kb_path.as_deref()),
         Some(Commands::Prepare(args)) => commands::prepare::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Query(args)) => commands::query::execute(cli.kb_path.as_deref(), args),
-        Some(Commands::SyncWiki(args)) => commands::sync_wiki::execute(cli.kb_path.as_deref(), args),
-        Some(Commands::LintStatic(args)) => commands::lint_static::execute(cli.kb_path.as_deref(), args),
+        Some(Commands::Links(args)) => commands::links::execute(cli.kb_path.as_deref(), args),
+        Some(Commands::Refs(args)) => commands::refs::execute(cli.kb_path.as_deref(), args),
+        Some(Commands::RefsIndex(args)) => {
+            commands::refs_index::execute(cli.kb_path.as_deref(), args)
+        }
+        Some(Commands::Tasks(args)) => commands::tasks::execute(cli.kb_path.as_deref(), args),
+        Some(Commands::Memory(args)) => commands::memory::execute(cli.kb_path.as_deref(), args),
+        Some(Commands::Grep(args)) => commands::grep::execute(cli.kb_path.as_deref(), args),
+        Some(Commands::SyncWiki(args)) => {
+            commands::sync_wiki::execute(cli.kb_path.as_deref(), args)
+        }
+        Some(Commands::LintStatic(args)) => {
+            commands::lint_static::execute(cli.kb_path.as_deref(), args)
+        }
         Some(Commands::Status(args)) => commands::manifest::execute(cli.kb_path.as_deref(), args),
-        Some(Commands::ExtractMetadata { force }) => commands::extract_metadata::execute(cli.kb_path.as_deref(), *force),
+        Some(Commands::ExtractMetadata { force }) => {
+            commands::extract_metadata::execute(cli.kb_path.as_deref(), *force)
+        }
+        Some(Commands::ExtractText(args)) => {
+            commands::extract_text::execute(cli.kb_path.as_deref(), args)
+        }
         Some(Commands::Repl) => commands::repl::execute(),
         Some(Commands::ListModels) => commands::model::execute_list_models(),
         Some(Commands::ShowModel) => commands::model::execute_show_model(),
         Some(Commands::AddModel(args)) => commands::model::execute_add_model(args.clone()),
         Some(Commands::SwitchModel { id }) => commands::model::execute_switch_model(id),
         Some(Commands::DeleteModel { id }) => commands::model::execute_delete_model(id),
-        Some(Commands::ValidateModel { id }) => commands::model::execute_validate_model(id.as_deref()),
+        Some(Commands::ValidateModel { id }) => {
+            commands::model::execute_validate_model(id.as_deref())
+        }
         None => {
             println!("Available commands:");
             println!("  init [--force]              Initialize/ensure knowledge base");
             println!("  ingest [--copy|--move]      Organize files into raw/ subfolders");
-            println!("  bootstrap [--copy|--move]   Initialize, ingest, extract metadata, build wiki");
+            println!(
+                "  bootstrap [--copy|--move]   Initialize, ingest, extract metadata, build wiki"
+            );
             println!("  extract-metadata [--force]  Extract PDF metadata");
+            println!("  extract-text [--dry-run|--preview] [--force] [--json]  Extract text into processing/text");
             println!("  build-wiki                  Build wiki pages");
             println!("  prepare [--new|--file PATH] [--dry-run|--preview]  Prepare LLM/wiki handoff artifacts");
             println!("  query <terms...> [--limit N] [--snippets N] [--json] [--title-only]  Search wiki Markdown pages");
+            println!("  links [--unresolved|--ambiguous|--resolved] [--json]  Scan wiki WikiLinks and resolution hints");
+            println!("  refs [--path PATH] [--citations] [--json]  Scan text for reference and DOI hints");
+            println!("  refs-index [--path PATH] [--dry-run|--preview] [--json]  Build bibliographic index relation candidates");
+            println!("  tasks [--dry-run|--preview] [--json]  Generate deferred LLM/agent task handoff lists");
+            println!("  memory --task-id ID --summary TEXT [--file PATH]  Record completed task memory under LLM/memory");
+            println!("  grep <pattern> [--path PATH] [--regex] [--json]  Search text files with line numbers");
             println!("  status [--dry-run|--preview] [--json] [--unprocessed]  Refresh manifest and show raw-file status");
             println!("  sync-wiki [--dry-run|--preview] [--json]  Link wiki front matter back to manifest");
             println!("  lint-static [--dry-run|--preview|--no-report] [--json] [--strict]  Check broken links, orphans, and source front matter");

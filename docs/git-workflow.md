@@ -27,7 +27,7 @@ This is intentionally a little slower than a blind commit. The extra review step
 From the project root:
 
 ```bat
-scripts\git_safe_push.bat "v0.5.4 clean script helpers"
+scripts\git_safe_push.bat "v0.5.10 literature relationship core"
 ```
 
 The script pauses twice:
@@ -41,7 +41,7 @@ From the project root:
 
 ```bash
 chmod +x scripts/git_safe_push.sh
-scripts/git_safe_push.sh "v0.5.4 clean script helpers"
+scripts/git_safe_push.sh "v0.5.10 literature relationship core"
 ```
 
 The Unix helper follows the same two-review process as the Windows helper.
@@ -74,7 +74,7 @@ It is too easy to push temporary files, local notes, generated test outputs, or 
 Use short, specific messages:
 
 ```text
-v0.5.4 clean script helpers
+v0.5.10 literature relationship core
 fix lint-static missing source report
 update Unix quickstart path notes
 ```

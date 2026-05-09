@@ -2,7 +2,7 @@
 
 ## Current version
 
-`kb-cli v0.5.4`
+`kb-cli v0.5.10`
 
 ## Core goal
 
@@ -49,6 +49,9 @@ prepare
 sync-wiki
 lint-static
 query
+grep
+extract-text
+refs
 repl
 list-models
 show-model
@@ -152,7 +155,118 @@ README and docs must describe only implemented behavior. Do not list future comm
 Prepare planning work starts in v0.4.x. Small compatible improvements should increment the patch version:
 
 ```text
-0.4.0 -> 0.4.1 -> 0.4.2 -> 0.4.3 -> 0.4.4 -> 0.4.5 -> 0.4.6 -> 0.4.7 -> 0.4.8 -> 0.5.0 -> 0.5.1 -> 0.5.2 -> 0.5.3 -> 0.5.4
+0.4.0 -> 0.4.1 -> 0.4.2 -> 0.4.3 -> 0.4.4 -> 0.4.5 -> 0.4.6 -> 0.4.7 -> 0.4.8 -> 0.5.0 -> 0.5.1 -> 0.5.2 -> 0.5.3 -> 0.5.7
 ```
 
-The next major implementation phase after v0.5.4 should refine query ergonomics carefully, then consider saved queries or semantic LLM linting only after the deterministic path is stable.
+The next major implementation phase after v0.5.10 should refine query ergonomics carefully, then consider saved queries or semantic LLM linting only after the deterministic path is stable.
+
+
+## Command classification rule
+
+Before adding or changing any command, classify it according to `docs/command-classification.md`:
+
+1. Deterministic core command
+2. Deterministic search / inspection command
+3. Text conversion / source processing command
+4. Task preparation command
+5. Explicit LLM / agent command
+
+Do not allow commands to silently cross category boundaries. In particular:
+
+- Deterministic commands must not call LLM APIs.
+- Search and inspection commands should be Rust-native whenever practical and must not require external `grep` or `rg`.
+- Text conversion commands such as `extract-text` may reserve future agent paths, but OCR/LLM/agent modes must be explicit and opt-in.
+- `prepare` generates reviewable task materials; it does not secretly execute LLM work.
+
+## Extract-text future boundary
+
+`kb extract-text` is currently deterministic and best-effort. It may become the future entry point for a PDF Text Conversion Agent, but default behavior must remain simple, non-OCR, and non-LLM.
+
+Do not hide OCR, layout repair, semantic cleanup, summarization, or LLM calls inside `kb extract-text`. Future behavior must be explicit, such as `--ocr`, `--llm-clean`, `--agent`, or `--pipeline full`, after those modes are deliberately designed.
+
+
+## Deferred LLM/agent skill rule
+
+For commands such as `extract-text`, `refs`, `grep`, and future source-processing commands, keep the default behavior small and deterministic.
+
+When the remaining work requires semantic judgment, layout repair, citation reconciliation, summarization, or wiki drafting, mark it as future explicit LLM/agent skill work instead of implementing hidden LLM behavior.
+
+Use `docs/llm-agent-skills.md` as the place to document those future skill boundaries. In particular:
+
+- `extract-text` may feed a future PDF Text Conversion Agent.
+- `refs` may feed a future Reference Reconciliation Agent or Citation Graph Building Agent.
+- `prepare` may feed a future Wiki Drafting / Concept Synthesis Agent.
+
+Do not silently convert deterministic commands into agent commands.
+
+
+## Deferred task handoff rule
+
+When adding or modifying commands, keep each command focused on one deterministic ability. If a task requires OCR, semantic repair, reference reconciliation, citation graph reasoning, concept synthesis, or Wiki drafting, do not hide that work inside the deterministic command.
+
+Instead, make the command report unresolved work in a form that can feed `kb tasks` or a similar handoff report. The task information should include target agent, goal, requirements, files, evidence, source command, and priority.
+
+Do not make `kb tasks` execute LLM work. It is a handoff generator, not an agent runner.
+
+
+## Completed task memory rule
+
+When implementing or guiding future LLM/agent work, do not rely on chat history as the only record of completed tasks. Use `kb memory` or the `LLM/memory/` convention to record task id, summary, source task report, files touched, and follow-up issues. This memory is project-local audit material, not hidden model state.
+
+## LLM command usage rule
+
+When acting as a future LLM maintainer or when guiding Claude Code, use `docs/llm-command-guide.md` as the practical command playbook.
+
+The LLM should not manually guess file lists, broken links, keyword occurrences, reference hints, missing text conversions, or completed task history when a deterministic command can provide that evidence.
+
+Preferred pattern:
+
+```text
+kb command -> evidence/file list/task handoff -> LLM semantic work -> git diff review -> kb check -> kb memory
+```
+
+Use deterministic commands as scouts:
+
+- `kb query` for topic-level candidate pages.
+- `kb grep` for line-level evidence.
+- `kb extract-text` for direct text extraction before summarizing PDFs.
+- `kb refs` for reference hints before reconciliation.
+- `kb tasks` for deferred work lists.
+- `kb memory` for completed-task audit records.
+
+Do not turn these commands into hidden LLM calls. Their purpose is to reduce unnecessary LLM work and make the remaining LLM work more focused.
+
+
+## LLM role hierarchy
+
+Treat the LLM using `kb-cli` commands as the top-level Manager LLM.
+
+This Manager LLM should use deterministic commands first, then delegate bounded semantic work to lower-level Worker LLMs or future agent skills. Do not collapse these roles into one unclear agent.
+
+When creating or updating task handoff documents, include goal, requirements, exact file list, evidence, non-goals, expected output, and memory-recording requirements.
+
+Worker LLMs must not redefine project scope, invent file lists, or bypass deterministic command evidence.
+
+See `docs/llm-hierarchy.md`.
+
+
+## `kb links` implementation guardrail
+
+`kb links` must remain a deterministic WikiLink scanner. Do not make it rewrite pages, create missing pages, rename files, call an LLM, or infer semantic intent. It should return unresolved and ambiguous cases as task hints for future Manager/Worker LLM workflows.
+
+
+## `kb refs-index` development rule
+
+When improving `kb refs-index`, keep it conservative. It may improve deterministic matching and reporting, but it must not silently call LLMs, query online DOI services, rewrite Wiki pages, or declare uncertain title/author matches as final. Human review remains the final guarantee for bibliographic identity.
+
+
+## Third-party visualization guidance
+
+When updating third-party skill / visualization support, preserve the relationship-certainty protocol in `docs/third-party-skills/`:
+
+- confirmed relations use solid edges;
+- candidate or ambiguous relations use dashed edges;
+- missing or unresolved references use hollow nodes;
+- uncertain relations must preserve evidence and human-review markers.
+
+Do not let a graph export or visualization step silently convert uncertain relations into confirmed ones.

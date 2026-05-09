@@ -1,12 +1,24 @@
 # kb-cli
 
-> **v0.5.4 note:** `scripts/` has been cleaned up. The old broad knowledge-base workflow wrappers were removed to avoid confusion with compiling the Rust executable. `scripts/build_release.*` now builds `kb-cli`; `scripts/git_safe_push.*` remains the review-first Git helper.
+> **v0.5.10.2 note:** LLM Wiki now uses `docs/third-party-skills/` as a reusable skill-specification directory for graph visualization, third-party integrations, and Claude Code generation. Confirmed literature relations should render as solid edges, uncertain relations as dashed edges, and unresolved references as hollow nodes.
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.5.4`
+> Current version: `v0.5.10.2`
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, use `kb prepare` to generate reviewable task materials, maintain Markdown knowledge pages under `wiki/`, and constrain future human/AI maintainers through the `rules/` layer.
+
+## Core principle: literature relationships
+
+LLM Wiki is not merely a local document archive. Its central purpose is to maintain an evolving, reviewable, and evidence-backed relationship network among references. Files, extracted text, grep results, reference scans, WikiLinks, task lists, and memory records all exist to support that relationship network.
+
+The relationship network has three levels:
+
+1. **Bibliographic index relations**: citation, reference-list, DOI, title, author, journal, volume, page, and date relationships. Rust-native commands should extract candidates; human review is the final guarantee.
+2. **Keyword / topic relations**: shared terms, methods, models, devices, and research topics. Rust-native commands should find candidates; the Manager LLM may judge meaning and delegate bounded work.
+3. **Scientific idea relations**: method transfer, mechanism similarity, theoretical inheritance, research gaps, and cross-domain inspiration. These should be handled through explicit Manager LLM / Worker LLM workflows with evidence and review.
+
+See `docs/literature-relationships.md` and `docs/third-party-skills/`.
 
 ## How does the LLM maintain Markdown pages?
 
@@ -68,6 +80,72 @@ kb query "thermal cloak" --limit 5
 kb query thermal cloak --json
 ```
 
+WikiLink scanning is available for deterministic link inspection:
+
+```bash
+kb links
+kb links --unresolved
+kb links --ambiguous
+kb links --json
+```
+
+`kb links` resolves what can be resolved locally and leaves semantic link repair to future explicit LLM/agent skills.
+
+Line-level Rust-native grep is also available for deterministic inspection:
+
+```bash
+kb grep thermal
+kb grep "source_files:" --path wiki
+kb grep "References" --path processing/text
+kb grep "10\\.\\d+" --regex --path processing/text
+```
+
+Best-effort text extraction is available as a deterministic preprocessing step:
+
+```bash
+kb extract-text --dry-run
+kb extract-text
+kb extract-text --path raw/papers/example.pdf
+```
+
+`kb extract-text` does not run OCR or LLM cleanup by default. It is reserved as the future entry point for a PDF Text Conversion Agent, but OCR/LLM/agent behavior must be explicitly enabled in a future version.
+
+Reference-hint scanning is available over extracted text:
+
+```bash
+kb refs
+kb refs --path processing/text
+kb refs --citations
+kb refs --json
+```
+
+`kb refs` is a deterministic scanner for reference headings, bibliography entries, DOI values, and optional citation markers. It does not build a reliable citation graph or infer semantic reference relationships.
+
+Bibliographic index relation candidates can be built from extracted reference entries and local papers:
+
+```bash
+kb refs-index
+kb refs-index --dry-run
+kb refs-index --json
+kb refs-index --limit 50
+```
+
+`kb refs-index` classifies relations as `confirmed`, `candidate`, `ambiguous`, or `missing`. DOI-exact matches can be high-confidence, but candidate / ambiguous / missing cases are explicitly deferred to human review.
+
+Deferred task handoff is available:
+
+```bash
+kb tasks
+kb tasks --dry-run
+kb tasks --json
+```
+
+`kb tasks` generates a reviewable list under `LLM/tasks/` for work that deterministic commands intentionally defer to future human/LLM/agent handling.
+
+`kb memory` appends completed task records to `LLM/memory/completed_tasks.md` so finished work can be inspected later without relying on chat history.
+
+Work left for future LLM/agent skills is documented explicitly. For example, OCR, PDF layout repair, garbled text cleanup, reference reconciliation, and citation-graph interpretation belong to future explicit agent modes, not to the default deterministic `extract-text` or `refs` commands. See `docs/llm-agent-skills.md`.
+
 Durable saved answers and LLM-assisted query synthesis are planned for later stages.
 
 Static wiki linting is now available:
@@ -103,12 +181,121 @@ docs/platform-notes.md          Path and wrapper-script policy
 docs/git-workflow.md            Review-first Git commit/push workflow
 docs/release-checklist.md       Small-release checklist
 docs/query.md                   Local keyword query skeleton
+docs/links.md                   WikiLink scan and deterministic link-resolution hints
+docs/grep.md                    Rust-native line-level text search
+docs/extract-text.md            Deterministic text extraction and future PDF conversion-agent boundary
+docs/refs.md                    Deterministic reference-hint scanning over extracted text
+docs/refs-index.md              Bibliographic index relation candidate building
+docs/tasks.md                   Deferred human/LLM/agent task handoff lists
+docs/memory.md                  Completed-task memory records under LLM/memory/
+docs/llm-command-guide.md       Practical guide for LLMs using structured kb commands
+docs/llm-hierarchy.md           Manager LLM / Worker LLM role hierarchy
+docs/literature-relationships.md LLM Wiki reference-relationship core principle
+docs/third-party-skills/      Third-party graph visualization skills and integration guidance
+docs/llm-agent-skills.md        Deferred LLM/agent skill boundaries for PDF and reference work
+docs/command-classification.md  Command categories and LLM/OCR boundary rules
 docs/cli-shell-principle.md     Batch mode / shell mode / LLM boundary
 ```
 
 ## Current Scope
 
-This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, a manifest registry under `processing/manifest.json`, static linting, and deterministic keyword search over `wiki/`. It still does **not** provide full RAG, vector search, embeddings, or autonomous LLM/wiki preparation. `kb prepare` currently plans and documents the prepare work; it does not perform LLM edits by itself.
+This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, a manifest registry under `processing/manifest.json`, static linting, and deterministic keyword search over `wiki/`, WikiLink scanning, Rust-native line-level grep, best-effort text extraction into `processing/text/`, reference-hint scanning over extracted text, bibliographic index relation candidate building, third-party graph visualization skill guidance, deferred task handoff reports under `LLM/tasks/`, and completed-task memory records under `LLM/memory/`. It still does **not** provide full RAG, vector search, embeddings, OCR, hidden LLM cleanup, or autonomous LLM/wiki preparation. `kb prepare` currently plans and documents the prepare work; it does not perform LLM edits by itself.
+
+## What Changed in v0.5.10.2
+
+`v0.5.10.2` uses `docs/third-party-skills/` as a dedicated Markdown skill-specification directory for third-party graph visualization, integration work, and Claude Code generation. It defines the literature relationship visual protocol:
+
+```text
+confirmed relation        -> solid edge
+candidate / ambiguous     -> dashed edge
+missing / unresolved node -> hollow node
+needs human review        -> explicit evidence and review marker
+```
+
+This is documentation only. It does not add a graph exporter yet. Future commands such as `kb refs-graph --json`, `--dot`, or `--mermaid` should follow this protocol. Developers may also hand `docs/third-party-skills/claude-code-generation-skill.md` to Claude Code to generate a first draft of a third-party graph viewer or review UI.
+
+## What Changed in v0.5.10
+
+`v0.5.10` adds `kb refs-index`, a deterministic skeleton for building bibliographic index relation candidates between extracted reference entries and local papers.
+
+Main changes:
+
+- Added `kb refs-index`.
+- Added `docs/refs-index.md`.
+- `kb refs-index` scans `processing/text/` by default and writes Markdown reports under `processing/refs/` unless `--dry-run` / `--preview` is used.
+- Relation statuses include `confirmed`, `candidate`, `ambiguous`, and `missing`.
+- Candidate, ambiguous, and missing cases return a deferred human-review task because humans remain the final guarantee for uncertain bibliographic identity decisions.
+- No LLM call, OCR, online DOI lookup, autonomous citation graph building, or Wiki rewriting was introduced.
+
+## What Changed in v0.5.10
+
+`v0.5.10` is a documentation and architecture-rule release. It standardizes the LLM hierarchy terminology as **Manager LLM / Worker LLM** and makes the core purpose explicit: LLM Wiki maintains relationships among references.
+
+## What Changed in v0.5.9
+
+`v0.5.9` adds `kb links`, a deterministic WikiLink scanner. It extracts WikiLinks from Markdown pages, resolves targets when there is exactly one local match, and marks unresolved or ambiguous links for future Wiki Link Repair Agent work.
+
+Main changes:
+
+- Added `kb links`.
+- Added `docs/links.md`.
+- Supports `--resolved`, `--unresolved`, `--ambiguous`, `--limit`, `--path`, and `--json`.
+- Returns deferred task hints for unresolved and ambiguous links instead of guessing semantic repairs.
+- No runtime LLM integration, OCR, vector search, autonomous agent execution, or automatic Wiki rewriting was introduced.
+
+## What Changed in v0.5.8.3
+
+`v0.5.8.3` is a documentation and operating-rule polish release. It adds a practical command guide for future LLM maintainers, making clear that structured `kb` commands are the first pass for scouting, searching, extracting, checking, and organizing evidence.
+
+Main changes:
+
+- Added `docs/llm-command-guide.md`.
+- Documented how LLM operators should use `kb query`, `kb grep`, `kb extract-text`, `kb refs`, `kb tasks`, and `kb memory` before doing semantic work.
+- Clarified that `LLM/tasks/` is the handoff area and `LLM/memory/` is the completed-task audit area.
+- Reinforced the one-command-one-ability rule: deterministic commands do simple work well and hand off hard semantic work instead of hiding LLM behavior.
+- No new command behavior, OCR, LLM call, vector search, citation graph construction, autonomous Wiki editing, or hidden agent execution was added.
+
+## What Changed in v0.5.8.2
+
+`v0.5.8.2` adds `kb memory`, a deterministic audit-memory command for recording completed task outcomes under `LLM/memory/completed_tasks.md`. It also makes `kb init` create `LLM/memory/`.
+
+`v0.5.8.1` kept `kb tasks` deterministic but moved its handoff reports into the LLM workbench path: `LLM/tasks/`. This reflects the project architecture: Rust commands scout, inspect, and organize first; hard semantic work is handed upward to future explicit human/LLM/agent skills.
+
+Main changes:
+
+- `kb tasks` writes Markdown handoff reports under `LLM/tasks/`.
+- `kb init` now creates `LLM/tasks/` and `LLM/memory/`.
+- Documentation now treats `LLM/` as the explicit future agent workbench, not as generic CLI output.
+- Task groups still include target agent, goal, requirements, file list, evidence, source command, and priority.
+- Task groups currently cover PDF text conversion gaps, reference reconciliation candidates, Wiki source traceability gaps, and broken WikiLinks.
+- No OCR, LLM call, vector search, citation graph construction, autonomous Wiki editing, or hidden agent execution was added.
+
+## What Changed in v0.5.7
+
+`v0.5.7` adds the first deterministic reference-hint scanner.
+
+Main changes:
+
+- Added `kb refs`.
+- Added `docs/refs.md`.
+- `kb refs` scans `processing/text/` by default.
+- It detects reference headings, bibliography-entry patterns, DOI values, and optional citation markers.
+- It supports `--path`, `--limit`, `--citations`, and `--json`.
+- `kb init` now creates `processing/refs/` as the future home for reference reports or graph exports.
+- No LLM, OCR, semantic citation reconciliation, vector search, or reference graph generation was added.
+
+## What Changed in v0.5.6.1
+
+`v0.5.6.1` is a project-rule stabilization release. It classifies commands by responsibility so future iterations can grow without mixing deterministic tools, text conversion, task preparation, shell mode, OCR, and LLM/agent behavior.
+
+Main changes:
+
+- Added `docs/command-classification.md`.
+- Added `kb grep` as a Rust-native line-level search command.
+- Added `kb extract-text` as a deterministic best-effort text extraction command.
+- Added `docs/grep.md` and `docs/extract-text.md`.
+- Documented `extract-text` as the future entry point for a PDF Text Conversion Agent, while keeping OCR/LLM/agent modes explicit and not implemented by default.
+- Reinforced that deterministic commands should reduce LLM burden rather than hide LLM usage.
 
 ## What Changed in v0.5.4
 
@@ -571,6 +758,9 @@ KnowledgeBase/
 │   ├── questions/    # Saved Q&A pages
 │   └── indexes/      # Navigation indexes
 ├── rules/            # LLM Wiki schema and AI-maintainer contract
+├── LLM/              # Future explicit LLM/agent workbench
+│   ├── tasks/        # Deferred task handoff reports
+│   └── memory/       # Completed-task audit memory
 ├── outputs/          # Generated answers and reports
 ├── processing/       # Intermediate processing files
 │   ├── manifest.json # Raw-file registry generated by `kb status`
@@ -593,6 +783,12 @@ KnowledgeBase/
 | `kb sync-wiki [--dry-run\|--preview] [--json]` | implemented skeleton | Read `source_ids` / `source_files` front matter from `wiki/**/*.md` and update manifest `wiki_pages`. |
 | `kb lint-static [--dry-run\|--preview\|--no-report] [--json] [--strict]` | implemented skeleton | Check broken WikiLinks, orphan pages, missing source front matter, empty pages, and duplicate titles. |
 | `kb query <terms...> [--limit N] [--snippets N] [--json] [--title-only]` | implemented skeleton | Search `wiki/**/*.md` with local keyword matching. |
+| `kb grep <pattern> [--path PATH] [--regex] [--json]` | implemented skeleton | Search text-like files with Rust-native line-level matching. |
+| `kb extract-text [--dry-run\|--preview] [--force] [--json]` | implemented skeleton | Extract plain text from supported source files into `processing/text/`. |
+| `kb refs [--path PATH] [--citations] [--json]` | implemented skeleton | Scan extracted text for reference headings, bibliography entries, DOI values, and citation hints. |
+| `kb refs-index [--path PATH] [--dry-run\|--preview] [--json]` | implemented skeleton | Build bibliographic index relation candidates between extracted references and local papers. |
+| `kb tasks [--dry-run\|--preview] [--json]` | implemented skeleton | Generate deferred human/LLM/agent task handoff lists. |
+| `kb memory --task-id ID --summary TEXT` | implemented skeleton | Append completed-task memory records under `LLM/memory/`. |
 | `kb repl` | implemented | Start a simple interactive shell. |
 | `kb list-models` | implemented | List configured LLM models. |
 | `kb show-model` | implemented | Show the current model configuration. |
@@ -665,7 +861,7 @@ Since `v0.5.3`, `kb>` does not write LLM requests and no longer parses ambiguous
 
 ## Notes for Future Agents
 
-`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM prepare execution, semantic LLM lint, saved query answers, or full RAG exists in `v0.5.4`.
+`docs/agent-api.md` records the current boundary: this project is not yet a full machine-readable agent API. Do not assume `--format json`, vector search, `add-paper`, autonomous LLM prepare execution, semantic LLM lint, saved query answers, or full RAG exists in `v0.5.10.2`.
 
 ## License
 

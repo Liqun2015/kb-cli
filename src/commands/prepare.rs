@@ -9,22 +9,39 @@ use crate::commands::manifest::{Manifest, ManifestEntry};
 
 #[derive(Debug, Clone, Args)]
 pub struct PrepareArgs {
-    #[arg(long, help = "Plan preparation for raw files not yet linked to wiki pages. This is the default when --file is not provided.")]
+    #[arg(
+        long,
+        help = "Plan preparation for raw files not yet linked to wiki pages. This is the default when --file is not provided."
+    )]
     pub new: bool,
 
-    #[arg(long, value_name = "PATH", help = "Plan preparation for one raw file. Accepts a path relative to the KB root, such as raw/papers/example.pdf, or an absolute path inside the KB.")]
+    #[arg(
+        long,
+        value_name = "PATH",
+        help = "Plan preparation for one raw file. Accepts a path relative to the KB root, such as raw/papers/example.pdf, or an absolute path inside the KB."
+    )]
     pub file: Option<PathBuf>,
 
-    #[arg(long, default_value_t = 20, help = "Maximum number of files to include. Use 0 for no limit.")]
+    #[arg(
+        long,
+        default_value_t = 20,
+        help = "Maximum number of files to include. Use 0 for no limit."
+    )]
     pub limit: usize,
 
-    #[arg(long, help = "Preview the prepare plan without writing processing/prepare_queue.json or a proposal file.")]
+    #[arg(
+        long,
+        help = "Preview the prepare plan without writing processing/prepare_queue.json or a proposal file."
+    )]
     pub dry_run: bool,
 
     #[arg(long, help = "Alias for --dry-run.")]
     pub preview: bool,
 
-    #[arg(long, help = "Do not refresh processing/manifest.json before planning. Non-dry-run prepare refreshes it by default.")]
+    #[arg(
+        long,
+        help = "Do not refresh processing/manifest.json before planning. Non-dry-run prepare refreshes it by default."
+    )]
     pub no_refresh: bool,
 }
 
@@ -228,9 +245,12 @@ fn prepare_instructions(entry: &ManifestEntry) -> Vec<String> {
     ];
 
     if entry.kind == "paper" {
-        instructions.push("Follow rules/PAPER_PAGE_TEMPLATE.md for the paper summary page.".to_string());
+        instructions
+            .push("Follow rules/PAPER_PAGE_TEMPLATE.md for the paper summary page.".to_string());
     } else {
-        instructions.push("Use the closest matching template under rules/ and keep the page concise.".to_string());
+        instructions.push(
+            "Use the closest matching template under rules/ and keep the page concise.".to_string(),
+        );
     }
 
     instructions
@@ -244,7 +264,12 @@ fn sanitize_wiki_stem(input: &str) -> String {
         if ch.is_alphanumeric() || matches!(ch, '-' | '_') {
             output.push(ch);
             last_was_sep = false;
-        } else if ch.is_whitespace() || matches!(ch, '.' | '/' | '\\' | ':' | ';' | ',' | '(' | ')' | '[' | ']') {
+        } else if ch.is_whitespace()
+            || matches!(
+                ch,
+                '.' | '/' | '\\' | ':' | ';' | ',' | '(' | ')' | '[' | ']'
+            )
+        {
             if !last_was_sep && !output.is_empty() {
                 output.push('_');
                 last_was_sep = true;
@@ -285,7 +310,9 @@ fn write_queue_and_proposal(kb_path: &Path, queue: &PrepareQueue) -> Result<()> 
     let proposal_path = kb_path.join(format!("processing/proposals/prepare_plan_{timestamp}.md"));
     fs::write(&proposal_path, render_proposal(queue))?;
 
-    let prompt_path = kb_path.join(format!("processing/proposals/prepare_agent_prompt_{timestamp}.md"));
+    let prompt_path = kb_path.join(format!(
+        "processing/proposals/prepare_agent_prompt_{timestamp}.md"
+    ));
     fs::write(&prompt_path, render_agent_prompt(queue))?;
 
     println!("\nPrepare planning complete.");
@@ -298,7 +325,9 @@ fn write_queue_and_proposal(kb_path: &Path, queue: &PrepareQueue) -> Result<()> 
     } else {
         println!("\nNext steps:");
         println!("  1. Review the proposal file.");
-        println!("  2. Copy the agent prompt into Claude Code, ChatGPT, or another knowledge agent.");
+        println!(
+            "  2. Copy the agent prompt into Claude Code, ChatGPT, or another knowledge agent."
+        );
         println!("  3. Let the agent edit only wiki/ and processing/ outputs, never raw/.");
         println!("  4. Review all changes with git diff before committing.");
         println!("  5. Run `kb sync-wiki` after accepted wiki edits.");
@@ -354,7 +383,6 @@ fn render_proposal(queue: &PrepareQueue) -> String {
     out
 }
 
-
 fn render_agent_prompt(queue: &PrepareQueue) -> String {
     let mut out = String::new();
     out.push_str("# LLM Wiki Prepare Agent Prompt\n\n");
@@ -366,7 +394,9 @@ fn render_agent_prompt(queue: &PrepareQueue) -> String {
     out.push_str("4. Use `rules/CONCEPT_PAGE_TEMPLATE.md` for concept pages.\n");
     out.push_str("5. Prefer small, reviewable Markdown edits.\n");
     out.push_str("6. Preserve uncertainty; do not invent claims not supported by the source.\n");
-    out.push_str("7. Add backlinks and Obsidian-style links only when they help future navigation.\n");
+    out.push_str(
+        "7. Add backlinks and Obsidian-style links only when they help future navigation.\n",
+    );
     out.push_str("8. Add YAML front matter to every source-derived page. Include both `source_ids` and `source_files`.\n");
     out.push_str("9. After editing, summarize every changed file and why it changed.\n");
     out.push_str("10. Tell the user to run `kb sync-wiki` after review so the manifest records the new wiki links.\n\n");
@@ -408,7 +438,9 @@ fn render_agent_prompt(queue: &PrepareQueue) -> String {
     out.push_str("2. Existing wiki pages updated.\n");
     out.push_str("3. Concepts or topics that should be reviewed by the user.\n");
     out.push_str("4. Any source files that could not be read or confidently summarized.\n");
-    out.push_str("5. Suggested next command: `git diff`, then `kb sync-wiki` after accepted wiki edits.\n");
+    out.push_str(
+        "5. Suggested next command: `git diff`, then `kb sync-wiki` after accepted wiki edits.\n",
+    );
 
     out
 }

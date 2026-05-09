@@ -2,7 +2,7 @@
 
 `kb-cli` is designed so the Rust CLI stays cross-platform and the platform-specific differences stay in documentation and small wrapper scripts.
 
-Current version: `v0.5.4`
+Current version: `v0.5.10`
 
 ## Related architecture document
 
@@ -53,7 +53,7 @@ kb --kb-path ./quantum status
 
 ## Wrapper scripts
 
-The `scripts/` directory should remain small and deterministic. In v0.5.4 it contains only:
+The `scripts/` directory should remain small and deterministic. In v0.5.10 it contains only:
 
 ```text
 scripts/build_release.bat   Windows Rust release build helper

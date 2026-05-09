@@ -1,10 +1,10 @@
+use anyhow::Result;
 use std::io::Write;
 use std::path::PathBuf;
-use anyhow::Result;
 
 use crate::commands::init::get_kb_path;
 use crate::commands::model_config::ModelManager;
-use crate::intent::{IntentParser, Intent};
+use crate::intent::{Intent, IntentParser};
 
 /// Main REPL interactive loop
 pub fn execute() -> Result<()> {
@@ -47,7 +47,12 @@ pub fn execute() -> Result<()> {
 }
 
 /// Execute the identified intent
-fn execute_intent(kb_path: &PathBuf, parser: &IntentParser, intent: &Intent, input: &str) -> Result<()> {
+fn execute_intent(
+    kb_path: &PathBuf,
+    parser: &IntentParser,
+    intent: &Intent,
+    input: &str,
+) -> Result<()> {
     match intent {
         // Exit
         Intent::Exit => {
@@ -111,7 +116,6 @@ fn execute_intent(kb_path: &PathBuf, parser: &IntentParser, intent: &Intent, inp
         Intent::BuildWiki => {
             println!("Run 'kb build-wiki' in bash mode to build wiki pages.");
         }
-
 
         // === Model Management Commands ===
         Intent::ListModel => {
@@ -333,7 +337,6 @@ fn search_notes(kb_path: &PathBuf, query: &str) {
     }
 }
 
-
 // === Model Management Functions ===
 
 fn list_models() {
@@ -506,7 +509,11 @@ fn add_model_interactive() {
 
             (
                 crate::commands::model_config::ApiKeySource::Env,
-                if env_var.is_empty() { None } else { Some(env_var.to_string()) },
+                if env_var.is_empty() {
+                    None
+                } else {
+                    Some(env_var.to_string())
+                },
                 None,
             )
         }
@@ -520,7 +527,11 @@ fn add_model_interactive() {
             (
                 crate::commands::model_config::ApiKeySource::Direct,
                 None,
-                if key.is_empty() { None } else { Some(key.to_string()) },
+                if key.is_empty() {
+                    None
+                } else {
+                    Some(key.to_string())
+                },
             )
         }
         _ => {
@@ -548,8 +559,16 @@ fn add_model_interactive() {
         api_key_source,
         api_key_env,
         api_key_value,
-        model_name: if model_name.is_empty() { None } else { Some(model_name.to_string()) },
-        description: if description.is_empty() { None } else { Some(description.to_string()) },
+        model_name: if model_name.is_empty() {
+            None
+        } else {
+            Some(model_name.to_string())
+        },
+        description: if description.is_empty() {
+            None
+        } else {
+            Some(description.to_string())
+        },
         created_at: chrono::Utc::now(),
         enabled: true,
     };
@@ -711,8 +730,15 @@ fn delete_model(id: &str) {
                 println!("\nModel '{}' deleted successfully.", id);
 
                 if let Some(new_default) = manager.get_current_model() {
-                    if old_default.as_ref().map(|o| o.id != new_default.id).unwrap_or(true) {
-                        println!("Default model switched to: {} ({})", new_default.id, new_default.name);
+                    if old_default
+                        .as_ref()
+                        .map(|o| o.id != new_default.id)
+                        .unwrap_or(true)
+                    {
+                        println!(
+                            "Default model switched to: {} ({})",
+                            new_default.id, new_default.name
+                        );
                     }
                 }
             }
@@ -775,7 +801,9 @@ fn validate_model_internal(id: Option<&str>) {
                     println!();
                     println!("Status: Configuration looks valid");
                     println!("Note: Network connectivity not tested in this validation.");
-                    println!("Note: REPL mode is deterministic and does not test LLM functionality.");
+                    println!(
+                        "Note: REPL mode is deterministic and does not test LLM functionality."
+                    );
                 }
                 None => {
                     println!("\nNo model to validate.");
