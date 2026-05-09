@@ -171,6 +171,18 @@ When a question is about a specific research topic, the Manager LLM should use t
 
 Do not treat `processing/refs/` as the final location for topic-specific causal or scientific idea relations. `processing/refs/` is the global bibliographic layer.
 
+
+## Creating a topic workspace
+
+Use `kb topic init <topic>` to create the recommended topic directory skeleton without making any semantic claims.
+
+```bash
+kb topic init thermal-metamaterials
+kb topic init thermal-metamaterials --title "Thermal Metamaterials"
+```
+
+This command creates files for scope, included literature, topic-local importance, topic-local relations, review tables, graph exports, tasks, and memory. It does not infer causal relations, rank papers, call an LLM, or update wiki pages.
+
 ## Relationship layers
 
 ```text
@@ -204,7 +216,7 @@ Do not make topic overlays replace `wiki/`; they provide relationship working re
 Potential future commands should be incremental:
 
 ```text
-kb topic init <topic>        Create the recommended topic directory skeleton.
+kb topic init <topic>        Create the recommended topic directory skeleton. Implemented in v0.6.5.
 kb topic list                List topic overlays.
 kb topic status <topic>      Summarize scope, literature, relations, tasks, and memory.
 kb topic graph <topic>       Export a topic-specific graph.

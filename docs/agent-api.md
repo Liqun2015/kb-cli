@@ -311,3 +311,8 @@ These documents are schema contracts for future Manager LLM, Worker LLM, and thi
 ## Static viewer boundary
 
 `kb view` is a static display command. It renders existing Markdown/JSON outputs into `outputs/html/index.html` and opens that static file in the system default browser by default. `kb view --no-open` refreshes the file without opening a browser. It must not call an LLM, start a local server, execute shell commands from the browser, or modify source/wiki files. The `kb-view>` box inside the generated HTML is display navigation only.
+
+
+## Topic workspace command
+
+`kb topic init <topic>` creates deterministic topic workspace scaffolding under `topics/<topic>/`. It is safe for Manager LLM sessions to request this command when a concrete topic needs a local relationship overlay. It does not call an LLM, infer relations, rank literature, or modify global bibliographic index files under `processing/refs/`.

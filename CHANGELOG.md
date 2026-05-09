@@ -1,3 +1,12 @@
+## v0.6.5 - topic init workspace skeleton
+
+- Added `kb topic init <topic>` to create a topic-specific literature relationship workspace under `topics/<topic>/`.
+- The generated workspace includes `scope.md`, `literature.md`, topic-local `importance/`, `relations/`, `review/`, `graph/`, `tasks/`, and `memory/` folders.
+- Added `docs/topic.md` as the command reference for topic workspace initialization.
+- Kept the global bibliographic layer unchanged: `processing/refs/` remains the place for topic-independent citation/index relations.
+- Topic-local importance, causal, method, evidence, and scientific idea relations stay under `topics/<topic>/`.
+- No LLM calls, no topic graph inference, no automatic importance ranking, and no Wiki auto-editing were added.
+
 ## v0.6.4.3 - kb view opens by default
 
 ## v0.6.4.4 - Windows view opener fix

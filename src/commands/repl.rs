@@ -144,6 +144,7 @@ fn is_known_batch_command(command: &str) -> bool {
             | "memory"
             | "grep"
             | "health"
+            | "topic"
             | "view"
             | "sync-wiki"
             | "lint-static"
@@ -185,6 +186,7 @@ fn print_help() {
     println!("  links --unresolved");
     println!("  health --dry-run");
     println!("  view --dry-run");
+    println!("  topic init <topic>");
     println!("  tasks --dry-run");
     println!("  memory --task-id ID --summary TEXT");
     println!();

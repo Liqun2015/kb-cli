@@ -70,6 +70,7 @@ kb refs-graph --help
 kb keywords --help
 kb health --help
 kb view --help
+kb topic init example-topic --dry-run
 kb view --dry-run
 # Optional manual browser-open check:
 # kb view
@@ -127,6 +128,7 @@ kb refs-graph --help
 kb keywords --help
 kb health --help
 kb view --help
+kb topic init example-topic --dry-run
 kb shell --help
 kb refs-index --dry-run
 ```

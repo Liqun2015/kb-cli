@@ -225,7 +225,7 @@ processing/refs/  global bibliographic index relations
 topics/<topic>/   topic-local causal, method, evidence, idea, and importance relations
 ```
 
-Before adding topic-specific commands, read `docs/topic-relationships.md`. Future commands such as `kb topic init`, `kb topic status`, and `kb topic graph` should be deterministic scaffolding commands that help Manager LLMs and humans maintain topic overlays without silently making causal or scientific-idea claims.
+Before adding topic-specific commands, read `docs/topic-relationships.md`. `kb topic init` is implemented as deterministic scaffolding. Future commands such as `kb topic status` and `kb topic graph` should remain deterministic commands that help Manager LLMs and humans maintain topic overlays without silently making causal or scientific-idea claims.
 
 ## Topic schema foundation added in v0.6.3
 
@@ -239,3 +239,20 @@ docs/third-party-skills/topic-graph-schema.md
 ```
 
 Future commands such as `kb topic`, `kb relation-review`, or topic graph exporters should follow these schemas instead of inventing new relation fields ad hoc.
+
+
+## `kb topic`
+
+- **Category:** topic-specific relationship workspace command.
+- **Current subcommand:** `kb topic init <topic>`.
+- **Primary input:** topic name or slug.
+- **Primary output:** `topics/<topic>/` workspace with scope, literature, importance, relations, review, graph, tasks, and memory files.
+- **LLM allowed:** no. This command only creates deterministic scaffolding.
+- **Deferred work:** Manager LLM / Worker LLM / human reviewers fill and review topic-local importance and relation records later.
+
+Example:
+
+```bash
+kb topic init thermal-metamaterials
+kb topic init thermal-metamaterials --title "Thermal Metamaterials"
+```

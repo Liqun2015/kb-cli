@@ -72,7 +72,7 @@ Upgrade graph export fields for directed/topic relation compatibility.
 
 ### v0.6.5
 
-Relation review table skeleton for human confirmation.
+`kb topic init <topic>` creates the topic workspace skeleton for scope, literature, importance, relations, review, graph, tasks, and memory.
 
 ### later
 
@@ -97,7 +97,7 @@ Then it should inspect the relevant topic directory:
 ```text
 topics/<topic>/scope.md
 topics/<topic>/literature.md
-topics/<topic>/importance.md
+topics/<topic>/importance/
 topics/<topic>/relations/
 ```
 
