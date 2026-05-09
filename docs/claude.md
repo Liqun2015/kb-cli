@@ -330,3 +330,8 @@ docs/topic-v2-roadmap.md
 ```
 
 Do not implement a universal causal graph. Do not auto-confirm causal, contradiction, improvement, or core-literature relations. Topic relations under `topics/<topic>/` must remain reviewable records with evidence and status fields.
+
+
+## Static viewer boundary
+
+`kb view` is a static display command. It may render existing Markdown/JSON outputs into `outputs/html/index.html`, but it must not call an LLM, execute shell commands from the browser, or modify source/wiki files. The `kb-view>` box inside the generated HTML is display navigation only.

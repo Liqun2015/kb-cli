@@ -1,6 +1,6 @@
 # Topic V2 Roadmap
 
-Current version: `v0.6.3.1`
+Current version: `v0.6.4`
 
 This roadmap keeps the V2 direction practical. Earlier discussions introduced directed relations, node attributes, causal links, importance, and hybrid retrieval. Those ideas are useful, but the near-term goal must stay conservative.
 

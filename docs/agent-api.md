@@ -306,3 +306,8 @@ docs/third-party-skills/topic-graph-schema.md
 ```
 
 These documents are schema contracts for future Manager LLM, Worker LLM, and third-party skill integrations. They are not executable APIs yet.
+
+
+## Static viewer boundary
+
+`kb view` is a static display command. It may render existing Markdown/JSON outputs into `outputs/html/index.html`, but it must not call an LLM, execute shell commands from the browser, or modify source/wiki files. The `kb-view>` box inside the generated HTML is display navigation only.

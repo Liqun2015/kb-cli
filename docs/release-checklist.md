@@ -69,6 +69,7 @@ kb refs-index --help
 kb refs-graph --help
 kb keywords --help
 kb health --help
+kb view --help
 kb shell --help
 kb tasks --help
 kb memory --help
@@ -120,6 +121,7 @@ kb refs-index --help
 kb refs-graph --help
 kb keywords --help
 kb health --help
+kb view --help
 kb shell --help
 kb refs-index --dry-run
 ```
@@ -169,3 +171,11 @@ If the downloaded source package does not include `Cargo.lock`, run `cargo check
 ## Topic relationship overlay check
 
 Before adding topic-specific relationship features, confirm that `docs/topic-relationships.md` still distinguishes global bibliographic index relations from topic-local causal, method, evidence, idea, and importance overlays.
+
+## View smoke test
+
+```bash
+kb view --dry-run
+```
+
+The command should report the planned `outputs/html/index.html` path without writing files.

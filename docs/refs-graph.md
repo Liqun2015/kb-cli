@@ -1,6 +1,6 @@
 # `kb refs-graph`
 
-Current version: `v0.6.3.1`
+Current version: `v0.6.4`
 
 `kb refs-graph` exports bibliographic index relation candidates as graph data for third-party visualization skills and tools.
 

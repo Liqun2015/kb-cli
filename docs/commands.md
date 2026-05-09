@@ -15,6 +15,7 @@ The guiding rule is simple:
 | Text / reference processing | `extract-text`, `refs`, `refs-index`, `refs-graph`, `keywords`, `extract-metadata` | No LLM | Convert source traces into searchable text, bibliographic relation candidates, and keyword/topic relation evidence. |
 | Handoff / memory | `prepare`, `tasks`, `memory` | No LLM | Prepare reviewable work items and record completed work. |
 | Health / reporting | `health` | No LLM | Summarize relationship-network completeness, review backlog, and pipeline health. |
+| Static viewing | `view` | No LLM | Generate a local read-only HTML dashboard from Markdown/JSON outputs. |
 | Interactive shell | `shell` | No hidden LLM | Deterministic interactive command shell; not a chat interface. |
 | Model configuration | `list-models`, `show-model`, `add-model`, `switch-model`, `delete-model`, `validate-model` | Configuration only | Manage model configuration without turning deterministic commands into implicit LLM calls. |
 
@@ -181,6 +182,14 @@ The guiding rule is simple:
 - **Deferred work:** missing extraction, uncertain bibliographic index relations, keyword/topic review, and initial wiki drafting become bounded handoff hints. Use `kb tasks` for consolidated `LLM/tasks/` files.
 
 ## Interactive shell and model commands
+
+### `kb view`
+
+- **Ability:** generate a static local HTML viewer for generated LLM Wiki artifacts.
+- **Primary input:** `wiki/`, `processing/refs/`, `processing/keywords/`, `outputs/reports/`, `LLM/tasks/`, `LLM/memory/`, and `topics/`.
+- **Primary output:** `outputs/html/index.html`.
+- **Allows LLM:** no.
+- **Deferred work:** none. The page command box is display-only and must not execute local commands or interpret natural language.
 
 ### `kb shell`
 

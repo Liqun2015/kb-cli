@@ -21,3 +21,4 @@ pub mod refs_index;
 pub mod repl;
 pub mod sync_wiki;
 pub mod tasks;
+pub mod view;

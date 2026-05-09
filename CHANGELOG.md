@@ -1,3 +1,13 @@
+## v0.6.4 - kb view static HTML viewer
+
+- Added `kb view` to generate a static local HTML viewer at `outputs/html/index.html`.
+- The viewer follows the uploaded sidebar/main/tab layout pattern: left sidebar navigation plus a right-side tabbed content area.
+- The sidebar command box is `kb-view>` style display navigation only. It supports page navigation and visible-page search, but does not execute local `kb` commands, call LLMs, or modify files.
+- The viewer renders latest generated Markdown/JSON artifacts from `wiki/`, `processing/refs/`, `processing/keywords/`, `outputs/reports/`, `LLM/tasks/`, `LLM/memory/`, and `topics/`.
+- `kb init` now creates `outputs/html/`.
+- Added `docs/view.md` and updated command and release documentation.
+- No server, browser backend, LLM call, command execution bridge, OCR, vector search, or Wiki auto-editing was added.
+
 ## v0.6.3.1 - Graph visual node-size protocol
 
 - Added a visual protocol rule: literature importance is represented by node size.

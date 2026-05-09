@@ -1,6 +1,6 @@
 # LLM Command Guide
 
-Current version: `v0.6.3.1`
+Current version: `v0.6.4`
 
 This document is the operating guide for the top-level Manager LLM, Claude Code sessions, and human operators who use `kb-cli` as a structured command layer.
 
@@ -297,3 +297,8 @@ topics/<topic>/relations/
 ```
 
 Worker LLMs should not invent new relation types unless the Manager LLM explicitly updates the schema. Use `unknown` with evidence when unsure.
+
+
+## Static viewer boundary
+
+`kb view` is a static display command. It may render existing Markdown/JSON outputs into `outputs/html/index.html`, but it must not call an LLM, execute shell commands from the browser, or modify source/wiki files. The `kb-view>` box inside the generated HTML is display navigation only.

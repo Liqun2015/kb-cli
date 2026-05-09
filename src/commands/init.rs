@@ -71,6 +71,7 @@ pub fn execute(custom_kb: Option<&Path>, force: bool) -> Result<()> {
         "rules",
         "outputs/answers",
         "outputs/reports",
+        "outputs/html",
         "LLM/tasks",
         "LLM/memory",
         "topics",

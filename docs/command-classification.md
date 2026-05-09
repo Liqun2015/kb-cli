@@ -301,3 +301,8 @@ Future `kb topic ...` commands should be classified as deterministic scaffolding
 Their job is to create, inspect, and export `topics/<topic>/` relationship overlays. They must not silently infer causal, method, evidence, or scientific idea relations. When interpretation is needed, they should generate bounded tasks for the Manager LLM to assign to Worker LLMs or human reviewers.
 
 The global bibliographic relation layer remains under `processing/refs/`; topic-specific interpretive records belong under `topics/<topic>/`.
+
+
+## Static viewer boundary
+
+`kb view` is a static display command. It may render existing Markdown/JSON outputs into `outputs/html/index.html`, but it must not call an LLM, execute shell commands from the browser, or modify source/wiki files. The `kb-view>` box inside the generated HTML is display navigation only.

@@ -71,6 +71,8 @@ enum Commands {
     Grep(commands::grep::GrepArgs),
     #[command(about = "Summarize deterministic LLM Wiki and literature-relation health checks")]
     Health(commands::health::HealthArgs),
+    #[command(about = "Generate a static local HTML viewer for LLM Wiki results")]
+    View(commands::view::ViewArgs),
     #[command(about = "Sync wiki page source front matter back into processing/manifest.json")]
     SyncWiki(commands::sync_wiki::SyncWikiArgs),
     #[command(about = "Run static wiki health checks for links, orphans, and source front matter")]
@@ -131,6 +133,7 @@ fn main() -> anyhow::Result<()> {
         Some(Commands::Memory(args)) => commands::memory::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Grep(args)) => commands::grep::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Health(args)) => commands::health::execute(cli.kb_path.as_deref(), args),
+        Some(Commands::View(args)) => commands::view::execute(cli.kb_path.as_deref(), args),
         Some(Commands::SyncWiki(args)) => {
             commands::sync_wiki::execute(cli.kb_path.as_deref(), args)
         }
@@ -174,6 +177,9 @@ fn main() -> anyhow::Result<()> {
             println!("  memory --task-id ID --summary TEXT [--file PATH]  Record completed task memory under LLM/memory");
             println!("  grep <pattern> [--path PATH] [--regex] [--json]  Search text files with line numbers");
             println!("  health [--dry-run|--preview] [--json] [--strict]  Summarize LLM Wiki relationship health");
+            println!(
+                "  view [--dry-run|--preview] [--output-dir DIR]  Generate static HTML viewer"
+            );
             println!(
                 "  shell                         Enter deterministic interactive command shell"
             );
