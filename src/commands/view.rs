@@ -3,6 +3,7 @@ use chrono::Utc;
 use clap::Args;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use walkdir::WalkDir;
 
 use crate::commands::init::get_kb_path;
@@ -21,11 +22,24 @@ pub struct ViewArgs {
 
     #[arg(long, help = "Alias for --dry-run")]
     pub preview: bool,
+
+    #[arg(
+        long = "no-open",
+        help = "Generate the static viewer without opening the browser"
+    )]
+    pub no_open: bool,
+
+    #[arg(long, hide = true, help = "Legacy no-op: kb view opens by default")]
+    pub open: bool,
 }
 
 impl ViewArgs {
     fn is_dry_run(&self) -> bool {
         self.dry_run || self.preview
+    }
+
+    fn should_open(&self) -> bool {
+        !self.no_open
     }
 }
 
@@ -68,6 +82,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
         println!("  knowledge base : {}", kb_path.display());
         println!("  output         : {}", output_path.display());
         println!("  sections       : {}", sections.len());
+        println!("  open browser   : {}", args.should_open());
         println!("  no files written");
         return Ok(());
     }
@@ -78,12 +93,39 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
     println!("Static HTML viewer generated:");
     println!("  {}", output_path.display());
     println!();
-    println!("Open this file in a browser. The sidebar command box is display-only:");
+    if args.should_open() {
+        open_in_default_browser(&output_path)?;
+        println!("Opened in the system default browser.");
+    } else {
+        println!("HTML generated without opening a browser because --no-open was set.");
+        println!("Open this file manually in a browser when needed.");
+    }
+    println!("The sidebar command box is display-only:");
     println!(
         "  it can navigate tabs and search visible content, but it cannot execute kb commands."
     );
 
     Ok(())
+}
+
+fn open_in_default_browser(path: &Path) -> Result<()> {
+    let status = if cfg!(target_os = "windows") {
+        let command = format!(r#"start "" "{}""#, path.display());
+        Command::new("cmd").args(["/C", &command]).status()?
+    } else if cfg!(target_os = "macos") {
+        Command::new("open").arg(path).status()?
+    } else {
+        Command::new("xdg-open").arg(path).status()?
+    };
+
+    if status.success() {
+        Ok(())
+    } else {
+        Err(anyhow!(
+            "failed to open viewer in the system default browser: {}",
+            path.display()
+        ))
+    }
 }
 
 fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
@@ -211,6 +253,7 @@ fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
     html.push_str("<aside class=\"sidebar\" id=\"wikiSidebar\">\n");
     html.push_str("<div class=\"sidebar-head\">📚 LLM Wiki Navigator</div>\n");
     html.push_str("<div class=\"sidebar-body\">\n");
+    html.push_str("<div class=\"sidebar-scroll\">\n");
     html.push_str("<div class=\"meta-card\"><strong>Knowledge base</strong><br><span>");
     html.push_str(&kb_display);
     html.push_str("</span><br><strong>Generated</strong><br><span>");
@@ -218,7 +261,7 @@ fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
     html.push_str("</span></div>\n");
     html.push_str("<div class=\"sidebar-links\">\n");
     html.push_str(&sidebar_links);
-    html.push_str("</div>\n");
+    html.push_str("</div>\n</div>\n");
     html.push_str("<div class=\"terminal\">\n<div class=\"terminal-head\">kb-view&gt; display commands only</div>\n<div class=\"terminal-log\" id=\"commandLog\"><div class=\"terminal-msg\">Type <code>help</code>. This box cannot execute local kb commands.</div></div>\n<div class=\"terminal-input\"><input id=\"viewCommand\" type=\"text\" placeholder=\"help / open health / find DOI\"/><button id=\"runViewCommand\">Run</button></div>\n</div>\n");
     html.push_str(
         "</div>\n</aside>\n<button class=\"toggle-sidebar\" id=\"toggleBtn\">‹</button>\n",
@@ -241,20 +284,21 @@ body { background: #f5f7fa; color: #2d3748; line-height: 1.6; }
 .sidebar { width: 340px; background: #fff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; transition: width 0.2s; overflow: hidden; flex-shrink: 0; }
 .sidebar.hidden { width: 0; }
 .sidebar-head { padding: 1rem 1.2rem; background: #2b6cb0; color: white; font-weight: 700; }
-.sidebar-body { flex: 1; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
+.sidebar-body { flex: 1; min-height: 0; padding: 1rem; overflow: hidden; display: flex; flex-direction: column; gap: 1rem; }
+.sidebar-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; padding-right: 0.15rem; }
 .meta-card { font-size: 0.85rem; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.8rem; word-break: break-all; }
 .sidebar-links { display: flex; flex-direction: column; gap: 0.4rem; }
 .sidebar-link { text-align: left; border: 1px solid #e2e8f0; background: #f7fafc; color: #2b6cb0; padding: 0.55rem 0.7rem; border-radius: 6px; cursor: pointer; }
 .sidebar-link:hover { background: #e8f4f8; }
 .toggle-sidebar { position: absolute; top: 12px; left: 340px; z-index: 10; background: #2b6cb0; color: white; border: 0; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; transition: left 0.2s; }
 .toggle-sidebar.collapsed { left: 0; }
-.terminal { border: 1px solid #cbd5e0; border-radius: 8px; overflow: hidden; background: #1a202c; color: #e2e8f0; }
+.terminal { margin-top: auto; flex: 0 0 340px; min-height: 320px; border: 1px solid #cbd5e0; border-radius: 8px; overflow: hidden; background: #1a202c; color: #e2e8f0; display: flex; flex-direction: column; }
 .terminal-head { padding: 0.5rem 0.7rem; background: #2d3748; font-size: 0.85rem; }
-.terminal-log { padding: 0.7rem; height: 190px; overflow-y: auto; font-size: 0.82rem; }
+.terminal-log { flex: 1; min-height: 230px; padding: 0.85rem; overflow-y: auto; font-size: 0.84rem; }
 .terminal-msg { margin-bottom: 0.45rem; }
 .terminal-input { display: flex; border-top: 1px solid #4a5568; }
-.terminal-input input { flex: 1; padding: 0.55rem; border: 0; outline: 0; background: #edf2f7; color: #1a202c; }
-.terminal-input button { padding: 0.55rem 0.8rem; border: 0; background: #4299e1; color: white; cursor: pointer; }
+.terminal-input input { flex: 1; min-height: 46px; padding: 0.8rem; border: 0; outline: 0; background: #edf2f7; color: #1a202c; font-size: 0.9rem; }
+.terminal-input button { min-height: 46px; padding: 0.8rem 0.95rem; border: 0; background: #4299e1; color: white; cursor: pointer; font-weight: 600; }
 .main { flex: 1; padding: 2rem; max-width: 1180px; margin: 0 auto; overflow-x: hidden; }
 header { text-align: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #4299e1; }
 h1 { color: #2b6cb0; font-size: 1.65rem; }

@@ -183,7 +183,7 @@ The guiding rule is simple:
 
 ## Interactive shell and model commands
 
-### `kb view`
+### `kb view` / `kb view --no-open`
 
 - **Ability:** generate a static local HTML viewer for generated LLM Wiki artifacts.
 - **Primary input:** `wiki/`, `processing/refs/`, `processing/keywords/`, `outputs/reports/`, `LLM/tasks/`, `LLM/memory/`, and `topics/`.

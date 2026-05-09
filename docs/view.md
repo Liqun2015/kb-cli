@@ -1,6 +1,6 @@
 # kb view
 
-Current version: `v0.6.4`
+Current version: `v0.6.4.3`
 
 `kb view` generates a static local HTML viewer for the current LLM Wiki.
 
@@ -8,6 +8,7 @@ It is a display layer, not an execution layer.
 
 ```bash
 kb view
+kb view --no-open
 kb view --dry-run
 kb view --output-dir outputs/html
 ```
@@ -18,7 +19,7 @@ Default output:
 outputs/html/index.html
 ```
 
-Open this file in a browser.
+`kb view` opens the generated file with the system default browser by default. Use `kb view --no-open` when you only want to refresh the HTML file without opening a browser. Neither mode starts a server or grants the page permission to execute local commands.
 
 ## What it displays
 
@@ -89,3 +90,8 @@ A future `kb browser --serve` may provide a local backend bridge to deterministi
 Markdown and JSON remain the source of truth. HTML is only a generated viewing layer.
 
 Do not manually edit `outputs/html/index.html` as project state. Re-run `kb view` instead.
+
+
+## Sidebar command panel layout
+
+Starting in `v0.6.4.2`, the left sidebar keeps the `kb-view>` display command panel anchored at the bottom. The command log and input area are intentionally taller than ordinary navigation controls so the panel feels like a small review console rather than a chat box. It remains display-only and cannot execute local `kb` commands.

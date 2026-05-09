@@ -70,6 +70,11 @@ kb refs-graph --help
 kb keywords --help
 kb health --help
 kb view --help
+kb view --dry-run
+# Optional manual browser-open check:
+# kb view
+# Optional manual check on a desktop environment:
+# kb view
 kb shell --help
 kb tasks --help
 kb memory --help

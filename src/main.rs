@@ -177,9 +177,7 @@ fn main() -> anyhow::Result<()> {
             println!("  memory --task-id ID --summary TEXT [--file PATH]  Record completed task memory under LLM/memory");
             println!("  grep <pattern> [--path PATH] [--regex] [--json]  Search text files with line numbers");
             println!("  health [--dry-run|--preview] [--json] [--strict]  Summarize LLM Wiki relationship health");
-            println!(
-                "  view [--dry-run|--preview] [--output-dir DIR]  Generate static HTML viewer"
-            );
+            println!("  view [--no-open] [--dry-run|--preview] [--output-dir DIR]  Generate/open static HTML viewer");
             println!(
                 "  shell                         Enter deterministic interactive command shell"
             );

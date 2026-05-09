@@ -1,3 +1,22 @@
+## v0.6.4.3 - kb view opens by default
+
+- Changed `kb view` to generate `outputs/html/index.html` and open it with the system default browser by default.
+- Added `kb view --no-open` for the previous generate-only behavior.
+- Kept the viewer static and read-only: no local server, no LLM call, no browser-to-shell bridge, and no file modification behavior was added.
+
+## v0.6.4.2 - kb view sidebar command panel polish
+
+- Adjusted the static HTML viewer layout so the left-sidebar `kb-view>` command panel stays anchored at the bottom of the sidebar.
+- Increased the command panel height and input padding to make the display-only command window easier to use.
+- Kept `kb view` static and read-only: no local server, no LLM call, no shell bridge, and no file modification behavior was added.
+
+## v0.6.4.1 - kb view --open
+
+- Added `kb view --open` to generate `outputs/html/index.html` and open it with the system default browser.
+- `kb view` still only generates the static HTML file.
+- `kb view --dry-run` previews the output path and does not open a browser.
+- The viewer remains static and read-only: no local server, no LLM call, no shell bridge, and no file modification behavior was added.
+
 ## v0.6.4 - kb view static HTML viewer
 
 - Added `kb view` to generate a static local HTML viewer at `outputs/html/index.html`.
