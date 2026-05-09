@@ -1,5 +1,10 @@
 ## v0.6.4.3 - kb view opens by default
 
+## v0.6.4.4 - Windows view opener fix
+
+- Changed `kb view` Windows browser opening from `cmd /C start` to `rundll32.exe url.dll,FileProtocolHandler`.
+- This avoids the `拒绝访问` / Access denied failure seen on some Windows file associations while keeping `kb view --no-open` unchanged.
+
 - Changed `kb view` to generate `outputs/html/index.html` and open it with the system default browser by default.
 - Added `kb view --no-open` for the previous generate-only behavior.
 - Kept the viewer static and read-only: no local server, no LLM call, no browser-to-shell bridge, and no file modification behavior was added.

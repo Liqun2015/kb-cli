@@ -110,8 +110,13 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
 
 fn open_in_default_browser(path: &Path) -> Result<()> {
     let status = if cfg!(target_os = "windows") {
-        let command = format!(r#"start "" "{}""#, path.display());
-        Command::new("cmd").args(["/C", &command]).status()?
+        // Use Windows FileProtocolHandler instead of `cmd /C start`.
+        // `start` can fail with "Access is denied" on some machines when
+        // opening .html files through a broken or restricted file association.
+        Command::new("rundll32.exe")
+            .arg("url.dll,FileProtocolHandler")
+            .arg(path)
+            .status()?
     } else if cfg!(target_os = "macos") {
         Command::new("open").arg(path).status()?
     } else {

@@ -4,8 +4,8 @@
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.6.4.3`
-> **v0.6.4.3 note:** `kb view` now opens the generated static viewer by default. Use `kb view --no-open` when you only want to refresh `outputs/html/index.html` without opening a browser.
+> Current version: `v0.6.4.4`
+> **v0.6.4.4 note:** `kb view` now opens the generated static viewer by default. Use `kb view --no-open` when you only want to refresh `outputs/html/index.html` without opening a browser.
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, use `kb prepare` to generate reviewable task materials, maintain Markdown knowledge pages under `wiki/`, and constrain future human/AI maintainers through the `rules/` layer.
 

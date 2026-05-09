@@ -95,3 +95,8 @@ Do not manually edit `outputs/html/index.html` as project state. Re-run `kb view
 ## Sidebar command panel layout
 
 Starting in `v0.6.4.2`, the left sidebar keeps the `kb-view>` display command panel anchored at the bottom. The command log and input area are intentionally taller than ordinary navigation controls so the panel feels like a small review console rather than a chat box. It remains display-only and cannot execute local `kb` commands.
+
+
+## Windows browser opening note
+
+On Windows, `kb view` opens the generated `outputs/html/index.html` through `rundll32.exe url.dll,FileProtocolHandler` instead of `cmd /C start`. This is more robust on systems where `start` reports access denied for local HTML files. Use `kb view --no-open` to generate the viewer without opening a browser.
