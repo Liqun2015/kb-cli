@@ -22,7 +22,7 @@ cargo check
 cargo build --release
 ```
 
-`cargo fmt` is run first on purpose. Formatting is deterministic mechanical maintenance. After the script succeeds, review any formatting-only edits with `git diff` before committing.
+`cargo fmt` is run first on purpose. Formatting is deterministic mechanical maintenance. After the script succeeds, review any formatting-only edits with `git --no-pager diff` before committing.
 
 They are for compiling `kb-cli` itself. They do not initialize or modify a knowledge base.
 
@@ -36,7 +36,7 @@ scripts\git_safe_push.bat "commit message"
 scripts/git_safe_push.sh "commit message"
 ```
 
-These show `git status`, `git diff`, then `git diff --cached` before committing and pushing.
+These show `git --no-pager status`, `git --no-pager diff`, then `git --no-pager diff --cached` before committing and pushing, so the review output scrolls continuously instead of pausing in Git's pager.
 
 ## Policy
 
@@ -46,3 +46,7 @@ Knowledge-base workflows should be documented as explicit `kb ...` command seque
 ## Lockfile behavior
 
 The release scripts run Cargo normally. If `Cargo.lock` is absent, Cargo will generate it locally. Review the generated lockfile before committing.
+
+## Git pager behavior
+
+The safe-push scripts intentionally use `git --no-pager ...` for status and diff review. This keeps the output visible in one continuous terminal stream and avoids requiring a key press to page through `less` or another Git pager.

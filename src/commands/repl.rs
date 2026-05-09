@@ -106,7 +106,8 @@ impl ShellState {
     }
 
     fn run_batch_command(&self, tokens: &[String]) -> Result<()> {
-        let exe = std::env::current_exe().map_err(|err| anyhow!("could not locate current executable: {err}"))?;
+        let exe = std::env::current_exe()
+            .map_err(|err| anyhow!("could not locate current executable: {err}"))?;
         let status = Command::new(exe)
             .arg("--kb-path")
             .arg(&self.kb_path)

@@ -1,6 +1,6 @@
 # LLM Command Guide
 
-Current version: `v0.6.0.4`
+Current version: `v0.6.1`
 
 This document is the operating guide for the top-level Manager LLM, Claude Code sessions, and human operators who use `kb-cli` as a structured command layer.
 
@@ -258,3 +258,20 @@ kb keywords --json
 ```
 
 The command returns candidate keyword/topic relations only. A Worker LLM may review whether the shared terms are scientifically meaningful, but it must preserve file lists and evidence lines and must not promote candidates into scientific idea relations without review.
+
+
+## Topic relationship navigation
+
+When a user asks about a specific research topic, the Manager LLM should not treat global reference indexes as topic-level conclusions.
+
+Use this order:
+
+```text
+1. Identify the topic slug.
+2. Inspect topics/<topic>/ if it exists.
+3. Read scope.md, literature.md, importance.md, relations/, tasks/, and memory/ if present.
+4. Use global commands such as kb query, kb grep, kb refs-index, kb refs-graph, kb keywords, and kb health for supporting evidence.
+5. Generate bounded tasks when Worker LLM or human review is required.
+```
+
+`processing/refs/` remains the global bibliographic layer. `topics/<topic>/` is the topic-local interpretation layer.

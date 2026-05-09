@@ -1,6 +1,6 @@
 # Literature Relationship Core Principle
 
-Current version: `v0.6.0.4`
+Current version: `v0.6.1`
 
 LLM Wiki is not merely a local document archive.
 
@@ -20,6 +20,22 @@ This principle should guide future command design. Before adding a command, ask:
 ```text
 Which reference relationship does this command discover, confirm, repair, explain, or delegate?
 ```
+
+## Global vs topic-specific relations
+
+LLM Wiki separates relationship records into two layers:
+
+```text
+processing/refs/
+    Global bibliographic index relations.
+    These apply across all topics.
+
+topics/<topic>/
+    Topic-specific interpretive relations.
+    These include topic-local importance, causal candidates, method relations, evidence relations, and scientific idea relations.
+```
+
+The global layer should remain conservative and reusable. Topic overlays may contain richer, topic-dependent interpretation, but these records must preserve evidence and review status. See `docs/topic-relationships.md`.
 
 ## Three relationship levels
 

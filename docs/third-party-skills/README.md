@@ -30,3 +30,15 @@ needs human review        -> explicit review marker and evidence
 ```
 
 Third-party skills should never silently convert uncertain relations into confirmed relations. Human review remains the final guarantee for bibliographic index identity.
+
+
+## Topic-specific graph overlays
+
+Third-party graph viewers should distinguish global bibliographic graphs from topic-specific overlays.
+
+```text
+processing/refs/refs_graph_*.json       global bibliographic index graph
+topics/<topic>/graph/topic_graph.json   topic-specific relationship overlay
+```
+
+Global graphs should primarily show citation/index candidates. Topic graphs may show causal, method, evidence, idea, and topic-local importance relations, but they must preserve relation status, evidence, and human-review markers.

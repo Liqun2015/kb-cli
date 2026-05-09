@@ -9,11 +9,11 @@ if "%~1"=="" (
 
 echo.
 echo ===== Current status =====
-git status
+git --no-pager status
 
 echo.
 echo ===== Unstaged diff: changes not yet added =====
-git diff
+git --no-pager diff
 
 echo.
 echo Please review the changes above.
@@ -24,7 +24,7 @@ git add .
 
 echo.
 echo ===== Staged diff: changes ready to commit =====
-git diff --cached
+git --no-pager diff --cached
 
 echo.
 echo Please review the staged changes above.

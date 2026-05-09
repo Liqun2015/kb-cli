@@ -292,3 +292,12 @@ When keyword/topic candidates are found, unresolved semantic interpretation shou
 - Known knowledge-base commands should map to batch-mode commands with the current `--kb-path`.
 - Unknown input must return safely without interpretation, LLM calls, shell escapes, or arbitrary execution.
 - It is suitable for Manager LLM sessions that need to repeatedly run structured commands before assigning bounded work to Worker LLMs.
+
+
+## Topic overlay commands
+
+Future `kb topic ...` commands should be classified as deterministic scaffolding commands unless they explicitly opt into LLM/agent behavior.
+
+Their job is to create, inspect, and export `topics/<topic>/` relationship overlays. They must not silently infer causal, method, evidence, or scientific idea relations. When interpretation is needed, they should generate bounded tasks for the Manager LLM to assign to Worker LLMs or human reviewers.
+
+The global bibliographic relation layer remains under `processing/refs/`; topic-specific interpretive records belong under `topics/<topic>/`.

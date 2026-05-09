@@ -9,7 +9,10 @@ use walkdir::WalkDir;
 
 #[derive(Debug, Clone, Args)]
 pub struct HealthArgs {
-    #[arg(long, help = "Preview health report without writing outputs/reports/health_*.md")]
+    #[arg(
+        long,
+        help = "Preview health report without writing outputs/reports/health_*.md"
+    )]
     pub dry_run: bool,
 
     #[arg(long, help = "Alias for --dry-run")]
@@ -18,7 +21,10 @@ pub struct HealthArgs {
     #[arg(long, help = "Print a machine-readable JSON health report")]
     pub json: bool,
 
-    #[arg(long, help = "Return a non-zero exit code when blocker-level issues are found")]
+    #[arg(
+        long,
+        help = "Return a non-zero exit code when blocker-level issues are found"
+    )]
     pub strict: bool,
 }
 
@@ -94,11 +100,15 @@ fn run_health(kb_path: &Path, args: &HealthArgs) -> Result<HealthReport> {
     let text_files = list_files_with_ext(&kb_path.join("processing/text"), &["txt", "md"]);
     let wiki_pages = list_files_with_ext(&kb_path.join("wiki"), &["md"]);
     let refs_reports = list_named_reports(&kb_path.join("processing/refs"), "refs_scan_", "md");
-    let refs_index_reports = list_named_reports(&kb_path.join("processing/refs"), "refs_index_", "md");
-    let refs_graph_json = list_named_reports(&kb_path.join("processing/refs"), "refs_graph_", "json");
-    let refs_graph_mermaid = list_named_reports(&kb_path.join("processing/refs"), "refs_graph_", "mmd");
+    let refs_index_reports =
+        list_named_reports(&kb_path.join("processing/refs"), "refs_index_", "md");
+    let refs_graph_json =
+        list_named_reports(&kb_path.join("processing/refs"), "refs_graph_", "json");
+    let refs_graph_mermaid =
+        list_named_reports(&kb_path.join("processing/refs"), "refs_graph_", "mmd");
     let refs_graph_dot = list_named_reports(&kb_path.join("processing/refs"), "refs_graph_", "dot");
-    let keyword_reports = list_named_reports(&kb_path.join("processing/keywords"), "keywords_", "md");
+    let keyword_reports =
+        list_named_reports(&kb_path.join("processing/keywords"), "keywords_", "md");
     let task_reports = list_files_with_ext(&kb_path.join("LLM/tasks"), &["md", "json"]);
     let memory_files = list_files_with_ext(&kb_path.join("LLM/memory"), &["md", "json"]);
     let lint_reports = list_named_reports(&kb_path.join("outputs/reports"), "lint_static_", "md");
@@ -137,10 +147,19 @@ fn run_health(kb_path: &Path, args: &HealthArgs) -> Result<HealthReport> {
 
     let mut checks = Vec::new();
     checks.push(check_raw_papers(&raw_papers));
-    checks.push(check_text_coverage(&raw_papers, &text_files, &empty_text_files));
+    checks.push(check_text_coverage(
+        &raw_papers,
+        &text_files,
+        &empty_text_files,
+    ));
     checks.push(check_wiki_pages(&wiki_pages));
     checks.push(check_reference_pipeline(&refs_reports, &refs_index_reports));
-    checks.push(check_refs_graph(&refs_index_reports, &refs_graph_json, &refs_graph_mermaid, &refs_graph_dot));
+    checks.push(check_refs_graph(
+        &refs_index_reports,
+        &refs_graph_json,
+        &refs_graph_mermaid,
+        &refs_graph_dot,
+    ));
     checks.push(check_keywords(&keyword_reports));
     checks.push(check_uncertain_relations(&uncertain_relation_evidence));
     checks.push(check_task_memory(&task_reports, &memory_files));
@@ -192,13 +211,23 @@ fn check_raw_papers(raw_papers: &[PathBuf]) -> HealthCheck {
             category: "source_materials".to_string(),
             status: "ok".to_string(),
             summary: format!("{} PDF paper(s) found under raw/papers/.", raw_papers.len()),
-            evidence: raw_papers.iter().take(5).map(|p| p.display().to_string()).collect(),
-            recommended_next: vec!["Run `kb extract-text` to create searchable text when needed.".to_string()],
+            evidence: raw_papers
+                .iter()
+                .take(5)
+                .map(|p| p.display().to_string())
+                .collect(),
+            recommended_next: vec![
+                "Run `kb extract-text` to create searchable text when needed.".to_string(),
+            ],
         }
     }
 }
 
-fn check_text_coverage(raw_papers: &[PathBuf], text_files: &[PathBuf], empty_text_files: &[PathBuf]) -> HealthCheck {
+fn check_text_coverage(
+    raw_papers: &[PathBuf],
+    text_files: &[PathBuf],
+    empty_text_files: &[PathBuf],
+) -> HealthCheck {
     if !raw_papers.is_empty() && text_files.is_empty() {
         HealthCheck {
             id: "text-coverage".to_string(),
@@ -223,8 +252,14 @@ fn check_text_coverage(raw_papers: &[PathBuf], text_files: &[PathBuf], empty_tex
             category: "text_extraction".to_string(),
             status: "ok".to_string(),
             summary: format!("{} extracted text file(s) found.", text_files.len()),
-            evidence: text_files.iter().take(5).map(|p| p.display().to_string()).collect(),
-            recommended_next: vec!["Use `kb grep`, `kb refs`, and `kb keywords` over processing/text/.".to_string()],
+            evidence: text_files
+                .iter()
+                .take(5)
+                .map(|p| p.display().to_string())
+                .collect(),
+            recommended_next: vec![
+                "Use `kb grep`, `kb refs`, and `kb keywords` over processing/text/.".to_string(),
+            ],
         }
     }
 }
@@ -237,7 +272,10 @@ fn check_wiki_pages(wiki_pages: &[PathBuf]) -> HealthCheck {
             status: "warn".to_string(),
             summary: "No Markdown wiki pages found under wiki/.".to_string(),
             evidence: vec!["wiki/ contains no Markdown pages".to_string()],
-            recommended_next: vec!["Run `kb build-wiki` or use `kb prepare` to create bounded wiki-writing tasks.".to_string()],
+            recommended_next: vec![
+                "Run `kb build-wiki` or use `kb prepare` to create bounded wiki-writing tasks."
+                    .to_string(),
+            ],
         }
     } else {
         HealthCheck {
@@ -245,20 +283,31 @@ fn check_wiki_pages(wiki_pages: &[PathBuf]) -> HealthCheck {
             category: "wiki".to_string(),
             status: "ok".to_string(),
             summary: format!("{} wiki Markdown page(s) found.", wiki_pages.len()),
-            evidence: wiki_pages.iter().take(5).map(|p| p.display().to_string()).collect(),
-            recommended_next: vec!["Run `kb links` and `kb lint-static` to inspect structural health.".to_string()],
+            evidence: wiki_pages
+                .iter()
+                .take(5)
+                .map(|p| p.display().to_string())
+                .collect(),
+            recommended_next: vec![
+                "Run `kb links` and `kb lint-static` to inspect structural health.".to_string(),
+            ],
         }
     }
 }
 
-fn check_reference_pipeline(refs_reports: &[PathBuf], refs_index_reports: &[PathBuf]) -> HealthCheck {
+fn check_reference_pipeline(
+    refs_reports: &[PathBuf],
+    refs_index_reports: &[PathBuf],
+) -> HealthCheck {
     if refs_reports.is_empty() && refs_index_reports.is_empty() {
         HealthCheck {
             id: "reference-pipeline".to_string(),
             category: "literature_relationships".to_string(),
             status: "warn".to_string(),
             summary: "No refs or refs-index reports found.".to_string(),
-            evidence: vec!["processing/refs/ has no refs_scan_*.md or refs_index_*.md reports".to_string()],
+            evidence: vec![
+                "processing/refs/ has no refs_scan_*.md or refs_index_*.md reports".to_string(),
+            ],
             recommended_next: vec!["Run `kb refs`, then `kb refs-index`.".to_string()],
         }
     } else if refs_index_reports.is_empty() {
@@ -266,9 +315,16 @@ fn check_reference_pipeline(refs_reports: &[PathBuf], refs_index_reports: &[Path
             id: "reference-pipeline".to_string(),
             category: "literature_relationships".to_string(),
             status: "warn".to_string(),
-            summary: "Reference hints exist, but no bibliographic index report was found.".to_string(),
-            evidence: refs_reports.iter().take(5).map(|p| p.display().to_string()).collect(),
-            recommended_next: vec!["Run `kb refs-index` to build bibliographic index relation candidates.".to_string()],
+            summary: "Reference hints exist, but no bibliographic index report was found."
+                .to_string(),
+            evidence: refs_reports
+                .iter()
+                .take(5)
+                .map(|p| p.display().to_string())
+                .collect(),
+            recommended_next: vec![
+                "Run `kb refs-index` to build bibliographic index relation candidates.".to_string(),
+            ],
         }
     } else {
         HealthCheck {
@@ -276,13 +332,24 @@ fn check_reference_pipeline(refs_reports: &[PathBuf], refs_index_reports: &[Path
             category: "literature_relationships".to_string(),
             status: "ok".to_string(),
             summary: format!("{} refs-index report(s) found.", refs_index_reports.len()),
-            evidence: refs_index_reports.iter().take(5).map(|p| p.display().to_string()).collect(),
-            recommended_next: vec!["Run `kb refs-graph` to export relation candidates for visualization.".to_string()],
+            evidence: refs_index_reports
+                .iter()
+                .take(5)
+                .map(|p| p.display().to_string())
+                .collect(),
+            recommended_next: vec![
+                "Run `kb refs-graph` to export relation candidates for visualization.".to_string(),
+            ],
         }
     }
 }
 
-fn check_refs_graph(refs_index_reports: &[PathBuf], json: &[PathBuf], mermaid: &[PathBuf], dot: &[PathBuf]) -> HealthCheck {
+fn check_refs_graph(
+    refs_index_reports: &[PathBuf],
+    json: &[PathBuf],
+    mermaid: &[PathBuf],
+    dot: &[PathBuf],
+) -> HealthCheck {
     let graph_count = json.len() + mermaid.len() + dot.len();
     if refs_index_reports.is_empty() {
         HealthCheck {
@@ -299,8 +366,14 @@ fn check_refs_graph(refs_index_reports: &[PathBuf], json: &[PathBuf], mermaid: &
             category: "third_party_skills".to_string(),
             status: "warn".to_string(),
             summary: "refs-index reports exist, but no refs-graph export was found.".to_string(),
-            evidence: refs_index_reports.iter().take(5).map(|p| p.display().to_string()).collect(),
-            recommended_next: vec!["Run `kb refs-graph --json`, optionally with `--mermaid` or `--dot`.".to_string()],
+            evidence: refs_index_reports
+                .iter()
+                .take(5)
+                .map(|p| p.display().to_string())
+                .collect(),
+            recommended_next: vec![
+                "Run `kb refs-graph --json`, optionally with `--mermaid` or `--dot`.".to_string(),
+            ],
         }
     } else {
         HealthCheck {
@@ -308,8 +381,16 @@ fn check_refs_graph(refs_index_reports: &[PathBuf], json: &[PathBuf], mermaid: &
             category: "third_party_skills".to_string(),
             status: "ok".to_string(),
             summary: format!("{} refs-graph export file(s) found.", graph_count),
-            evidence: json.iter().chain(mermaid.iter()).chain(dot.iter()).take(5).map(|p| p.display().to_string()).collect(),
-            recommended_next: vec!["Use docs/third-party-skills/ to render graph certainty correctly.".to_string()],
+            evidence: json
+                .iter()
+                .chain(mermaid.iter())
+                .chain(dot.iter())
+                .take(5)
+                .map(|p| p.display().to_string())
+                .collect(),
+            recommended_next: vec![
+                "Use docs/third-party-skills/ to render graph certainty correctly.".to_string(),
+            ],
         }
     }
 }
@@ -330,8 +411,15 @@ fn check_keywords(keyword_reports: &[PathBuf]) -> HealthCheck {
             category: "keyword_topic_relations".to_string(),
             status: "ok".to_string(),
             summary: format!("{} keyword report(s) found.", keyword_reports.len()),
-            evidence: keyword_reports.iter().take(5).map(|p| p.display().to_string()).collect(),
-            recommended_next: vec!["Review keyword/topic candidates before claiming scientific idea relations.".to_string()],
+            evidence: keyword_reports
+                .iter()
+                .take(5)
+                .map(|p| p.display().to_string())
+                .collect(),
+            recommended_next: vec![
+                "Review keyword/topic candidates before claiming scientific idea relations."
+                    .to_string(),
+            ],
         }
     }
 }
@@ -342,9 +430,13 @@ fn check_uncertain_relations(evidence: &[String]) -> HealthCheck {
             id: "uncertain-bibliographic-relations".to_string(),
             category: "human_review".to_string(),
             status: "ok".to_string(),
-            summary: "No uncertain bibliographic relation hints detected in refs-index reports.".to_string(),
+            summary: "No uncertain bibliographic relation hints detected in refs-index reports."
+                .to_string(),
             evidence: vec![],
-            recommended_next: vec!["Continue using humans as the final guarantee when uncertain matches appear.".to_string()],
+            recommended_next: vec![
+                "Continue using humans as the final guarantee when uncertain matches appear."
+                    .to_string(),
+            ],
         }
     } else {
         HealthCheck {
@@ -366,7 +458,9 @@ fn check_task_memory(task_reports: &[PathBuf], memory_files: &[PathBuf]) -> Heal
             status: "ok".to_string(),
             summary: "No LLM task files found yet.".to_string(),
             evidence: vec!["LLM/tasks/ has no task reports".to_string()],
-            recommended_next: vec!["Run `kb tasks` when deterministic commands uncover deferred work.".to_string()],
+            recommended_next: vec![
+                "Run `kb tasks` when deterministic commands uncover deferred work.".to_string(),
+            ],
         }
     } else if memory_files.is_empty() {
         HealthCheck {
@@ -374,8 +468,14 @@ fn check_task_memory(task_reports: &[PathBuf], memory_files: &[PathBuf]) -> Heal
             category: "llm_handoff".to_string(),
             status: "warn".to_string(),
             summary: "Task reports exist, but no completed memory file was found.".to_string(),
-            evidence: task_reports.iter().take(5).map(|p| p.display().to_string()).collect(),
-            recommended_next: vec!["Use `kb memory --task-id ... --summary ...` after accepted work.".to_string()],
+            evidence: task_reports
+                .iter()
+                .take(5)
+                .map(|p| p.display().to_string())
+                .collect(),
+            recommended_next: vec![
+                "Use `kb memory --task-id ... --summary ...` after accepted work.".to_string(),
+            ],
         }
     } else {
         HealthCheck {
@@ -383,8 +483,14 @@ fn check_task_memory(task_reports: &[PathBuf], memory_files: &[PathBuf]) -> Heal
             category: "llm_handoff".to_string(),
             status: "ok".to_string(),
             summary: "LLM task and memory areas are both present.".to_string(),
-            evidence: memory_files.iter().take(5).map(|p| p.display().to_string()).collect(),
-            recommended_next: vec!["Keep completed task records reviewable under LLM/memory/.".to_string()],
+            evidence: memory_files
+                .iter()
+                .take(5)
+                .map(|p| p.display().to_string())
+                .collect(),
+            recommended_next: vec![
+                "Keep completed task records reviewable under LLM/memory/.".to_string()
+            ],
         }
     }
 }
@@ -397,7 +503,10 @@ fn check_lint_reports(lint_reports: &[PathBuf]) -> HealthCheck {
             status: "warn".to_string(),
             summary: "No lint-static report was found under outputs/reports/.".to_string(),
             evidence: vec!["outputs/reports/ has no lint_static_*.md reports".to_string()],
-            recommended_next: vec!["Run `kb lint-static` to check broken links, orphans, and source front matter.".to_string()],
+            recommended_next: vec![
+                "Run `kb lint-static` to check broken links, orphans, and source front matter."
+                    .to_string(),
+            ],
         }
     } else {
         HealthCheck {
@@ -405,8 +514,14 @@ fn check_lint_reports(lint_reports: &[PathBuf]) -> HealthCheck {
             category: "wiki_structure".to_string(),
             status: "ok".to_string(),
             summary: format!("{} lint-static report(s) found.", lint_reports.len()),
-            evidence: lint_reports.iter().take(5).map(|p| p.display().to_string()).collect(),
-            recommended_next: vec!["Use `kb tasks` for unresolved link or source-traceability handoffs.".to_string()],
+            evidence: lint_reports
+                .iter()
+                .take(5)
+                .map(|p| p.display().to_string())
+                .collect(),
+            recommended_next: vec![
+                "Use `kb tasks` for unresolved link or source-traceability handoffs.".to_string(),
+            ],
         }
     }
 }
@@ -418,9 +533,12 @@ fn check_third_party_skills(kb_path: &Path) -> HealthCheck {
             id: "third-party-skills".to_string(),
             category: "third_party_skills".to_string(),
             status: "ok".to_string(),
-            summary: "Third-party skills documentation is present inside this workspace.".to_string(),
+            summary: "Third-party skills documentation is present inside this workspace."
+                .to_string(),
             evidence: vec![relative_path_string(kb_path, &skills_dir)],
-            recommended_next: vec!["Use these skills when generating graph viewers or review dashboards.".to_string()],
+            recommended_next: vec![
+                "Use these skills when generating graph viewers or review dashboards.".to_string(),
+            ],
         }
     } else {
         HealthCheck {
@@ -520,7 +638,10 @@ fn build_deferred_tasks(
 
 fn summarize_status(checks: &[HealthCheck]) -> (String, i32) {
     let warn_count = checks.iter().filter(|check| check.status == "warn").count() as i32;
-    let blocker_count = checks.iter().filter(|check| check.status == "blocker").count() as i32;
+    let blocker_count = checks
+        .iter()
+        .filter(|check| check.status == "blocker")
+        .count() as i32;
     let score = (100 - warn_count * 8 - blocker_count * 25).max(0);
     let status = if blocker_count > 0 {
         "blocker"
@@ -606,7 +727,10 @@ fn render_markdown_report(report: &HealthReport) -> String {
 }
 
 fn print_report(report: &HealthReport) {
-    println!("LLM Wiki health: {} (score {})", report.status, report.score);
+    println!(
+        "LLM Wiki health: {} (score {})",
+        report.status, report.score
+    );
     println!("Counts:");
     for (key, value) in &report.counts {
         println!("  {key}: {value}");
@@ -620,7 +744,10 @@ fn print_report(report: &HealthReport) {
         println!();
         println!("Deferred task hints:");
         for task in &report.deferred_tasks {
-            println!("  - {} -> {} ({})", task.id, task.target_agent, task.priority);
+            println!(
+                "  - {} -> {} ({})",
+                task.id, task.target_agent, task.priority
+            );
         }
         println!("Use `kb tasks` for a consolidated LLM/tasks/ handoff list.");
     }
@@ -637,7 +764,10 @@ fn list_files_with_ext(root: &Path, exts: &[&str]) -> Vec<PathBuf> {
     if !root.exists() {
         return Vec::new();
     }
-    let exts = exts.iter().map(|ext| ext.to_ascii_lowercase()).collect::<BTreeSet<_>>();
+    let exts = exts
+        .iter()
+        .map(|ext| ext.to_ascii_lowercase())
+        .collect::<BTreeSet<_>>();
     let mut files = Vec::new();
     for entry in WalkDir::new(root)
         .into_iter()
@@ -686,7 +816,11 @@ fn scan_uncertain_refs_index(kb_path: &Path, reports: &[PathBuf]) -> Vec<String>
                 || line.contains("| `ambiguous` |")
                 || line.contains("| `missing` |")
             {
-                evidence.push(format!("{}: {}", relative_path_string(kb_path, report), line.trim()));
+                evidence.push(format!(
+                    "{}: {}",
+                    relative_path_string(kb_path, report),
+                    line.trim()
+                ));
             }
         }
     }
@@ -701,7 +835,11 @@ fn scan_keyword_candidates(kb_path: &Path, reports: &[PathBuf]) -> Vec<String> {
         };
         for line in content.lines() {
             if line.contains("| `candidate` |") || line.contains("candidate keyword/topic") {
-                evidence.push(format!("{}: {}", relative_path_string(kb_path, report), line.trim()));
+                evidence.push(format!(
+                    "{}: {}",
+                    relative_path_string(kb_path, report),
+                    line.trim()
+                ));
             }
         }
     }

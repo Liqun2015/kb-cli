@@ -73,7 +73,11 @@ pub fn execute(custom_kb: Option<&Path>) -> Result<()> {
     Ok(())
 }
 
-fn generate_paper_page(kb_path: &Path, paper: &PaperMetadata, manifest_lookup: &BTreeMap<String, String>) -> Result<()> {
+fn generate_paper_page(
+    kb_path: &Path,
+    paper: &PaperMetadata,
+    manifest_lookup: &BTreeMap<String, String>,
+) -> Result<()> {
     let title = paper
         .title
         .as_ref()
@@ -82,7 +86,11 @@ fn generate_paper_page(kb_path: &Path, paper: &PaperMetadata, manifest_lookup: &
         .unwrap_or_else(|| filename_stem(&paper.filename));
     let page_stem = paper_page_stem(paper);
 
-    let authors = paper.author.as_ref().map(|a| a.as_str()).unwrap_or("Unknown");
+    let authors = paper
+        .author
+        .as_ref()
+        .map(|a| a.as_str())
+        .unwrap_or("Unknown");
     let subject = paper.subject.as_ref().map(|s| s.as_str()).unwrap_or("N/A");
     let pages = paper.pages;
     let doi = paper
@@ -92,7 +100,11 @@ fn generate_paper_page(kb_path: &Path, paper: &PaperMetadata, manifest_lookup: &
         .unwrap_or_else(|| "N/A".to_string());
 
     let source_path = format!("raw/papers/{}", paper.filename.as_str());
-    let front_matter = source_front_matter("paper", &source_path, manifest_lookup.get(&source_path).map(|s| s.as_str()));
+    let front_matter = source_front_matter(
+        "paper",
+        &source_path,
+        manifest_lookup.get(&source_path).map(|s| s.as_str()),
+    );
 
     let content = format!(
         r#"{front_matter}# {title}
@@ -161,7 +173,11 @@ fn build_note_pages(kb_path: &Path, manifest_lookup: &BTreeMap<String, String>) 
             .to_string();
 
         let source_path = relative_path_string(kb_path, path);
-        let front_matter = source_front_matter("note", &source_path, manifest_lookup.get(&source_path).map(|s| s.as_str()));
+        let front_matter = source_front_matter(
+            "note",
+            &source_path,
+            manifest_lookup.get(&source_path).map(|s| s.as_str()),
+        );
         let note_display_path = path
             .strip_prefix(&notes_dir)
             .unwrap_or(path)
@@ -221,7 +237,12 @@ fn generate_papers_index(kb_path: &Path, papers: &[PaperMetadata]) -> Result<()>
             .filter(|t| !t.is_empty())
             .unwrap_or_else(|| filename_stem(&paper.filename));
         let page_stem = paper_page_stem(paper);
-        content.push_str(&format!("- [[{}|{}]] - {}\n", page_stem, title, paper.filename.as_str()));
+        content.push_str(&format!(
+            "- [[{}|{}]] - {}\n",
+            page_stem,
+            title,
+            paper.filename.as_str()
+        ));
     }
 
     let output_path = kb_path.join("wiki/indexes/papers_index.md");
@@ -282,7 +303,9 @@ fn generate_notes_index(kb_path: &Path) -> Result<()> {
     content.push_str("## All Notes\n\n");
 
     if note_names.is_empty() {
-        content.push_str("No note pages generated yet. Add files to `raw/notes/` and run `kb build-wiki`.\n");
+        content.push_str(
+            "No note pages generated yet. Add files to `raw/notes/` and run `kb build-wiki`.\n",
+        );
     } else {
         for name in note_names {
             content.push_str(&format!("- [[{}]]\n", name));
@@ -462,7 +485,6 @@ KnowledgeBase/
     Ok(())
 }
 
-
 fn load_manifest_lookup(kb_path: &Path) -> Result<BTreeMap<String, String>> {
     let manifest_path = kb_path.join("processing/manifest.json");
     if !manifest_path.exists() {
@@ -607,11 +629,8 @@ mod tests {
 
     #[test]
     fn source_front_matter_includes_source_file_and_id() {
-        let front_matter = source_front_matter(
-            "paper",
-            "raw/papers/example paper.pdf",
-            Some("raw_123456"),
-        );
+        let front_matter =
+            source_front_matter("paper", "raw/papers/example paper.pdf", Some("raw_123456"));
 
         assert!(front_matter.starts_with("---\n"));
         assert!(front_matter.contains("page_type: paper"));
@@ -638,7 +657,10 @@ mod tests {
         };
 
         let mut manifest_lookup = BTreeMap::new();
-        manifest_lookup.insert("raw/papers/example.pdf".to_string(), "raw_example".to_string());
+        manifest_lookup.insert(
+            "raw/papers/example.pdf".to_string(),
+            "raw_example".to_string(),
+        );
 
         generate_paper_page(&kb_path, &paper, &manifest_lookup)?;
         let content = fs::read_to_string(kb_path.join("wiki/papers/Example_Paper.md"))?;
@@ -659,8 +681,14 @@ mod tests {
 
     #[test]
     fn sanitize_filename_is_stable_for_common_titles() {
-        assert_eq!(sanitize_filename("A Diffusion-Based Framework.pdf"), "A_Diffusion-Based_Framework_pdf");
-        assert_eq!(sanitize_filename("  paper: title / with * marks  "), "paper_title_with_marks");
+        assert_eq!(
+            sanitize_filename("A Diffusion-Based Framework.pdf"),
+            "A_Diffusion-Based_Framework_pdf"
+        );
+        assert_eq!(
+            sanitize_filename("  paper: title / with * marks  "),
+            "paper_title_with_marks"
+        );
         assert_eq!(sanitize_filename("!!!"), "untitled");
     }
 }

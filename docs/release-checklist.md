@@ -79,10 +79,10 @@ kb memory --help
 Use:
 
 ```bash
-git status
-git diff
+git --no-pager status
+git --no-pager diff
 git add .
-git diff --cached
+git --no-pager diff --cached
 ```
 
 Review both the unstaged and staged diff.
@@ -163,4 +163,9 @@ kb refs-graph --json --dry-run
 
 ## Cargo.lock note
 
-If the downloaded source package does not include `Cargo.lock`, run `cargo check` or `cargo build --release` once to generate a fresh local lockfile. This avoids stale transitive locks from fast-moving Windows crates. Review the generated `Cargo.lock` with `git diff` before committing.
+If the downloaded source package does not include `Cargo.lock`, run `cargo check` or `cargo build --release` once to generate a fresh local lockfile. This avoids stale transitive locks from fast-moving Windows crates. Review the generated `Cargo.lock` with `git --no-pager diff` before committing.
+
+
+## Topic relationship overlay check
+
+Before adding topic-specific relationship features, confirm that `docs/topic-relationships.md` still distinguishes global bibliographic index relations from topic-local causal, method, evidence, idea, and importance overlays.

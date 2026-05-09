@@ -11,7 +11,10 @@ use crate::commands::manifest::Manifest;
 
 #[derive(Debug, Clone, Args)]
 pub struct SyncWikiArgs {
-    #[arg(long, help = "Scan wiki/ and preview manifest updates without writing processing/manifest.json")]
+    #[arg(
+        long,
+        help = "Scan wiki/ and preview manifest updates without writing processing/manifest.json"
+    )]
     pub dry_run: bool,
 
     #[arg(long, help = "Alias for --dry-run.")]
@@ -55,7 +58,8 @@ pub fn execute(custom_kb: Option<&Path>, args: &SyncWikiArgs) -> Result<()> {
     }
 
     let mut manifest = load_manifest(&manifest_path)?;
-    let summary = sync_manifest_from_wiki(&kb_path, &manifest_path, &mut manifest, args.is_dry_run())?;
+    let summary =
+        sync_manifest_from_wiki(&kb_path, &manifest_path, &mut manifest, args.is_dry_run())?;
 
     if args.json {
         println!("{}", serde_json::to_string_pretty(&summary)?);
@@ -86,7 +90,14 @@ fn sync_manifest_from_wiki(
             .into_iter()
             .filter_map(|entry| entry.ok())
             .filter(|entry| entry.file_type().is_file())
-            .filter(|entry| entry.path().extension().and_then(|s| s.to_str()).map(|s| s.eq_ignore_ascii_case("md")).unwrap_or(false))
+            .filter(|entry| {
+                entry
+                    .path()
+                    .extension()
+                    .and_then(|s| s.to_str())
+                    .map(|s| s.eq_ignore_ascii_case("md"))
+                    .unwrap_or(false)
+            })
         {
             summary.scanned_pages += 1;
             let page_path = relative_path_string(kb_path, item.path());
@@ -99,7 +110,10 @@ fn sync_manifest_from_wiki(
 
             for source in sources {
                 summary.source_references += 1;
-                refs_by_source.entry(source).or_default().insert(page_path.clone());
+                refs_by_source
+                    .entry(source)
+                    .or_default()
+                    .insert(page_path.clone());
             }
         }
     }
@@ -116,7 +130,10 @@ fn sync_manifest_from_wiki(
 
     for (source_ref, pages) in refs_by_source {
         let normalized = normalize_ref(&source_ref);
-        let matched_index = by_path.get(&normalized).copied().or_else(|| by_id.get(&normalized).copied());
+        let matched_index = by_path
+            .get(&normalized)
+            .copied()
+            .or_else(|| by_id.get(&normalized).copied());
 
         if let Some(index) = matched_index {
             summary.matched_sources += 1;
@@ -157,7 +174,11 @@ fn sync_manifest_from_wiki(
 }
 
 fn print_summary(summary: &SyncSummary) {
-    let label = if summary.dry_run { "Wiki sync preview" } else { "Wiki sync complete" };
+    let label = if summary.dry_run {
+        "Wiki sync preview"
+    } else {
+        "Wiki sync complete"
+    };
     println!("\n{label}:");
     println!("  scanned pages      : {}", summary.scanned_pages);
     println!("  pages with sources : {}", summary.pages_with_sources);
@@ -177,7 +198,9 @@ fn print_summary(summary: &SyncSummary) {
         println!("\nDry run: processing/manifest.json was not written.");
     } else {
         println!("\nManifest updated: {}", summary.manifest_path);
-        println!("Next: run `kb status --unprocessed` to see remaining raw files without wiki links.");
+        println!(
+            "Next: run `kb status --unprocessed` to see remaining raw files without wiki links."
+        );
     }
 }
 
@@ -200,7 +223,9 @@ fn source_refs_from_markdown(content: &str) -> Vec<String> {
 }
 
 fn extract_front_matter(content: &str) -> Option<&str> {
-    let content = content.strip_prefix("---\n").or_else(|| content.strip_prefix("---\r\n"))?;
+    let content = content
+        .strip_prefix("---\n")
+        .or_else(|| content.strip_prefix("---\r\n"))?;
     let end_lf = content.find("\n---\n");
     let end_crlf = content.find("\r\n---\r\n");
 
@@ -248,9 +273,16 @@ fn parse_inline_values(input: &str) -> Vec<String> {
     let trimmed = input.trim();
     if trimmed.starts_with('[') && trimmed.ends_with(']') {
         let inner = &trimmed[1..trimmed.len() - 1];
-        return inner.split(',').map(clean_ref).filter(|s| !s.is_empty()).collect();
+        return inner
+            .split(',')
+            .map(clean_ref)
+            .filter(|s| !s.is_empty())
+            .collect();
     }
-    vec![clean_ref(trimmed)].into_iter().filter(|s| !s.is_empty()).collect()
+    vec![clean_ref(trimmed)]
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .collect()
 }
 
 fn clean_ref(input: &str) -> String {

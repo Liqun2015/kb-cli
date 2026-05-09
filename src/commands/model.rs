@@ -1,5 +1,5 @@
-use clap::Args;
 use anyhow::Result;
+use clap::Args;
 
 use crate::commands::model_config::ModelManager;
 
@@ -44,7 +44,10 @@ pub fn execute_list_models() -> Result<()> {
                     }
                 }
 
-                println!("  Status: {}", if model.enabled { "Enabled" } else { "Disabled" });
+                println!(
+                    "  Status: {}",
+                    if model.enabled { "Enabled" } else { "Disabled" }
+                );
                 println!();
             }
 
@@ -133,13 +136,16 @@ pub struct ModelArgs {
 pub fn execute_add_model(args: ModelArgs) -> Result<()> {
     let id = args.id.unwrap_or_else(|| {
         // Generate id from name if not provided
-        args.name.as_ref()
+        args.name
+            .as_ref()
             .map(|n| n.to_lowercase().replace(' ', "-"))
             .unwrap_or_else(|| "custom-model".to_string())
     });
 
     let name = args.name.unwrap_or_else(|| "Custom Model".to_string());
-    let url = args.url.unwrap_or_else(|| "http://localhost:8080/v1/chat/completions".to_string());
+    let url = args
+        .url
+        .unwrap_or_else(|| "http://localhost:8080/v1/chat/completions".to_string());
 
     let mut manager = match ModelManager::new() {
         Ok(m) => m,
@@ -155,7 +161,7 @@ pub fn execute_add_model(args: ModelArgs) -> Result<()> {
     } else if args.api_key_value.is_some() {
         crate::commands::model_config::ApiKeySource::Direct
     } else {
-        crate::commands::model_config::ApiKeySource::Env  // Default to environment variable
+        crate::commands::model_config::ApiKeySource::Env // Default to environment variable
     };
 
     let entry = crate::commands::model_config::ModelEntry {
@@ -251,7 +257,10 @@ pub fn execute_delete_model(id: &str) -> Result<()> {
 
                 // Check if default model changed
                 if let Some(new_default) = manager.get_current_model() {
-                    println!("Default model switched to: {} ({})", new_default.id, new_default.name);
+                    println!(
+                        "Default model switched to: {} ({})",
+                        new_default.id, new_default.name
+                    );
                 }
             }
         }

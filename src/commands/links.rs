@@ -10,10 +10,18 @@ use walkdir::WalkDir;
 
 #[derive(Debug, Clone, Args)]
 pub struct LinksArgs {
-    #[arg(long, value_name = "PATH", help = "Path relative to the knowledge base to scan. Defaults to wiki/.")]
+    #[arg(
+        long,
+        value_name = "PATH",
+        help = "Path relative to the knowledge base to scan. Defaults to wiki/."
+    )]
     pub path: Option<PathBuf>,
 
-    #[arg(long, default_value_t = 100, help = "Maximum number of link records to return. Use 0 for no limit.")]
+    #[arg(
+        long,
+        default_value_t = 100,
+        help = "Maximum number of link records to return. Use 0 for no limit."
+    )]
     pub limit: usize,
 
     #[arg(long, help = "Show only unresolved WikiLinks")]
@@ -106,14 +114,20 @@ fn run_links_scan(kb_path: &Path, args: &LinksArgs) -> Result<LinksReport> {
     };
 
     if !search_root.exists() {
-        return Err(anyhow!("link scan path does not exist: {}", search_root.display()));
+        return Err(anyhow!(
+            "link scan path does not exist: {}",
+            search_root.display()
+        ));
     }
 
     let pages = scan_markdown_pages(kb_path, &search_root)?;
     let mut page_keys: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
     for page in &pages {
         for key in page_lookup_keys(page) {
-            page_keys.entry(key).or_default().insert(page.rel_path.clone());
+            page_keys
+                .entry(key)
+                .or_default()
+                .insert(page.rel_path.clone());
         }
     }
 
@@ -155,9 +169,18 @@ fn run_links_scan(kb_path: &Path, args: &LinksArgs) -> Result<LinksReport> {
     }
 
     let link_count = links.len();
-    let resolved_count = links.iter().filter(|link| link.status == "resolved").count();
-    let unresolved_count = links.iter().filter(|link| link.status == "unresolved").count();
-    let ambiguous_count = links.iter().filter(|link| link.status == "ambiguous").count();
+    let resolved_count = links
+        .iter()
+        .filter(|link| link.status == "resolved")
+        .count();
+    let unresolved_count = links
+        .iter()
+        .filter(|link| link.status == "unresolved")
+        .count();
+    let ambiguous_count = links
+        .iter()
+        .filter(|link| link.status == "ambiguous")
+        .count();
 
     let deferred_tasks = build_deferred_tasks(&links, unresolved_count, ambiguous_count);
     let filtered = filter_links(links, args);
@@ -402,7 +425,10 @@ fn extract_title(content: &str) -> Option<String> {
 }
 
 fn markdown_body_without_front_matter(content: &str) -> &str {
-    let Some(rest) = content.strip_prefix("---\n").or_else(|| content.strip_prefix("---\r\n")) else {
+    let Some(rest) = content
+        .strip_prefix("---\n")
+        .or_else(|| content.strip_prefix("---\r\n"))
+    else {
         return content;
     };
 
@@ -463,7 +489,10 @@ fn print_report(report: &LinksReport) {
         println!();
         println!("Deferred LLM/agent task hints:");
         for task in &report.deferred_tasks {
-            println!("  - {} -> {} ({})", task.id, task.target_agent, task.priority);
+            println!(
+                "  - {} -> {} ({})",
+                task.id, task.target_agent, task.priority
+            );
         }
         println!("Use `kb tasks` to generate a consolidated LLM/tasks/ handoff list.");
     }

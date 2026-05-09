@@ -1,8 +1,8 @@
-use std::fs;
-use std::path::PathBuf;
 use anyhow::{anyhow, Result};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::fs;
+use std::path::PathBuf;
 
 /// filepath to model settings
 const CONFIG_FILE: &str = ".model_config.json";
@@ -26,7 +26,9 @@ impl std::fmt::Display for ModelConfigError {
         match self {
             ModelConfigError::FileNotFound => write!(f, "Model configuration file not found"),
             ModelConfigError::InvalidJson(msg) => write!(f, "Invalid JSON: {}", msg),
-            ModelConfigError::InvalidStructure(msg) => write!(f, "Invalid configuration structure: {}", msg),
+            ModelConfigError::InvalidStructure(msg) => {
+                write!(f, "Invalid configuration structure: {}", msg)
+            }
             ModelConfigError::ModelNotFound(id) => write!(f, "Model '{}' not found", id),
             ModelConfigError::DuplicateModelId(id) => write!(f, "Model ID '{}' already exists", id),
             ModelConfigError::ApiKeyMissing => write!(f, "API key not configured"),
@@ -89,8 +91,8 @@ impl ModelManager {
 
     /// load settings from designated path
     pub fn from_path(path: PathBuf) -> Result<Self> {
-        let content = fs::read_to_string(&path)
-            .map_err(|e| ModelConfigError::InvalidJson(e.to_string()))?;
+        let content =
+            fs::read_to_string(&path).map_err(|e| ModelConfigError::InvalidJson(e.to_string()))?;
 
         let config: ModelConfig = serde_json::from_str(&content)
             .map_err(|e| ModelConfigError::InvalidJson(e.to_string()))?;
@@ -107,10 +109,16 @@ impl ModelManager {
         // verifying the presence of default model
         let default_exists = config.models.iter().any(|m| m.id == config.default_model);
         if !default_exists {
-            return Err(anyhow!("Default model '{}' not found in models list", config.default_model));
+            return Err(anyhow!(
+                "Default model '{}' not found in models list",
+                config.default_model
+            ));
         }
 
-        Ok(ModelManager { config_path: path, config })
+        Ok(ModelManager {
+            config_path: path,
+            config,
+        })
     }
 
     /// save the settings
@@ -163,7 +171,10 @@ impl ModelManager {
 
     /// fetch the current(default) model
     pub fn get_current_model(&self) -> Option<&ModelEntry> {
-        self.config.models.iter().find(|m| m.id == self.config.default_model)
+        self.config
+            .models
+            .iter()
+            .find(|m| m.id == self.config.default_model)
     }
 
     /// switch to a designated model
@@ -177,7 +188,7 @@ impl ModelManager {
         Ok(())
     }
 
-    /// fetch the URL of current model 
+    /// fetch the URL of current model
     #[allow(dead_code)]
     pub fn get_model_url(&self) -> String {
         if let Some(model) = self.get_current_model() {
@@ -213,7 +224,7 @@ impl ModelManager {
         }
     }
 
-    /// creating the default settings ( for the four preset models) 
+    /// creating the default settings ( for the four preset models)
     fn create_default() -> Result<Self> {
         let config_path = PathBuf::from(CONFIG_FILE);
 
@@ -277,7 +288,10 @@ impl ModelManager {
         };
 
         // save default settings
-        let manager = ModelManager { config_path, config };
+        let manager = ModelManager {
+            config_path,
+            config,
+        };
         manager.save()?;
 
         Ok(manager)

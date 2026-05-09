@@ -1,10 +1,10 @@
+use anyhow::Result;
+use lopdf::Document;
+use lopdf::Object;
+use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
-use anyhow::Result;
-use lopdf::Document;
-use regex::Regex;
-use lopdf::Object;
 
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct PaperMetadata {
@@ -88,7 +88,8 @@ pub fn execute(custom_kb: Option<&Path>, force: bool) -> Result<()> {
 }
 
 fn extract_pdf_metadata(path: &Path) -> Result<PaperMetadata> {
-    let filename = path.file_name()
+    let filename = path
+        .file_name()
         .and_then(|s| s.to_str())
         .unwrap_or("")
         .to_string();
@@ -138,16 +139,12 @@ fn extract_info_value(doc: &Document, key: &[u8]) -> Option<String> {
 
 fn extract_string_from_object(obj: &Object) -> Option<String> {
     match obj {
-        Object::String(s, _) => {
-            std::str::from_utf8(s)
-                .ok()
-                .map(|s| clean_string(s.to_string()))
-        }
-        Object::Name(n) => {
-            std::str::from_utf8(n)
-                .ok()
-                .map(|s| clean_string(s.to_string()))
-        }
+        Object::String(s, _) => std::str::from_utf8(s)
+            .ok()
+            .map(|s| clean_string(s.to_string())),
+        Object::Name(n) => std::str::from_utf8(n)
+            .ok()
+            .map(|s| clean_string(s.to_string())),
         Object::Array(arr) => {
             // Sometimes strings are wrapped in arrays
             for item in arr.iter() {

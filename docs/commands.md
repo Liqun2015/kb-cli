@@ -205,3 +205,15 @@ The following command areas are reserved but not implemented in this document:
 | Future command | Purpose | Default rule |
 |---|---|---|
 | explicit LLM / agent commands | Run bounded Worker tasks. | Must be explicit and auditable. |
+
+
+## Topic relationship overlay roadmap
+
+`topics/<topic>/` is reserved for topic-specific literature relationship overlays. This is not a replacement for `processing/refs/`.
+
+```text
+processing/refs/  global bibliographic index relations
+topics/<topic>/   topic-local causal, method, evidence, idea, and importance relations
+```
+
+Before adding topic-specific commands, read `docs/topic-relationships.md`. Future commands such as `kb topic init`, `kb topic status`, and `kb topic graph` should be deterministic scaffolding commands that help Manager LLMs and humans maintain topic overlays without silently making causal or scientific-idea claims.

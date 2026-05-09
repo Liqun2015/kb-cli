@@ -202,7 +202,7 @@ long-running background daemon
 `ingest` and `bootstrap` default to copy mode unless `--move` is explicitly provided. Recursive mode skips generated/project folders such as:
 
 ```text
-raw, wiki, processing, references, outputs, logs, .git, .obsidian, target, node_modules
+raw, wiki, processing, references, topics, outputs, logs, .git, .obsidian, target, node_modules
 ```
 
 For automation, prefer running a dry run first:
@@ -287,3 +287,10 @@ Manager LLMs may use its output to assign bounded Worker LLM tasks for semantic 
 ## `kb health`
 
 `kb health` provides a deterministic relationship-health dashboard for Manager LLM sessions and review tools. It reads existing project directories and reports, then emits status, counts, checks, and deferred task hints. It does not execute Worker tasks or call an LLM.
+
+
+## Topic-specific relationship overlays
+
+Global bibliographic index relations stay under `processing/refs/`. Topic-specific causal, method, evidence, idea, and importance relations belong under `topics/<topic>/`.
+
+Do not ask a Worker LLM to store topic-level interpretation in `processing/refs/`. If a topic-specific relation is uncertain, create or update a bounded task under `topics/<topic>/tasks/` or `LLM/tasks/`, and record accepted decisions under `topics/<topic>/memory/` or `LLM/memory/`.

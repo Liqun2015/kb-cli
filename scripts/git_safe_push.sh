@@ -11,11 +11,11 @@ commit_message="$*"
 
 echo
 echo "===== Current status ====="
-git status
+git --no-pager status
 
 echo
 echo "===== Unstaged diff: changes not yet added ====="
-git diff
+git --no-pager diff
 
 echo
 read -r -p "Review the changes above. Press Enter to continue with: git add ."
@@ -24,7 +24,7 @@ git add .
 
 echo
 echo "===== Staged diff: changes ready to commit ====="
-git diff --cached
+git --no-pager diff --cached
 
 echo
 read -r -p "Review the staged changes above. Press Enter to commit and push."

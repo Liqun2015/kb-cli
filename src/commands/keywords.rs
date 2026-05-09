@@ -12,19 +12,38 @@ pub struct KeywordsArgs {
     #[arg(value_name = "TERM", num_args = 0.., help = "Optional keyword or phrase to scan for. If omitted, kb-cli extracts simple candidate terms deterministically.")]
     pub terms: Vec<String>,
 
-    #[arg(long, value_name = "PATH", help = "Text file or directory to scan. Defaults to processing/text/.")]
+    #[arg(
+        long,
+        value_name = "PATH",
+        help = "Text file or directory to scan. Defaults to processing/text/."
+    )]
     pub path: Option<PathBuf>,
 
-    #[arg(long = "terms-file", value_name = "PATH", help = "Optional newline-separated keyword list. Relative paths are resolved under the knowledge base.")]
+    #[arg(
+        long = "terms-file",
+        value_name = "PATH",
+        help = "Optional newline-separated keyword list. Relative paths are resolved under the knowledge base."
+    )]
     pub terms_file: Option<PathBuf>,
 
-    #[arg(long = "min-count", default_value_t = 2, help = "Minimum count for auto-extracted terms. Explicit terms are reported when present at least once.")]
+    #[arg(
+        long = "min-count",
+        default_value_t = 2,
+        help = "Minimum count for auto-extracted terms. Explicit terms are reported when present at least once."
+    )]
     pub min_count: usize,
 
-    #[arg(long, default_value_t = 100, help = "Maximum number of keyword relation rows to print. Use 0 for no limit.")]
+    #[arg(
+        long,
+        default_value_t = 100,
+        help = "Maximum number of keyword relation rows to print. Use 0 for no limit."
+    )]
     pub limit: usize,
 
-    #[arg(long, help = "Preview keyword relation scan without writing processing/keywords/keywords_*.md")]
+    #[arg(
+        long,
+        help = "Preview keyword relation scan without writing processing/keywords/keywords_*.md"
+    )]
     pub dry_run: bool,
 
     #[arg(long, help = "Alias for --dry-run")]
@@ -142,7 +161,10 @@ fn run_keywords(kb_path: &Path, args: &KeywordsArgs) -> Result<KeywordsReport> {
     let all_relations = build_keyword_relations(&hits);
     let relation_count = all_relations.len();
     let returned_relations = if args.limit > 0 {
-        all_relations.into_iter().take(args.limit).collect::<Vec<_>>()
+        all_relations
+            .into_iter()
+            .take(args.limit)
+            .collect::<Vec<_>>()
     } else {
         all_relations
     };
@@ -160,7 +182,11 @@ fn run_keywords(kb_path: &Path, args: &KeywordsArgs) -> Result<KeywordsReport> {
         },
         terms_requested: selected_terms,
         files_scanned: documents.len(),
-        term_count: hits.iter().map(|hit| hit.term.clone()).collect::<BTreeSet<_>>().len(),
+        term_count: hits
+            .iter()
+            .map(|hit| hit.term.clone())
+            .collect::<BTreeSet<_>>()
+            .len(),
         hit_count: hits.len(),
         relation_count,
         returned_count: returned_relations.len(),
@@ -185,8 +211,13 @@ fn load_requested_terms(kb_path: &Path, args: &KeywordsArgs) -> Result<Vec<Strin
         } else {
             kb_path.join(path)
         };
-        let content = fs::read_to_string(&terms_path)
-            .map_err(|err| anyhow!("could not read terms file {}: {}", terms_path.display(), err))?;
+        let content = fs::read_to_string(&terms_path).map_err(|err| {
+            anyhow!(
+                "could not read terms file {}: {}",
+                terms_path.display(),
+                err
+            )
+        })?;
         for line in content.lines() {
             let trimmed = line.trim();
             if trimmed.is_empty() || trimmed.starts_with('#') {
@@ -410,7 +441,10 @@ fn render_markdown(report: &KeywordsReport) -> String {
     out.push_str(&format!("- Files scanned: `{}`\n", report.files_scanned));
     out.push_str(&format!("- Terms found: `{}`\n", report.term_count));
     out.push_str(&format!("- Hits: `{}`\n", report.hit_count));
-    out.push_str(&format!("- Candidate relations: `{}`\n\n", report.relation_count));
+    out.push_str(&format!(
+        "- Candidate relations: `{}`\n\n",
+        report.relation_count
+    ));
 
     out.push_str("## Terms\n\n");
     if report.terms_requested.is_empty() {
@@ -567,48 +601,11 @@ fn normalize_phrase(input: &str) -> String {
 
 fn stopwords() -> HashSet<&'static str> {
     [
-        "about",
-        "above",
-        "after",
-        "again",
-        "against",
-        "also",
-        "analysis",
-        "based",
-        "between",
-        "could",
-        "during",
-        "effect",
-        "effects",
-        "figure",
-        "from",
-        "have",
-        "into",
-        "journal",
-        "method",
-        "methods",
-        "model",
-        "models",
-        "paper",
-        "research",
-        "result",
-        "results",
-        "section",
-        "show",
-        "shown",
-        "study",
-        "system",
-        "systems",
-        "that",
-        "their",
-        "there",
-        "these",
-        "this",
-        "those",
-        "through",
-        "using",
-        "were",
-        "with",
+        "about", "above", "after", "again", "against", "also", "analysis", "based", "between",
+        "could", "during", "effect", "effects", "figure", "from", "have", "into", "journal",
+        "method", "methods", "model", "models", "paper", "research", "result", "results",
+        "section", "show", "shown", "study", "system", "systems", "that", "their", "there",
+        "these", "this", "those", "through", "using", "were", "with",
     ]
     .into_iter()
     .collect()

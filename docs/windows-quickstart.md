@@ -151,7 +151,7 @@ The current test suite covers `build-wiki` and `lint-static`, especially the sou
 - `--dry-run` previews write-like actions.
 - `--preview` is an alias for `--dry-run` on dry-run-capable commands.
 - `lint-static --no-report` checks without writing `outputs\reports\lint_static_*.md`.
-- Recursive ingest skips managed folders such as `raw`, `wiki`, `rules`, `processing`, `references`, `outputs`, `logs`, `.git`, `.obsidian`, `target`, and `node_modules`.
+- Recursive ingest skips managed folders such as `raw`, `wiki`, `rules`, `processing`, `references`, `topics`, `outputs`, `logs`, `.git`, `.obsidian`, `target`, and `node_modules`.
 
 ## 9. Troubleshooting
 

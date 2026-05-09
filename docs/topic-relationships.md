@@ -1,0 +1,214 @@
+# Topic Relationship Overlay Roadmap
+
+Current version: `v0.6.1`
+
+This document defines the first practical V2 step for LLM Wiki: keep global bibliographic index relations global, and store topic-specific interpretive relationships under `topics/<topic>/`.
+
+The goal is deliberately conservative:
+
+```text
+For a specific research topic, maintain a reviewable literature relationship overlay.
+Do not attempt to build a universal causal knowledge graph.
+Do not treat topic-level interpretations as global facts.
+```
+
+## Why this layer exists
+
+The global reference index answers questions that are true across all topics:
+
+```text
+Paper A cites Paper B.
+Paper A's reference list contains Paper B.
+A reference entry may match a local paper by DOI, title, author, journal, year, volume, or pages.
+```
+
+These global bibliographic relations live under:
+
+```text
+processing/refs/
+```
+
+They should remain shared by all topics.
+
+However, higher-level relations are usually topic-dependent:
+
+```text
+Paper A is a core source for this topic.
+Paper A improves Paper B for this topic.
+Paper A contradicts Paper B under this topic's assumptions.
+Paper A motivates Paper B in this research direction.
+Paper A and Paper B share a method, mechanism, or experimental logic that matters only for this topic.
+```
+
+Those relations should live under:
+
+```text
+topics/<topic>/
+```
+
+## Directory contract
+
+A topic directory should be named with a stable, lowercase, hyphen-separated slug:
+
+```text
+topics/thermal-metamaterials/
+topics/microfluidic-dialysis/
+topics/protein-crystallization/
+```
+
+Recommended topic layout:
+
+```text
+topics/<topic>/
+  README.md
+  scope.md
+  literature.md
+  importance.md
+  relations/
+    causal_relations.md
+    method_relations.md
+    evidence_relations.md
+    idea_relations.md
+  graph/
+    topic_graph.json
+    topic_graph.mmd
+  tasks/
+    pending.md
+  memory/
+    confirmed.md
+```
+
+Only the top-level `topics/` directory is created by `kb init` at this stage. Concrete topic subdirectories should be created deliberately by a Manager LLM or human maintainer when a topic becomes active.
+
+## File responsibilities
+
+### `README.md`
+
+Explains the topic in human-readable form.
+
+### `scope.md`
+
+Defines what belongs to this topic and what is out of scope. This file prevents Worker LLMs from expanding a bounded relationship task into a broad literature review.
+
+### `literature.md`
+
+Lists the local papers included in this topic overlay. It should refer back to global files under `raw/`, `processing/text/`, `processing/refs/`, and `wiki/` where possible.
+
+### `importance.md`
+
+Records topic-local importance. A paper may be globally important but peripheral to the topic, or globally obscure but central to the topic.
+
+Recommended fields:
+
+```text
+paper
+importance_level: core | important | background | peripheral | unknown
+importance_reason
+evidence
+needs_human_review
+```
+
+### `relations/`
+
+Stores topic-local interpretive relations.
+
+Recommended conservative relation types:
+
+```text
+cites        Global bibliographic relation; usually imported from processing/refs/
+same_topic   Shared topic or keyword-level relation
+uses_method  One paper uses or adapts a method from another
+improves     One paper improves, extends, or makes a method more practical
+contradicts  One paper contradicts, challenges, or gives a counterexample
+causal       A topic-specific causal or explanatory relation candidate
+unknown      A relation is suspected, but its type is not yet confirmed
+```
+
+Recommended status values:
+
+```text
+confirmed
+candidate
+ambiguous
+needs_human
+rejected
+```
+
+Important: topic-level causal, method, evidence, and idea relations should usually begin as `candidate` unless a human has confirmed them.
+
+### `graph/`
+
+Stores third-party graph exports for the topic. These should reuse the visual conventions in `docs/third-party-skills/`:
+
+```text
+confirmed relation        -> solid directed edge
+candidate / ambiguous     -> dashed directed edge
+missing / unresolved node -> hollow node
+needs human review        -> visible review marker
+```
+
+### `tasks/`
+
+Stores topic-specific handoff tasks for Worker LLMs or human reviewers. These should include a goal, requirements, evidence, file list, expected output, and uncertainty rules.
+
+### `memory/`
+
+Stores accepted topic-level decisions, especially confirmed relations, rejected candidates, and unresolved issues.
+
+## Manager LLM navigation rule
+
+When a question is about a specific research topic, the Manager LLM should use this order:
+
+```text
+1. Identify or create the topic slug.
+2. Inspect topics/<topic>/scope.md if it exists.
+3. Inspect topics/<topic>/literature.md and importance.md.
+4. Inspect topics/<topic>/relations/ for existing topic-specific relationship records.
+5. Use global commands such as kb query, kb grep, kb refs-index, kb refs-graph, kb keywords, and kb health for evidence.
+6. Create bounded tasks under topics/<topic>/tasks/ or LLM/tasks/ if Worker LLM or human review is needed.
+7. Record accepted decisions under topics/<topic>/memory/ and/or LLM/memory/.
+```
+
+Do not treat `processing/refs/` as the final location for topic-specific causal or scientific idea relations. `processing/refs/` is the global bibliographic layer.
+
+## Relationship layers
+
+```text
+Global layer:
+  processing/refs/
+  Bibliographic index relations that apply across all topics.
+
+Topic overlay layer:
+  topics/<topic>/
+  Topic-local importance, method, evidence, causal, and scientific idea relations.
+
+Wiki expression layer:
+  wiki/
+  Human-readable pages that summarize accepted knowledge and link to evidence.
+```
+
+## Non-goals for the first topic roadmap
+
+Do not build a universal causal graph.
+
+Do not automatically infer topic importance from a single score.
+
+Do not let a Worker LLM confirm bibliographic identity or high-impact causal claims without review.
+
+Do not move global citation/index relations out of `processing/refs/`.
+
+Do not make topic overlays replace `wiki/`; they provide relationship working records that may later be summarized into wiki pages.
+
+## Future command direction
+
+Potential future commands should be incremental:
+
+```text
+kb topic init <topic>        Create the recommended topic directory skeleton.
+kb topic list                List topic overlays.
+kb topic status <topic>      Summarize scope, literature, relations, tasks, and memory.
+kb topic graph <topic>       Export a topic-specific graph.
+kb topic tasks <topic>       Generate bounded Worker LLM / human review tasks for a topic.
+```
+
+These commands should remain deterministic. They should prepare evidence and tasks for Manager LLM and Worker LLM workflows, not silently make semantic conclusions.

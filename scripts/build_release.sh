@@ -31,4 +31,4 @@ echo
 echo "Build succeeded."
 echo "Executable: target/release/kb"
 echo
-echo "Note: cargo fmt may have modified source files. Review with git diff before committing."
+echo "Note: cargo fmt may have modified source files. Review with git --no-pager diff before committing."

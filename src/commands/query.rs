@@ -12,16 +12,27 @@ pub struct QueryArgs {
     #[arg(value_name = "QUERY", required = true, num_args = 1.., help = "Keyword query to search under wiki/. Multiple words are matched with AND semantics.")]
     pub query: Vec<String>,
 
-    #[arg(long, default_value_t = 10, help = "Maximum number of matching pages to show. Use 0 for no limit.")]
+    #[arg(
+        long,
+        default_value_t = 10,
+        help = "Maximum number of matching pages to show. Use 0 for no limit."
+    )]
     pub limit: usize,
 
-    #[arg(long, default_value_t = 2, help = "Maximum number of matching line snippets per page. Use 0 to hide snippets.")]
+    #[arg(
+        long,
+        default_value_t = 2,
+        help = "Maximum number of matching line snippets per page. Use 0 to hide snippets."
+    )]
     pub snippets: usize,
 
     #[arg(long, help = "Print a machine-readable JSON query report")]
     pub json: bool,
 
-    #[arg(long = "title-only", help = "Search only page titles and relative paths, not full Markdown bodies")]
+    #[arg(
+        long = "title-only",
+        help = "Search only page titles and relative paths, not full Markdown bodies"
+    )]
     pub title_only: bool,
 }
 
@@ -85,7 +96,9 @@ fn run_query(kb_path: &Path, args: &QueryArgs) -> Result<QueryReport> {
     let raw_query = args.query.join(" ");
     let terms = normalize_query_terms(&raw_query);
     if terms.is_empty() {
-        return Err(anyhow!("query must contain at least one non-empty search term"));
+        return Err(anyhow!(
+            "query must contain at least one non-empty search term"
+        ));
     }
 
     let pages = scan_wiki_pages(kb_path)?;
@@ -217,7 +230,8 @@ fn clean_query_term(input: &str) -> String {
     loop {
         let cleaned = value
             .trim_matches(|ch: char| {
-                matches!(ch, '"' | '\'' | '`') || (ch.is_ascii_punctuation() && ch != '-' && ch != '_')
+                matches!(ch, '"' | '\'' | '`')
+                    || (ch.is_ascii_punctuation() && ch != '-' && ch != '_')
             })
             .trim()
             .to_string();
@@ -278,7 +292,10 @@ fn extract_title(content: &str) -> Option<String> {
 }
 
 fn markdown_body_without_front_matter(content: &str) -> &str {
-    let Some(rest) = content.strip_prefix("---\n").or_else(|| content.strip_prefix("---\r\n")) else {
+    let Some(rest) = content
+        .strip_prefix("---\n")
+        .or_else(|| content.strip_prefix("---\r\n"))
+    else {
         return content;
     };
 

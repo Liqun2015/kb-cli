@@ -12,10 +12,18 @@ pub struct GrepArgs {
     #[arg(value_name = "PATTERN", help = "Text or regex pattern to search for")]
     pub pattern: String,
 
-    #[arg(long, value_name = "PATH", help = "Path relative to the knowledge base to search. Defaults to wiki/.")]
+    #[arg(
+        long,
+        value_name = "PATH",
+        help = "Path relative to the knowledge base to search. Defaults to wiki/."
+    )]
     pub path: Option<PathBuf>,
 
-    #[arg(long, default_value_t = 50, help = "Maximum number of matching lines to show. Use 0 for no limit.")]
+    #[arg(
+        long,
+        default_value_t = 50,
+        help = "Maximum number of matching lines to show. Use 0 for no limit."
+    )]
     pub limit: usize,
 
     #[arg(long, help = "Treat PATTERN as a regular expression")]
@@ -84,7 +92,10 @@ fn run_grep(kb_path: &Path, args: &GrepArgs) -> Result<GrepReport> {
     };
 
     if !search_root.exists() {
-        return Err(anyhow!("search path does not exist: {}", search_root.display()));
+        return Err(anyhow!(
+            "search path does not exist: {}",
+            search_root.display()
+        ));
     }
 
     let matcher = Matcher::new(&args.pattern, args.regex, args.case_sensitive)?;

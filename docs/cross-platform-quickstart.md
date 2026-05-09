@@ -90,7 +90,7 @@ kb --kb-path /path/to/literature-folder bootstrap --move
 kb --kb-path /path/to/literature-folder bootstrap --copy --recursive
 ```
 
-Recursive mode skips managed/generated folders including `raw`, `wiki`, `processing`, `references`, `outputs`, `logs`, `.git`, `.obsidian`, `target`, and `node_modules`.
+Recursive mode skips managed/generated folders including `raw`, `wiki`, `processing`, `references`, `topics`, `outputs`, `logs`, `.git`, `.obsidian`, `target`, and `node_modules`.
 
 ## 6. Manual workflow
 

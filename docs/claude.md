@@ -311,3 +311,10 @@ When editing `kb shell`, keep it as a strict whitelist command shell.
 - Unknown input should return safely with a short no-action message.
 
 The shell is valuable because it is safe and boring. Its job is to execute explicit structured commands, not to be clever.
+
+
+## Topic-specific relationship overlays
+
+Global bibliographic index relations stay under `processing/refs/`. Topic-specific causal, method, evidence, idea, and importance relations belong under `topics/<topic>/`.
+
+Do not ask a Worker LLM to store topic-level interpretation in `processing/refs/`. If a topic-specific relation is uncertain, create or update a bounded task under `topics/<topic>/tasks/` or `LLM/tasks/`, and record accepted decisions under `topics/<topic>/memory/` or `LLM/memory/`.

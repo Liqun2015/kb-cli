@@ -4,7 +4,7 @@
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.6.0.4`
+> Current version: `v0.6.1`
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, use `kb prepare` to generate reviewable task materials, maintain Markdown knowledge pages under `wiki/`, and constrain future human/AI maintainers through the `rules/` layer.
 
@@ -15,6 +15,7 @@ Before adding new commands, read the command map and lifecycle docs:
 ```text
 docs/commands.md          What each command does, what it reads/writes, and whether it may use LLM behavior
 docs/task-lifecycle.md    How LLM/tasks/ and LLM/memory/ should be used from pending work to completed memory
+docs/topic-relationships.md  How topic-specific relationship overlays under topics/<topic>/ should be organized
 ```
 
 The intended pattern is:
@@ -39,7 +40,25 @@ The relationship network has three levels:
 2. **Keyword / topic relations**: shared terms, methods, models, devices, and research topics. Rust-native commands should find candidates; the Manager LLM may judge meaning and delegate bounded work.
 3. **Scientific idea relations**: method transfer, mechanism similarity, theoretical inheritance, research gaps, and cross-domain inspiration. These should be handled through explicit Manager LLM / Worker LLM workflows with evidence and review.
 
-See `docs/literature-relationships.md` and `docs/third-party-skills/`.
+See `docs/literature-relationships.md`, `docs/topic-relationships.md`, and `docs/third-party-skills/`.
+
+## Topic-specific relationship overlays
+
+Global bibliographic index relations are shared by all topics and remain under:
+
+```text
+processing/refs/
+```
+
+Topic-specific interpretive relations should be stored under:
+
+```text
+topics/<topic>/
+```
+
+This distinction is important. A citation relation such as `Paper A cites Paper B` is global. But relations such as `Paper A motivates Paper B for thermal metamaterials`, `Paper A improves Paper B under this topic`, or `Paper A is core literature for this topic` are topic-dependent. They should be stored in the corresponding topic overlay rather than mixed into the global reference index.
+
+The first V2 goal is therefore conservative: maintain reviewable topic-centered literature relationship overlays, not a universal causal knowledge graph. See `docs/topic-relationships.md`.
 
 ## How does the LLM maintain Markdown pages?
 
@@ -62,9 +81,10 @@ The layers remain separated:
 1. `raw/` stores original source materials. These files are read-only records.
 2. `processing/` stores deterministic extraction, metadata, reference hints, and candidate index relations.
 3. `wiki/` stores reviewable Markdown knowledge pages and relationship explanations.
-4. `LLM/tasks/` stores bounded work orders produced by deterministic commands for Manager LLM delegation.
-5. `LLM/memory/` stores completed-task records for later inspection.
-6. `rules/` stores the operating contract for human, Manager LLM, and Worker LLM maintainers.
+4. `topics/` stores topic-specific literature relationship overlays such as causal, method, evidence, idea, and topic-local importance records.
+5. `LLM/tasks/` stores bounded work orders produced by deterministic commands for Manager LLM delegation.
+6. `LLM/memory/` stores completed-task records for later inspection.
+7. `rules/` stores the operating contract for human, Manager LLM, and Worker LLM maintainers.
 
 The intended maintenance loop is:
 
@@ -275,6 +295,7 @@ docs/memory.md                  Completed-task memory records under LLM/memory/
 docs/llm-command-guide.md       Practical guide for LLMs using structured kb commands
 docs/llm-hierarchy.md           Manager LLM / Worker LLM role hierarchy
 docs/literature-relationships.md LLM Wiki reference-relationship core principle
+docs/topic-relationships.md     Topic-specific literature relationship overlay roadmap
 docs/third-party-skills/      Third-party graph visualization skills and integration guidance
 docs/llm-agent-skills.md        Deferred LLM/agent skill boundaries for PDF and reference work
 docs/command-classification.md  Command categories and LLM/OCR boundary rules
@@ -284,7 +305,25 @@ docs/shell.md                   Deterministic `kb shell` usage, whitelist behavi
 
 ## Current Scope
 
-This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, a manifest registry under `processing/manifest.json`, static linting, and deterministic keyword search over `wiki/`, WikiLink scanning, Rust-native line-level grep, best-effort text extraction into `processing/text/`, reference-hint scanning over extracted text, bibliographic index relation candidate building, deterministic refs graph export, third-party graph visualization skill guidance, a command overview map, a task lifecycle guide, deferred task handoff reports under `LLM/tasks/`, and completed-task memory records under `LLM/memory/`. It still does **not** provide full RAG, vector search, embeddings, OCR, hidden LLM cleanup, or autonomous LLM/wiki preparation. `kb prepare` currently plans and documents the prepare work; it does not perform LLM edits by itself.
+This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, a manifest registry under `processing/manifest.json`, static linting, and deterministic keyword search over `wiki/`, WikiLink scanning, Rust-native line-level grep, best-effort text extraction into `processing/text/`, reference-hint scanning over extracted text, bibliographic index relation candidate building, deterministic refs graph export, third-party graph visualization skill guidance, a command overview map, a task lifecycle guide, deferred task handoff reports under `LLM/tasks/`, and completed-task memory records under `LLM/memory/`, and the `topics/` directory plus topic-relationship roadmap for future topic-specific overlays. It still does **not** provide full RAG, vector search, embeddings, OCR, hidden LLM cleanup, or autonomous LLM/wiki preparation. `kb prepare` currently plans and documents the prepare work; it does not perform LLM edits by itself.
+
+
+## What Changed in v0.6.1
+
+`v0.6.1` defines the topic relationship overlay roadmap. It keeps global bibliographic index relations under `processing/refs/`, while reserving `topics/<topic>/` for topic-specific causal, method, evidence, idea, and topic-local importance relations.
+
+Main changes:
+
+- Added `docs/topic-relationships.md`.
+- `kb init` now creates a top-level `topics/` directory.
+- Recursive ingest treats `topics/` as a managed directory and skips it.
+- README now distinguishes global bibliographic relations from topic-specific interpretive relations.
+- The V2 target is intentionally conservative: topic-centered literature relationship overlays, not a universal causal knowledge graph.
+- No LLM call, causal inference engine, vector search, automatic topic graph builder, or autonomous Wiki editing was added.
+
+## What Changed in v0.6.0.5
+
+`v0.6.0.5` updates the safe Git helper scripts so diff review does not open Git's pager. The scripts now use `git --no-pager status`, `git --no-pager diff`, and `git --no-pager diff --cached`, which prints the review output continuously instead of requiring page-by-page key presses.
 
 ## What Changed in v0.6.0.1
 
@@ -940,7 +979,7 @@ other ordinary files         -> raw/other
 `ingest --recursive` skips generated/project folders such as:
 
 ```text
-raw, wiki, processing, references, outputs, logs, .git, .obsidian, target, node_modules
+raw, wiki, processing, references, topics, outputs, logs, .git, .obsidian, target, node_modules
 ```
 
 It also skips common executable/script/config files such as `.bat`, `.cmd`, `.ps1`, `.sh`, `.exe`, `.dll`, `README.md`, `Cargo.toml`, and `.gitignore`.

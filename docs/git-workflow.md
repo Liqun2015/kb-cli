@@ -7,13 +7,13 @@ The preferred workflow is:
 ```text
 edit files
   ↓
-git status
+git --no-pager status
   ↓
-git diff
+git --no-pager diff
   ↓
 git add .
   ↓
-git diff --cached
+git --no-pager diff --cached
   ↓
 git commit -m "clear message"
   ↓
@@ -32,8 +32,8 @@ scripts\git_safe_push.bat "v0.5.10 literature relationship core"
 
 The script pauses twice:
 
-1. before `git add .`, after showing `git diff`;
-2. before `git commit` and `git push`, after showing `git diff --cached`.
+1. before `git add .`, after showing `git --no-pager diff`;
+2. before `git commit` and `git push`, after showing `git --no-pager diff --cached`.
 
 ## macOS / Linux helper
 
@@ -51,13 +51,18 @@ The Unix helper follows the same two-review process as the Windows helper.
 If you do not want to use the helper scripts, run:
 
 ```bash
-git status
-git diff
+git --no-pager status
+git --no-pager diff
 git add .
-git diff --cached
+git --no-pager diff --cached
 git commit -m "your commit message"
 git push
 ```
+
+
+## Pager behavior
+
+The helper scripts intentionally use `git --no-pager ...` for review output. This avoids Git opening `less` or another pager that requires page-by-page key presses. If you run commands manually and want the same behavior, use `git --no-pager diff` and `git --no-pager diff --cached`.
 
 ## What not to do
 

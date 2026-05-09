@@ -10,19 +10,28 @@ use walkdir::WalkDir;
 
 #[derive(Debug, Clone, Args)]
 pub struct LintStaticArgs {
-    #[arg(long, help = "Preview lint results without writing outputs/reports/lint_static_*.md")]
+    #[arg(
+        long,
+        help = "Preview lint results without writing outputs/reports/lint_static_*.md"
+    )]
     pub dry_run: bool,
 
     #[arg(long, help = "Alias for --dry-run.")]
     pub preview: bool,
 
-    #[arg(long = "no-report", help = "Alias for --dry-run in lint-static: check only, do not write a report file.")]
+    #[arg(
+        long = "no-report",
+        help = "Alias for --dry-run in lint-static: check only, do not write a report file."
+    )]
     pub no_report: bool,
 
     #[arg(long, help = "Print a machine-readable JSON lint summary")]
     pub json: bool,
 
-    #[arg(long, help = "Return a non-zero exit code when static lint issues are found")]
+    #[arg(
+        long,
+        help = "Return a non-zero exit code when static lint issues are found"
+    )]
     pub strict: bool,
 }
 
@@ -124,7 +133,10 @@ fn run_lint(kb_path: &Path) -> Result<LintStaticReport> {
     for page in &pages {
         incoming_counts.entry(page.rel_path.clone()).or_insert(0);
         for key in page_lookup_keys(page) {
-            page_keys.entry(key).or_default().insert(page.rel_path.clone());
+            page_keys
+                .entry(key)
+                .or_default()
+                .insert(page.rel_path.clone());
         }
         titles
             .entry(normalize_title(&page.title))
@@ -186,7 +198,12 @@ fn run_lint(kb_path: &Path) -> Result<LintStaticReport> {
     let mut empty_pages = pages
         .iter()
         .filter(|page| !is_orphan_exempt(&page.rel_path))
-        .filter(|page| markdown_body_without_front_matter(&page.content).trim().len() < 20)
+        .filter(|page| {
+            markdown_body_without_front_matter(&page.content)
+                .trim()
+                .len()
+                < 20
+        })
         .map(|page| page.rel_path.clone())
         .collect::<Vec<_>>();
     empty_pages.sort();
@@ -322,7 +339,10 @@ fn extract_title(content: &str) -> Option<String> {
 }
 
 fn markdown_body_without_front_matter(content: &str) -> &str {
-    let Some(rest) = content.strip_prefix("---\n").or_else(|| content.strip_prefix("---\r\n")) else {
+    let Some(rest) = content
+        .strip_prefix("---\n")
+        .or_else(|| content.strip_prefix("---\r\n"))
+    else {
         return content;
     };
 
@@ -354,7 +374,9 @@ fn source_refs_from_markdown(content: &str) -> Vec<String> {
 }
 
 fn extract_front_matter(content: &str) -> Option<&str> {
-    let content = content.strip_prefix("---\n").or_else(|| content.strip_prefix("---\r\n"))?;
+    let content = content
+        .strip_prefix("---\n")
+        .or_else(|| content.strip_prefix("---\r\n"))?;
     let end_lf = content.find("\n---\n");
     let end_crlf = content.find("\r\n---\r\n");
 
@@ -402,9 +424,16 @@ fn parse_inline_values(input: &str) -> Vec<String> {
     let trimmed = input.trim();
     if trimmed.starts_with('[') && trimmed.ends_with(']') {
         let inner = &trimmed[1..trimmed.len() - 1];
-        return inner.split(',').map(clean_ref).filter(|s| !s.is_empty()).collect();
+        return inner
+            .split(',')
+            .map(clean_ref)
+            .filter(|s| !s.is_empty())
+            .collect();
     }
-    vec![clean_ref(trimmed)].into_iter().filter(|s| !s.is_empty()).collect()
+    vec![clean_ref(trimmed)]
+        .into_iter()
+        .filter(|s| !s.is_empty())
+        .collect()
 }
 
 fn clean_ref(input: &str) -> String {
@@ -470,7 +499,10 @@ fn print_report(report: &LintStaticReport) {
     println!("  wiki links found     : {}", report.wiki_links_found);
     println!("  broken links         : {}", report.broken_links.len());
     println!("  orphan pages         : {}", report.orphan_pages.len());
-    println!("  missing source pages : {}", report.missing_source_pages.len());
+    println!(
+        "  missing source pages : {}",
+        report.missing_source_pages.len()
+    );
     println!("  empty pages          : {}", report.empty_pages.len());
     println!("  duplicate titles     : {}", report.duplicate_titles.len());
 
@@ -512,15 +544,27 @@ fn render_markdown_report(report: &LintStaticReport) -> String {
     out.push_str("## Summary\n\n");
     out.push_str(&format!("- Generated at: `{}`\n", report.generated_at));
     out.push_str(&format!("- Pages scanned: `{}`\n", report.pages_scanned));
-    out.push_str(&format!("- Wiki links found: `{}`\n", report.wiki_links_found));
-    out.push_str(&format!("- Broken links: `{}`\n", report.broken_links.len()));
-    out.push_str(&format!("- Orphan pages: `{}`\n", report.orphan_pages.len()));
+    out.push_str(&format!(
+        "- Wiki links found: `{}`\n",
+        report.wiki_links_found
+    ));
+    out.push_str(&format!(
+        "- Broken links: `{}`\n",
+        report.broken_links.len()
+    ));
+    out.push_str(&format!(
+        "- Orphan pages: `{}`\n",
+        report.orphan_pages.len()
+    ));
     out.push_str(&format!(
         "- Pages missing source front matter: `{}`\n",
         report.missing_source_pages.len()
     ));
     out.push_str(&format!("- Empty pages: `{}`\n", report.empty_pages.len()));
-    out.push_str(&format!("- Duplicate title groups: `{}`\n\n", report.duplicate_titles.len()));
+    out.push_str(&format!(
+        "- Duplicate title groups: `{}`\n\n",
+        report.duplicate_titles.len()
+    ));
 
     out.push_str("## Broken WikiLinks\n\n");
     if report.broken_links.is_empty() {
@@ -677,7 +721,10 @@ status: compiled
         let report = run_lint(&kb_path)?;
         assert_eq!(report.broken_links.len(), 1);
         assert_eq!(report.broken_links[0].target, "Missing Page");
-        assert_eq!(report.missing_source_pages, vec!["wiki/papers/no_source.md".to_string()]);
+        assert_eq!(
+            report.missing_source_pages,
+            vec!["wiki/papers/no_source.md".to_string()]
+        );
 
         let _ = fs::remove_dir_all(&kb_path);
         Ok(())

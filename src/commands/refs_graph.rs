@@ -179,7 +179,8 @@ fn run_refs_graph(kb_path: &Path, args: &RefsGraphArgs) -> Result<RefsGraphRepor
 
         let targets = relation_targets(relation);
         for target in targets {
-            let (target_id, target_label, target_path, node_type, node_status, target_style) = target;
+            let (target_id, target_label, target_path, node_type, node_status, target_style) =
+                target;
             ensure_target_node(
                 &mut nodes_by_id,
                 &target_id,
@@ -387,16 +388,14 @@ fn relation_targets(
             relation.source_line
         );
         let label = format!("Unresolved reference at line {}", relation.source_line);
-        return vec![
-            (
-                id,
-                label,
-                None,
-                "unresolved_reference".to_string(),
-                "missing".to_string(),
-                "hollow".to_string(),
-            ),
-        ];
+        return vec![(
+            id,
+            label,
+            None,
+            "unresolved_reference".to_string(),
+            "missing".to_string(),
+            "hollow".to_string(),
+        )];
     }
 
     let mut targets = Vec::new();
@@ -430,7 +429,11 @@ fn relation_targets(
     }
 }
 
-fn ensure_source_node(nodes: &mut BTreeMap<String, GraphNode>, id: &str, relation: &ParsedRelation) {
+fn ensure_source_node(
+    nodes: &mut BTreeMap<String, GraphNode>,
+    id: &str,
+    relation: &ParsedRelation,
+) {
     nodes.entry(id.to_string()).or_insert_with(|| {
         let mut visual = BTreeMap::new();
         visual.insert("node_style".to_string(), "filled".to_string());
@@ -680,7 +683,13 @@ fn print_report(report: &RefsGraphReport) {
 
 fn node_id_from_path(path: &str) -> String {
     path.chars()
-        .map(|ch| if ch.is_alphanumeric() { ch.to_ascii_lowercase() } else { '_' })
+        .map(|ch| {
+            if ch.is_alphanumeric() {
+                ch.to_ascii_lowercase()
+            } else {
+                '_'
+            }
+        })
         .collect::<String>()
         .split('_')
         .filter(|part| !part.is_empty())
@@ -711,7 +720,8 @@ fn escape_mermaid_label(value: &str) -> String {
 }
 
 fn escape_dot(value: &str) -> String {
-    value.replace('\\', "\\\\")
+    value
+        .replace('\\', "\\\\")
         .replace('"', "\\\"")
         .replace('\n', " ")
 }

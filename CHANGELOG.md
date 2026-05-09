@@ -1,3 +1,21 @@
+## v0.6.1 - Topic relationship overlay roadmap
+
+- Added `docs/topic-relationships.md` as the roadmap for topic-specific literature relationship overlays.
+- Clarified that global bibliographic index relations remain under `processing/refs/` and apply across all topics.
+- Reserved `topics/<topic>/` for topic-local causal, method, evidence, idea, and importance records.
+- `kb init` now creates the top-level `topics/` directory.
+- Recursive ingest now treats `topics/` as a managed directory and skips it.
+- Updated README and LLM guidance docs so Manager LLMs know to inspect `topics/<topic>/` for topic-specific relationship work.
+- The V2 direction is intentionally conservative: maintain reviewable topic-centered relationship overlays, not a universal causal knowledge graph.
+- No LLM call, causal inference engine, vector search, automatic topic graph builder, or Wiki auto-editing was added.
+
+## v0.6.0.5 - Safe Git helper no-pager review
+
+- Updated `scripts/git_safe_push.bat` and `scripts/git_safe_push.sh` to use `git --no-pager status`, `git --no-pager diff`, and `git --no-pager diff --cached`.
+- This prevents Git diff review from opening the pager and requiring page-by-page key presses.
+- Updated `scripts/README.md` and README notes to document the safer continuous-output review behavior.
+- No command behavior, LLM call, shell parser behavior, Wiki editing, or knowledge-base workflow logic was changed.
+
 ## v0.6.0.4 - Shell Windows path parsing test fix
 
 - Fixed `split_shell_words` so quoted Windows paths preserve backslashes, for example `use "D:\github\llm-wiki\quantum"`.
