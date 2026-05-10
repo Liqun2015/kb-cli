@@ -1,589 +1,495 @@
-## v0.6.7.1 - README opening notes cleanup
-
-- Reorganized the opening notes in `README.md` into a clear `Recent version notes` list.
-- Kept the current version line separate from the version notes.
-- Moved the strict shell safety note into the same version-notes block so the README opening has a cleaner three-part structure: project description, current version, and recent notes.
-- No command behavior, topic behavior, HTML viewer behavior, or LLM behavior was changed.
-
-## v0.6.7 - topic-local importance candidate ranking
-
-- Added `kb topic rank <topic>` to generate deterministic, topic-specific literature importance candidates.
-- The command reads `topics/<topic>/literature.md`, counts supporting mentions inside the topic workspace, and optionally uses existing `processing/refs/refs_index_*.md` mentions as weak evidence.
-- Reports are written under `topics/<topic>/importance/importance_candidates_YYYYMMDD_HHMMSS.md`, not under global `processing/` directories.
-- Added JSON and dry-run modes.
-- Kept the boundary conservative: no LLM calls, no final importance decisions, no citation identity guarantees, and no topic-causality inference.
-- Fixed a topic status source typo introduced in the previous packaging so `kb topic status` can compile cleanly.
-
-## v0.6.6.1 - kb view title and subtitle polish
-
-- Updated the static HTML viewer header so the main title uses the current knowledge-base directory name, for example `quantum`.
-- Replaced the viewer subtitle with: `LLM Wiki of your knowledge base for the purpose of swift and high quality research`.
-- Kept `kb view` as a static, read-only HTML viewer; no local command execution, browser service, or LLM call was added.
-
-## v0.6.6 - topic list and status checks
-
-- Added `kb topic list` to enumerate topic-specific literature relationship workspaces under `topics/`.
-- Added `kb topic status <topic>` to check whether a topic workspace has the expected directories and template files.
-- Added `--json` output for both `topic list` and `topic status`; added `--strict` for status checks.
-- Kept the behavior deterministic: no LLM calls, no topic relation inference, no importance ranking, and no file repair behavior.
-- Updated topic, command-map, shell, Manager/Worker workflow, and release documentation.
-
-## v0.6.5.1 - README shell safety note placement
-
-- Moved the `v0.6.0.1` strict shell safety note to immediately before the `Command map and task lifecycle` section in `README.md`.
-- Kept the meaning unchanged: `kb shell` is a strict whitelist command shell; unknown input is a safe no-op and never triggers intent guessing, natural-language interpretation, or LLM calls.
-- No command behavior, HTML viewer behavior, topic workspace behavior, or LLM behavior was changed.
-
-## v0.6.5 - topic init workspace skeleton
-
-- Added `kb topic init <topic>` to create a topic-specific literature relationship workspace under `topics/<topic>/`.
-- The generated workspace includes `scope.md`, `literature.md`, topic-local `importance/`, `relations/`, `review/`, `graph/`, `tasks/`, and `memory/` folders.
-- Added `docs/topic.md` as the command reference for topic workspace initialization.
-- Kept the global bibliographic layer unchanged: `processing/refs/` remains the place for topic-independent citation/index relations.
-- Topic-local importance, causal, method, evidence, and scientific idea relations stay under `topics/<topic>/`.
-- No LLM calls, no topic graph inference, no automatic importance ranking, and no Wiki auto-editing were added.
-
-## v0.6.4.3 - kb view opens by default
-
-## v0.6.4.4 - Windows view opener fix
-
-- Changed `kb view` Windows browser opening from `cmd /C start` to `rundll32.exe url.dll,FileProtocolHandler`.
-- This avoids the `拒绝访问` / Access denied failure seen on some Windows file associations while keeping `kb view --no-open` unchanged.
-
-- Changed `kb view` to generate `outputs/html/index.html` and open it with the system default browser by default.
-- Added `kb view --no-open` for the previous generate-only behavior.
-- Kept the viewer static and read-only: no local server, no LLM call, no browser-to-shell bridge, and no file modification behavior was added.
-
-## v0.6.4.2 - kb view sidebar command panel polish
-
-- Adjusted the static HTML viewer layout so the left-sidebar `kb-view>` command panel stays anchored at the bottom of the sidebar.
-- Increased the command panel height and input padding to make the display-only command window easier to use.
-- Kept `kb view` static and read-only: no local server, no LLM call, no shell bridge, and no file modification behavior was added.
-
-## v0.6.4.1 - kb view --open
-
-- Added `kb view --open` to generate `outputs/html/index.html` and open it with the system default browser.
-- `kb view` still only generates the static HTML file.
-- `kb view --dry-run` previews the output path and does not open a browser.
-- The viewer remains static and read-only: no local server, no LLM call, no shell bridge, and no file modification behavior was added.
-
-## v0.6.4 - kb view static HTML viewer
-
-- Added `kb view` to generate a static local HTML viewer at `outputs/html/index.html`.
-- The viewer follows the uploaded sidebar/main/tab layout pattern: left sidebar navigation plus a right-side tabbed content area.
-- The sidebar command box is `kb-view>` style display navigation only. It supports page navigation and visible-page search, but does not execute local `kb` commands, call LLMs, or modify files.
-- The viewer renders latest generated Markdown/JSON artifacts from `wiki/`, `processing/refs/`, `processing/keywords/`, `outputs/reports/`, `LLM/tasks/`, `LLM/memory/`, and `topics/`.
-- `kb init` now creates `outputs/html/`.
-- Added `docs/view.md` and updated command and release documentation.
-- No server, browser backend, LLM call, command execution bridge, OCR, vector search, or Wiki auto-editing was added.
-
-## v0.6.3.1 - Graph visual node-size protocol
-
-- Added a visual protocol rule: literature importance is represented by node size.
-- Updated `kb refs-graph` JSON node visual fields to include `node_size` and `node_size_value`.
-- Bumped the graph export schema marker to `refs-graph.v2.1`.
-- Kept `refs-graph` conservative: global bibliographic graphs still output `unknown` / `default` importance placeholders and do not rank literature.
-- Updated third-party skill docs so graph viewers can render core, important, background, peripheral, and unknown literature with different node sizes.
-- Reaffirmed that future `kb rank` or topic-local importance files should provide real importance values; `refs-graph` only preserves the interface.
-- No LLM call, automatic importance ranking, topic causality inference, or Wiki auto-editing was added.
-
-## v0.6.3 - refs-graph V2 export fields
-
-- Upgraded `kb refs-graph` JSON output to `schema_version: refs-graph.v2.0`.
-- Added graph-level fields for `graph_kind`, `relation_layer`, and `direction_model`.
-- Added directed edge fields: `id`, `direction`, `relation_layer`, `relation_type`, `relation_label`, and `human_final_guarantee_required`.
-- Added node weight placeholders so graph consumers can distinguish current unknown importance from future ranking output.
-- Extended visual style hints with `edge_arrow`, `target_node_marker`, and optional `review_marker`.
-- Kept the scope conservative: this is still a global bibliographic index graph, not a topic-specific causal graph and not an LLM inference engine.
-- No LLM call, no topic graph generation, no automatic ranking, and no automatic relation confirmation were added.
-
-## v0.6.2 - Topic relation and importance schema foundation
-
-- Added `docs/topic-relation-schema.md` for topic-local directed relation records.
-- Added `docs/literature-importance-schema.md` for global vs topic-local importance.
-- Added `docs/topic-v2-roadmap.md` to keep the V2 direction conservative and incremental.
-- Added `docs/third-party-skills/topic-graph-schema.md` for topic graph visualizers and skills.
-- Clarified that global bibliographic index relations remain in `processing/refs/`, while topic-specific causal, method, evidence, idea, and importance records belong under `topics/<topic>/`.
-- No LLM calls, no causal inference engine, no automatic importance ranking, and no automatic topic graph generation were added.
-
-## v0.6.1 - Topic relationship overlay roadmap
-
-- Added `docs/topic-relationships.md` as the roadmap for topic-specific literature relationship overlays.
-- Clarified that global bibliographic index relations remain under `processing/refs/` and apply across all topics.
-- Reserved `topics/<topic>/` for topic-local causal, method, evidence, idea, and importance records.
-- `kb init` now creates the top-level `topics/` directory.
-- Recursive ingest now treats `topics/` as a managed directory and skips it.
-- Updated README and LLM guidance docs so Manager LLMs know to inspect `topics/<topic>/` for topic-specific relationship work.
-- The V2 direction is intentionally conservative: maintain reviewable topic-centered relationship overlays, not a universal causal knowledge graph.
-- No LLM call, causal inference engine, vector search, automatic topic graph builder, or Wiki auto-editing was added.
-
-## v0.6.0.5 - Safe Git helper no-pager review
-
-- Updated `scripts/git_safe_push.bat` and `scripts/git_safe_push.sh` to use `git --no-pager status`, `git --no-pager diff`, and `git --no-pager diff --cached`.
-- This prevents Git diff review from opening the pager and requiring page-by-page key presses.
-- Updated `scripts/README.md` and README notes to document the safer continuous-output review behavior.
-- No command behavior, LLM call, shell parser behavior, Wiki editing, or knowledge-base workflow logic was changed.
-
-## v0.6.0.4 - Shell Windows path parsing test fix
-
-- Fixed `split_shell_words` so quoted Windows paths preserve backslashes, for example `use "D:\github\llm-wiki\quantum"`.
-- The strict shell remains a whitelist command shell: unknown input is still a safe no-op and is not interpreted as natural language.
-- No LLM call, no shell command execution, no command behavior expansion, and no Wiki auto-editing was added.
-
-## v0.6.0.1 - Strict shell safety rule
-
-## v0.6.0.3 - links compile fix
-
-- Fixed a `kb links` compile error caused by an outdated local variable name in the link scan report summary.
-- `pages_scanned` now uses the actual scanned Markdown page collection.
-- No command behavior changes, no LLM calls, no new features.
-
-
-## v0.6.0.2 - Cargo lockfile compatibility fix
-
-- Removed the stale generated `Cargo.lock` from the distributed source package.
-- This avoids a Windows dependency resolution failure where the lockfile pinned `windows-strings` to `0.5.2`, while the available crates.io index resolves `windows-strings` to `0.5.1`.
-- `cargo check` / `cargo build` will regenerate a fresh local `Cargo.lock` on the developer machine.
-- After a successful local build, review and commit the generated `Cargo.lock` if this project is being managed as an application repository.
-
-- Tightened `kb shell` into a strict whitelist command shell.
-- Unknown input now returns safely with a no-action message instead of being delegated as arbitrary batch input.
-- Added shell whitelist tests for known structured commands and rejected free-form text.
-- Updated `docs/shell.md`, `docs/cli-shell-principle.md`, `docs/commands.md`, `docs/agent-api.md`, and `docs/claude.md` with the final-else safe-return rule.
-- Reaffirmed that `kb shell` is not an LLM chat interface and must not guess Manager LLM intent.
-
-## v0.6.0 - Deterministic shell skeleton
-
-- Added `kb shell` as the deterministic interactive command shell.
-- Kept `kb repl` only as a compatibility alias; documentation should prefer `kb shell`.
-- Shell session commands: `use`, `pwd`, `clear`, `help`, and `exit`.
-- Ordinary shell input is delegated to the same batch-mode `kb` executable with the current `--kb-path`, preserving one-to-one command semantics.
-- Added `docs/shell.md` and updated CLI/shell/LLM boundary documentation.
-- Reinforced that `kb>` is not an LLM chat interface and must not implicitly interpret free-form natural language.
-
-## v0.5.13 - Health / relation-health skeleton
-
-- Added `kb health` as a deterministic LLM Wiki relationship-health dashboard.
-- The command summarizes raw papers, extracted text files, wiki pages, refs reports, refs-index reports, refs-graph exports, keyword reports, task files, memory files, lint reports, and third-party skill docs.
-- Reports are written under `outputs/reports/health_*.md` unless `--dry-run` / `--preview` is used.
-- Added `docs/health.md`.
-- `kb health` emits deferred task hints for missing text extraction, uncertain bibliographic index review, keyword/topic review, and initial wiki drafting.
-- The command does not call an LLM, run OCR, confirm bibliographic identity, repair files, create wiki pages, or decide scientific idea relations.
-
-## v0.5.12 - Keywords skeleton
-
-- Added `kb keywords` as a deterministic keyword/topic co-occurrence scanner over extracted text.
-- Added `docs/keywords.md`.
-- `kb keywords` scans `processing/text/` by default and can use explicit terms, a terms file, or deterministic auto-extracted candidate terms.
-- Reports are written under `processing/keywords/keywords_*.md` unless `--dry-run` / `--preview` is used.
-- `kb init` now creates `processing/keywords/`.
-- `kb tasks` now detects keyword/topic candidate reports and prepares a Keyword Topic Relation Worker handoff.
-- The command emits keyword/topic relations as candidates only; shared terms are evidence, not confirmed scientific idea relations.
-- No LLM call, vector search, semantic idea inference, topic merge, or autonomous Wiki rewrite was added.
-
-## v0.5.10.4 - README Manager/Worker maintenance loop clarification
-
-- Updated the README section "How does the LLM maintain Markdown pages?" to show the intended hierarchy: Manager LLM -> deterministic kb-cli commands -> Worker LLM / human reviewer -> Git review -> wiki and LLM/memory records.
-- Clarified that Manager LLM sessions should scout with `kb query`, `kb grep`, `kb extract-text`, `kb refs`, `kb refs-index`, `kb links`, `kb lint-static`, and `kb tasks` before delegating semantic work.
-- Clarified that Worker LLMs receive bounded tasks with goal, requirements, file list, evidence lines, expected output, and review rules.
-- Reaffirmed that humans remain the final guarantee for uncertain bibliographic index relations.
-- No command behavior, LLM call, OCR, vector search, autonomous worker execution, or Wiki auto-editing was added.
-
-## v0.5.10.3 - Documentation convergence and command overview
-
-- Added `docs/commands.md` as the central command map for humans, Manager LLM sessions, Worker LLM tasks, and future third-party skills.
-- Added `docs/task-lifecycle.md` to define the `LLM/tasks/` to `LLM/memory/` handoff and review lifecycle.
-- Documented command categories, inputs, outputs, LLM boundaries, and deferred-work expectations.
-- Clarified task statuses such as `pending`, `assigned`, `in_progress`, `needs_human`, `blocked`, `completed`, and `rejected`.
-- Kept the build-helper improvement: `scripts/build_release.bat` and `scripts/build_release.sh` now run `cargo fmt` before `cargo fmt --check`.
-- Updated script documentation, README navigation, and release checklist guidance.
-
-## v0.5.10.2 - Third-party skills guidance
-
-- Renamed `docs/third-party-tools/` to `docs/third-party-skills/` to make the directory usable as a reusable skill specification area, not merely a tool-documentation folder.
-- Added `claude-code-generation-skill.md`, a direct promptable skill spec for Claude Code or similar coding agents to generate graph viewers, importers, exporters, or review dashboards.
-- Kept the graph certainty protocol: confirmed relations render as solid edges, uncertain relations as dashed edges, and unresolved references as hollow nodes.
-- Preserved the evidence and human-review requirements for bibliographic index relations.
-- No new graph exporter is implemented in this release. Future `refs-graph` work should follow these skills.
-
 # Changelog
 
-## v0.5.10 - Bibliographic index relation candidates
+All notable changes to `kb-cli` are recorded here.
 
-- Added `kb refs-index` as a deterministic bibliographic index relation candidate builder.
-- The command scans extracted text under `processing/text/` by default and matches reference entries against local papers in `raw/papers/`.
+This project uses small, review-first releases. Many releases are documentation, workflow, or boundary-stabilization releases rather than feature-heavy releases.
+
+## v0.6.9
+
+README cleanup and changelog split.
+
+Main changes:
+
+- Turned `README.md` into a concise project entry page.
+- Moved long historical release notes into `CHANGELOG.md`.
+- Moved the detailed Manager LLM / Worker LLM maintenance workflow into `docs/llm-maintenance.md`.
+- Kept the project positioning from `v0.6.8` while reducing README length and duplication.
+- No core CLI behavior is changed in this version.
+
+## v0.6.8
+
+README project-positioning update.
+
+Main changes:
+
+- Clarified the purpose of `kb-cli` as a small Rust CLI for building, analyzing, and maintaining a local Markdown-based LLM Wiki.
+- Documented the relationship between the Karpathy-style local Markdown knowledge-base workflow and the later topic-local importance ranking workflow.
+- Emphasized local source materials, reviewable generated knowledge, and traceable AI-assisted maintenance.
+- No core CLI behavior was changed.
+
+## v0.6.7
+
+`kb topic rank <topic>` now generates deterministic topic-local literature importance candidates under:
+
+```text
+topics/<topic>/importance/
+```
+
+These candidates are intended for later human review rather than automatic semantic judgment.
+
+## v0.6.6.1
+
+`kb view` now uses the knowledge-base directory name as the HTML viewer title and updates the viewer subtitle to better reflect the research-oriented purpose of the LLM Wiki.
+
+## v0.6.6
+
+`kb topic list` and `kb topic status <topic>` now inspect topic-specific relationship workspaces without making semantic claims.
+
+## v0.6.5
+
+Previous topic-related workflow improvements.
+
+## v0.6.3
+
+`v0.6.3` upgrades `kb refs-graph` output into a conservative V2 graph export.
+
+Main changes:
+
+- The global bibliographic graph now exposes directed edges.
+- The graph includes graph kind, relation layer, relation type, relation label, confidence, evidence, human-review flags, visual style hints, and placeholder node-weight fields.
+- The graph remains the global bibliographic index layer.
+- It does not infer topic-specific causal, method, evidence, or idea relations; those belong under `topics/<topic>/`.
+
+## v0.6.2
+
+`v0.6.2` adds the first topic-level schema foundation.
+
+Main changes:
+
+- Defines how a specific topic directory should record directed relation candidates, topic-local importance, evidence, review status, and third-party topic graph fields.
+- Keeps global bibliographic index relations under `processing/refs/`.
+- Keeps topic-local causal, method, evidence, idea, and importance records under `topics/<topic>/`.
+
+New schema documents:
+
+```text
+docs/topic-v2-roadmap.md
+docs/topic-relation-schema.md
+docs/literature-importance-schema.md
+docs/third-party-skills/topic-graph-schema.md
+```
+
+## v0.6.1
+
+`v0.6.1` defines the topic relationship overlay roadmap.
+
+Main changes:
+
+- Added `docs/topic-relationships.md`.
+- `kb init` now creates a top-level `topics/` directory.
+- Recursive ingest treats `topics/` as a managed directory and skips it.
+- README distinguishes global bibliographic relations from topic-specific interpretive relations.
+- The V2 target is intentionally conservative: topic-centered literature relationship overlays, not a universal causal knowledge graph.
+- No LLM call, causal inference engine, vector search, automatic topic graph builder, or autonomous Wiki editing was added.
+
+## v0.6.0.5
+
+`v0.6.0.5` updates safe Git helper scripts so diff review does not open Git's pager.
+
+Main changes:
+
+- Git helper scripts now use `git --no-pager status`.
+- Git helper scripts now use `git --no-pager diff`.
+- Git helper scripts now use `git --no-pager diff --cached`.
+
+## v0.6.0.1
+
+`v0.6.0.1` tightens `kb shell` into a strict whitelist command shell for Manager LLM or human maintenance sessions.
+
+Main changes:
+
+- Unknown input is rejected safely instead of being interpreted.
+- Added `kb keywords`.
+- Added `docs/keywords.md`.
+- `kb init` now creates `processing/keywords/`.
+- `kb keywords` scans `processing/text/` by default and writes `processing/keywords/keywords_*.md` unless `--dry-run` / `--preview` is used.
+- Explicit terms, terms files, auto-extracted candidate terms, JSON output, and candidate relation rows are supported.
+- `kb tasks` now detects keyword/topic candidate reports and creates a bounded handoff for a Keyword Topic Relation Worker.
+- No LLM call, vector search, semantic idea inference, wiki rewrite, or topic merge was added.
+
+## v0.5.10.4
+
+`v0.5.10.4` updates the README's Markdown-maintenance section so it reflects the current LLM hierarchy:
+
+```text
+Manager LLM -> deterministic kb-cli commands -> Worker LLM / human reviewer -> Git review -> wiki + LLM/memory
+```
+
+Main changes:
+
+- Clarified that the Manager LLM should first scout with structured commands such as `kb query`, `kb grep`, `kb extract-text`, `kb refs`, `kb refs-index`, `kb refs-graph`, `kb links`, `kb lint-static`, and `kb tasks`.
+- Clarified that Worker LLMs should receive bounded tasks with explicit goals, requirements, file lists, evidence lines, expected outputs, and review rules.
+- Documentation-only release.
+- No LLM calls, OCR, vector search, autonomous Worker execution, or automatic Wiki editing was added.
+
+## v0.5.10.2
+
+`v0.5.10.2` uses `docs/third-party-skills/` as a dedicated Markdown skill-specification directory for third-party graph visualization, integration work, and Claude Code generation.
+
+Main changes:
+
+- Defined the literature relationship visual protocol:
+
+```text
+confirmed relation        -> solid edge
+candidate / ambiguous     -> dashed edge
+missing / unresolved node -> hollow node
+needs human review        -> explicit evidence and review marker
+```
+
+- Documentation-only at `v0.5.10.2`.
+- In `v0.5.11`, `kb refs-graph` begins to implement this protocol with JSON, Mermaid, and Graphviz DOT export.
+
+## v0.5.10
+
+`v0.5.10` adds `kb refs-index`, a deterministic skeleton for building bibliographic index relation candidates between extracted reference entries and local papers.
+
+Main changes:
+
+- Added `kb refs-index`.
+- Added `docs/refs-index.md`.
+- `kb refs-index` scans `processing/text/` by default and writes Markdown reports under `processing/refs/` unless `--dry-run` / `--preview` is used.
 - Relation statuses include `confirmed`, `candidate`, `ambiguous`, and `missing`.
-- Reports are written under `processing/refs/refs_index_*.md` unless `--dry-run` / `--preview` is used.
-- Candidate, ambiguous, and missing cases include a deferred human-review task because humans remain the final guarantee for uncertain bibliographic identity decisions.
-- No LLM call, OCR, online DOI lookup, autonomous citation graph construction, or Wiki rewriting was added.
+- Candidate, ambiguous, and missing cases return a deferred human-review task.
+- No LLM call, OCR, online DOI lookup, autonomous citation graph building, or Wiki rewriting was introduced.
 
-## v0.5.10 - Literature relationship core and Manager/Worker terminology
+Architecture-rule clarification in the same release family:
 
-- Standardized LLM hierarchy terminology to `Manager LLM` and `Worker LLM`.
-- Added `docs/literature-relationships.md` to make the central project principle explicit: LLM Wiki maintains relationships among references, not merely files.
-- Defined three relationship levels: bibliographic index relations, keyword/topic relations, and scientific idea relations.
-- Clarified that Rust-native commands extract bibliographic candidates, humans provide the final guarantee for uncertain index relations, and Manager/Worker LLM workflows handle higher-level semantic relationship work.
-- Updated README and LLM-related docs to use Manager/Worker terminology consistently.
-- No command behavior, LLM call, OCR, vector search, or autonomous relation repair was added.
+- Standardized the LLM hierarchy terminology as **Manager LLM / Worker LLM**.
+- Made the core purpose explicit: LLM Wiki maintains relationships among references.
 
-## v0.5.9 - Links skeleton
+## v0.5.9
 
-- Added `kb links` as a deterministic WikiLink scanner over Markdown pages.
-- `kb links` extracts `[[Target]]`, `[[Target|Alias]]`, and `[[Target#Heading|Alias]]` links and classifies them as resolved, unresolved, or ambiguous.
+`v0.5.9` adds `kb links`, a deterministic WikiLink scanner.
+
+Main changes:
+
+- Added `kb links`.
 - Added `docs/links.md`.
-- Reports include deferred task hints for future Wiki Link Repair Agent work when unresolved or ambiguous links are found.
-- The command does not call an LLM, rewrite Wiki pages, create missing pages, rename files, or perform semantic link repair.
+- Extracts WikiLinks from Markdown pages.
+- Resolves targets when there is exactly one local match.
+- Marks unresolved or ambiguous links for future Wiki Link Repair Agent work.
+- Supports `--resolved`, `--unresolved`, `--ambiguous`, `--limit`, `--path`, and `--json`.
+- Returns deferred task hints instead of guessing semantic repairs.
+- No runtime LLM integration, OCR, vector search, autonomous agent execution, or automatic Wiki rewriting was introduced.
 
-## v0.5.8.4 - LLM hierarchy clarification
+## v0.5.8.3
 
-- Added `docs/llm-hierarchy.md` to define the hierarchy between Manager LLMs and Worker LLMs.
-- Clarified that the LLM using structured `kb` commands is the highest-level coordinator: it scouts with deterministic commands, reads task files, delegates bounded work, checks results, and records completion memory.
-- Clarified that lower-level LLMs or Worker LLMs should execute specific handoff tasks rather than redefine workflow scope.
-- Updated LLM command, agent-skill, command-classification, Claude, and agent API docs to reflect the hierarchy.
-- No new command behavior, LLM call, OCR, vector search, or autonomous agent execution was added.
+`v0.5.8.3` is a documentation and operating-rule polish release.
 
+Main changes:
 
-## v0.5.8.3 - LLM structured command guide
+- Added `docs/llm-command-guide.md`.
+- Documented how LLM operators should use `kb query`, `kb grep`, `kb extract-text`, `kb refs`, `kb tasks`, and `kb memory` before doing semantic work.
+- Clarified that `LLM/tasks/` is the handoff area and `LLM/memory/` is the completed-task audit area.
+- Reinforced the one-command-one-ability rule.
+- No new command behavior, OCR, LLM call, vector search, citation graph construction, autonomous Wiki editing, or hidden agent execution was added.
 
-- Added `docs/llm-command-guide.md` as a practical operating guide for future LLM maintainers and Claude Code sessions.
-- Documented the principle that Rust-native `kb` commands scout first: search, inspect, extract, count, and report before hard semantic work is given to LLM/agent skills.
-- Added a command map for LLM operators covering `query`, `grep`, `extract-text`, `refs`, `tasks`, and `memory`.
-- Clarified how `LLM/tasks/` and `LLM/memory/` should be used as handoff and audit-memory areas.
-- Reinforced that this is a documentation-only polish release: no new command behavior, LLM call, OCR, vector search, or autonomous agent execution was added.
+## v0.5.8.2
 
-## v0.5.8.2 - Completed task memory
+`v0.5.8.2` adds `kb memory`, a deterministic audit-memory command for recording completed task outcomes under `LLM/memory/completed_tasks.md`.
 
-- Added `kb memory` for appending completed task records under `LLM/memory/completed_tasks.md`.
-- `kb init` now creates `LLM/memory/`.
-- Added `docs/memory.md` to document the completed-task audit-memory workflow.
-- Clarified that completed task memories are project-local records for later inspection, not hidden model memory.
-- No LLM, OCR, vector search, autonomous task execution, or semantic validation was added.
+Related `v0.5.8.1` change:
 
-## v0.5.8.1 - LLM task workspace path
-
-- Moved deterministic handoff reports from the generic `outputs/tasks/` location to the explicit LLM workbench path: `LLM/tasks/`.
-- `kb tasks` now writes Markdown reports to `LLM/tasks/` unless `--dry-run`/`--preview` is used.
-- `kb init` now creates `LLM/tasks/`.
-- Updated `docs/tasks.md`, `docs/command-classification.md`, and `docs/llm-agent-skills.md` to state that deterministic commands are the first scouting pass and that unresolved hard work should be handed upward to future explicit human/LLM/agent skills.
-- No OCR, LLM call, vector search, citation graph construction, autonomous Wiki editing, or hidden agent execution was added.
-
-## v0.5.8 - Deferred task handoff skeleton
-
-- Added `kb tasks` to generate deterministic LLM/agent handoff task lists.
+- `kb tasks` writes Markdown handoff reports under `LLM/tasks/`.
+- `kb init` now creates `LLM/tasks/` and `LLM/memory/`.
+- Documentation treats `LLM/` as the explicit future agent workbench.
 - Task groups include target agent, goal, requirements, file list, evidence, source command, and priority.
-- Current task groups cover PDF text conversion gaps, reference reconciliation candidates, Wiki source traceability gaps, and broken WikiLinks.
-- Added `docs/tasks.md`.
-- Reinforced the rule that deterministic commands should do one ability well and defer unresolved semantic work explicitly instead of hiding LLM behavior.
+- Task groups cover PDF text conversion gaps, reference reconciliation candidates, Wiki source traceability gaps, and broken WikiLinks.
 - No OCR, LLM call, vector search, citation graph construction, autonomous Wiki editing, or hidden agent execution was added.
 
-## v0.5.7.1 - Deferred LLM/agent skill boundaries
+## v0.5.7
 
-- Added `docs/llm-agent-skills.md` to document future explicit LLM/agent skill responsibilities.
-- Clarified that `kb extract-text` and `kb refs` should do simple deterministic work well, then clearly mark work that requires OCR, semantic repair, citation reconciliation, or LLM synthesis.
-- Updated `docs/extract-text.md` with tasks deferred to a future PDF Text Conversion Agent.
-- Updated `docs/refs.md` with tasks deferred to future Reference Reconciliation and Citation Graph Building agents.
-- Updated command-classification, agent boundary, and Claude guardrail docs so future versions do not hide LLM work inside deterministic commands.
-- No OCR, LLM call, vector search, reference graph generation, or autonomous wiki editing was added.
+`v0.5.7` adds the first deterministic reference-hint scanner.
 
-## v0.5.7 - Refs skeleton
+Main changes:
 
-- Added `kb refs` as a deterministic reference-hint scanner over extracted text.
+- Added `kb refs`.
 - Added `docs/refs.md`.
-- `kb refs` scans `processing/text/` by default and supports `--path`, `--limit`, `--citations`, and `--json`.
-- The scanner detects reference headings, numbered bibliography entries, DOI values, and optional citation-marker candidates.
-- `kb init` now creates `processing/refs/` as a future home for reference reports or graph exports.
+- `kb refs` scans `processing/text/` by default.
+- Detects reference headings, bibliography-entry patterns, DOI values, and optional citation markers.
+- Supports `--path`, `--limit`, `--citations`, and `--json`.
+- `kb init` now creates `processing/refs/` as the future home for reference reports or graph exports.
 - No LLM, OCR, semantic citation reconciliation, vector search, or reference graph generation was added.
 
-## v0.5.6.1 - Command classification principle
+## v0.5.6.1
 
-- Added `docs/command-classification.md` to classify commands into deterministic core, deterministic search/inspection, text conversion/source processing, task preparation, and explicit future LLM/agent commands.
-- Added `kb grep` as a Rust-native deterministic grep-like command for line-level text search.
-- Added `kb extract-text` as a deterministic best-effort text extraction command that writes to `processing/text/`.
+`v0.5.6.1` is a project-rule stabilization release.
+
+Main changes:
+
+- Added `docs/command-classification.md`.
+- Added `kb grep` as a Rust-native line-level search command.
+- Added `kb extract-text` as a deterministic best-effort text extraction command.
 - Added `docs/grep.md` and `docs/extract-text.md`.
-- Clarified that `kb extract-text` is reserved as a future PDF Text Conversion Agent entry point, but OCR, LLM cleanup, layout repair, and agent behavior must be explicit future modes.
-- Reinforced that deterministic commands must not silently call LLM APIs or external grep/rg tools.
+- Documented `extract-text` as the future entry point for a PDF Text Conversion Agent.
+- Kept OCR/LLM/agent modes explicit and not implemented by default.
+- Reinforced that deterministic commands should reduce LLM burden rather than hide LLM usage.
 
-## v0.5.4 - Clean script helpers
+## v0.5.4
 
-- Removed broad knowledge-base workflow wrapper scripts from `scripts/` to avoid confusion with compiling the Rust executable.
-- Added `scripts/build_release.bat` for the Windows Rust verification/build flow.
-- Added `scripts/build_release.sh` for the macOS/Linux Rust verification/build flow.
-- Added `scripts/README.md` to define what belongs in the scripts directory.
-- Kept the review-first Git helper scripts.
-- Updated quickstart and platform docs to prefer explicit `kb ...` command sequences for knowledge-base workflows.
-- No query behavior, REPL behavior, LLM calls, embeddings, vector search, RAG, or autonomous editing changed.
+`v0.5.4` cleans up `scripts/` so only small, deterministic, low-confusion developer helpers remain.
 
-## v0.5.3 - Remove ambiguous REPL LLM-like commands
+Main changes:
 
-- Removed LLM-like command patterns from the experimental `kb repl` parser instead of merely rejecting them at runtime.
-- Removed REPL branches and helper functions for ambiguous natural-language/LLM-style commands.
-- Updated CLI/shell boundary documentation so placeholder LLM command names are no longer advertised.
-- Kept `kb>` as a deterministic command shell only.
+- Removed old broad knowledge-base workflow wrapper scripts from `scripts/`.
+- Added `scripts/build_release.bat` for Windows release builds.
+- Added `scripts/build_release.sh` for macOS/Linux release builds.
+- Added `scripts/README.md` to define what belongs in `scripts/`.
+- Kept `scripts/git_safe_push.bat` and `scripts/git_safe_push.sh` as review-first Git helpers.
+- Updated README and platform docs to prefer explicit `kb ...` command sequences for knowledge-base workflows.
 - No LLM calls, embeddings, vector search, RAG, autonomous editing, or hidden natural-language command interpretation were added.
 
-## v0.5.2 - CLI / Shell / LLM boundary
+## v0.5.2
 
-- Added `docs/cli-shell-principle.md` to define the relationship between batch mode, interactive shell mode, and future LLM-assisted modes.
-- Documented that `kb ...` is deterministic batch mode and `kb>` must remain a deterministic command shell rather than an implicit LLM chat interface.
-- Documented that future LLM behavior must be introduced through a deliberately designed explicit interface.
-- Disabled LLM-like requests inside the current experimental `kb repl`; they now explain the boundary instead of calling a model.
-- No embeddings, vector search, RAG, saved answers, autonomous wiki editing, or hidden LLM calls were added.
+`v0.5.2` establishes the CLI / shell / LLM boundary before expanding interactive features.
 
-## v0.5.1 - README workflow wording clarity
+Main changes:
 
-- Clarified the README's Karpathy-style workflow sentence.
-- Documented `kb prepare` as generating reviewable task materials rather than directly preparing final `wiki/` pages.
-- Clarified that `wiki/` stores maintained Markdown knowledge pages and `rules/` constrains future human/AI maintainers.
-- No query behavior, LLM calls, embeddings, vector search, RAG, or autonomous LLM execution was added.
+- Added `docs/cli-shell-principle.md`.
+- Documented that `kb ...` is batch mode and `kb>` is deterministic interactive shell mode.
+- Documented that future LLM behavior must use a deliberately designed explicit interface.
+- Disabled LLM-like requests inside `kb shell`; they explain the boundary instead of calling a model.
+- Kept query deterministic and local.
 
-## v0.5.0 - Query skeleton
+## v0.5.1
 
-- Added `kb query` for deterministic local keyword search over `wiki/**/*.md`.
-- Query searches titles, relative paths, and Markdown bodies with simple AND semantics across terms.
-- Added `--limit`, `--snippets`, `--json`, and `--title-only` options.
-- Added `docs/query.md` to document the query boundary and usage examples.
-- Updated README, agent boundary notes, and developer guardrails for v0.5.0.
-- No LLM calls, embeddings, vector search, RAG, semantic reranking, saved answers, or background indexing were added.
+`v0.5.1` is a documentation clarity release.
 
-## v0.4.8 - Developer workflow helpers
+Main changes:
 
-- Added `scripts/git_safe_push.bat` for Windows users who want a review-first `git status` / `git diff` / `git add` / `git diff --cached` / `git commit` / `git push` flow.
-- Added `scripts/git_safe_push.sh` with the same two-review flow for macOS/Linux users.
-- Added `docs/git-workflow.md` to document safe commit and push habits for this project.
-- Added `docs/release-checklist.md` for small local releases.
-- Updated README documentation links and version markers to `v0.4.8`.
-- No query, vector search, embeddings, RAG, or autonomous LLM execution was added.
+- Clarified the README description of the Karpathy-style workflow.
+- Made the role of `kb prepare` explicit: it generates reviewable task materials, not final wiki pages.
+- Clarified that `wiki/` contains maintained Markdown knowledge pages and `rules/` constrains future human/AI maintainers.
+- No query behavior or LLM functionality changed.
 
-## v0.4.7 - Cross-platform quickstart polish
+## v0.5.0
+
+`v0.5.0` adds the first query skeleton.
+
+Main changes:
+
+- Added `kb query` for local keyword search over `wiki/**/*.md`.
+- Added AND-style matching across query terms.
+- Added lightweight scoring from title, path, body, and snippet matches.
+- Added `--limit`, `--snippets`, `--json`, and `--title-only`.
+- Added `docs/query.md`.
+- No LLM calls or semantic retrieval were added.
+
+Useful query commands:
+
+```bash
+kb query thermal cloak
+kb query thermal cloak --limit 5
+kb query thermal cloak --snippets 3
+kb query thermal cloak --title-only
+kb query thermal cloak --json
+```
+
+## v0.4.8
+
+`v0.4.8` is a developer workflow stabilization release before `v0.5.0`.
+
+Main changes:
+
+- Added `scripts/git_safe_push.bat` for Windows.
+- Added `scripts/git_safe_push.sh` for macOS/Linux.
+- Added `docs/git-workflow.md`.
+- Added `docs/release-checklist.md`.
+- Updated README and docs index links to include the Git workflow and release checklist.
+- Kept the Rust core workflow unchanged.
+- Did not add query, vector search, embeddings, RAG, or autonomous LLM execution.
+
+## v0.4.7
+
+`v0.4.7` is a cross-platform documentation stabilization release before `v0.5.0`.
+
+Main changes:
 
 - Added `docs/unix-quickstart.md` for macOS/Linux users.
-- Added `docs/platform-notes.md` to document path syntax, shell differences, wrapper-script policy, and release smoke-test expectations.
-- Added `scripts/build_llm_wiki.sh` as a thin Unix shell helper around the Rust CLI bootstrap flow.
-- Rewrote `docs/cross-platform-quickstart.md` so Windows and Unix examples are both first-class.
-- Updated Windows and core docs to point to the cross-platform documentation set.
-- Bumped Cargo package version and schema/version markers to `0.4.7`.
-- No query, vector search, embeddings, RAG, or autonomous LLM execution was added.
+- Added `docs/platform-notes.md`.
+- Updated `docs/cross-platform-quickstart.md` so Windows and Unix paths are both first-class examples.
+- Updated `docs/windows-quickstart.md` to align with the cross-platform documentation set.
+- Kept the Rust core workflow unchanged.
 
-## v0.4.6.2 - Prepare-only documentation polish
+## v0.4.6.2
 
-- Updated README and docs so the review-first planning step is documented only as `kb prepare`.
-- Removed the legacy command page from `docs/`.
-- Hid the reserved legacy spelling from the top-level help output while keeping command compatibility in code.
-- Cargo package metadata uses `0.4.6-2` because Cargo requires standard SemVer. The release/package label remains `v0.4.6.2`.
+`v0.4.6.2` was a documentation polish release before `v0.5.0`.
 
-## v0.4.6.1 - Naming alignment for prepare
+Main changes:
 
-- Made `kb prepare` the documented user-facing planning command.
-- Generated handoff artifacts use `processing/prepare_queue.json`, `processing/proposals/prepare_plan_<timestamp>.md`, and `processing/proposals/prepare_agent_prompt_<timestamp>.md`.
-- Updated README and docs to use `prepare` as the primary command name.
-- Cargo package metadata uses `0.4.6-1` because Cargo requires standard SemVer. The release/package label remains `v0.4.6.1`.
+- `kb prepare` is now the primary command for generating AI/human handoff artifacts.
+- Generated artifacts use prepare-oriented names:
 
-## v0.4.6 - Tests and documentation stabilization
+```text
+processing/prepare_queue.json
+processing/proposals/prepare_plan_<timestamp>.md
+processing/proposals/prepare_agent_prompt_<timestamp>.md
+```
 
-- Added focused unit/regression tests for `build-wiki` front matter generation and placeholder-link avoidance.
-- Added focused unit/regression tests for `lint-static` WikiLink parsing, YAML source-reference parsing, issue detection, `--no-report`, and default report writing.
-- Expanded README with a dedicated testing and release-check section.
-- Expanded `docs/windows-quickstart.md` with a PowerShell-first workflow, dry-run/preview examples, lint commands, and troubleshooting notes.
-- Expanded `docs/lint-static.md` with issue categories, concrete examples, cleanup order, JSON/strict usage, and test coverage notes.
-- Bumped schema/version markers to `0.4.6`.
-- No query, vector search, embeddings, RAG, or autonomous LLM execution was added.
+- Cargo metadata used `0.4.6-2` for SemVer compatibility, while the release package was labeled `v0.4.6.2`.
+- Did not add query, vector search, embeddings, RAG, or autonomous LLM execution.
 
-## v0.4.5 - Build/lint consistency polish
+## v0.4.6
 
-- Kept `--dry-run` and added `--preview` as an equivalent inspection alias for dry-run-capable commands.
-- Added `kb lint-static --no-report` as a clearer alias for checking without writing `outputs/reports/lint_static_*.md`.
-- Updated `kb build-wiki` so generated paper and note pages include YAML source front matter.
-- Generated paper/note pages now include `source_files`, and include `source_ids` when a matching manifest entry is available.
-- Removed generated placeholder WikiLinks that caused avoidable broken-link noise, including `[[Concept Placeholder]]`, `[[Topic Placeholder]]`, and `[[LLM_WIKI_SCHEMA]]`.
-- Bumped schema/version markers to `0.4.5` and updated README/docs.
+`v0.4.6` is a testing and documentation stabilization release before `v0.5.0`.
 
-## v0.4.4 - Static wiki lint
+Main changes:
 
-- Added `kb lint-static` for deterministic Markdown health checks under `wiki/`.
-- The static lint pass checks broken `[[WikiLinks]]`, orphan pages, missing source front matter, empty/near-empty pages, and duplicate titles.
-- Added `--dry-run`, `--json`, and `--strict` modes for linting.
-- Lint reports are written to `outputs/reports/lint_static_<timestamp>.md`.
-- Added `docs/lint-static.md` and updated README/agent boundary notes.
+- Added focused Rust regression tests for `build-wiki` source front matter generation.
+- Added focused Rust regression tests for `lint-static` WikiLink parsing, source front matter parsing, issue detection, and report-writing behavior.
+- Documented local test commands to run before tagging a release.
+- Expanded the README with a clearer testing/release checklist.
+- Expanded `docs/windows-quickstart.md`.
+- Expanded `docs/lint-static.md`.
+- Updated version/schema markers to `0.4.6`.
 
-## v0.4.3 - Sync wiki source links back to manifest
+Recommended release check:
 
-- Added `kb sync-wiki` to scan Markdown front matter under `wiki/` and update `processing/manifest.json`.
-- Wiki pages can now declare `source_ids` and `source_files` in YAML front matter.
-- Manifest entries linked to wiki pages are marked as source-linked in the manifest.
-- `kb status` now reports source-linked wiki coverage in the manifest summary.
-- Updated paper/concept templates and prepare agent prompts to require source-linking front matter.
-- Added `docs/sync-wiki.md`.
+```bash
+cargo fmt --check
+cargo test
+cargo check
+cargo build --release
+```
 
-All notable changes to this project will be documented in this file.
+## v0.4.5
 
-## [0.4.2] - 2026-05-07
+`v0.4.5` is a small consistency release before `v0.5.0`.
 
-### Added
-- Added `processing/proposals/prepare_agent_prompt_<timestamp>.md` generation for non-dry-run `kb prepare` runs.
-- The generated agent prompt is designed as a copy-paste instruction block for Claude Code, ChatGPT, or another knowledge agent.
+Main changes:
 
-### Changed
-- Improved `kb prepare` next-step output to point users to both the review proposal and the agent prompt.
-- Updated prepare documentation to describe the new prompt handoff artifact.
+- `kb build-wiki` writes YAML source front matter on generated `wiki/papers/*.md` and `wiki/notes/*.md` pages.
+- Generated source-derived pages include `source_files` and include `source_ids` when a matching manifest entry is available.
+- Generated placeholder WikiLinks such as `[[Concept Placeholder]]`, `[[Topic Placeholder]]`, and `[[LLM_WIKI_SCHEMA]]` were removed.
+- `--dry-run` remains supported.
+- `--preview` is available as an equivalent inspection alias for dry-run-capable commands.
+- `kb lint-static --no-report` is available as a clearer alias for checking without writing `outputs/reports/lint_static_*.md`.
 
-### Notes
-- `kb prepare` still does not call an LLM and still does not directly edit `wiki/`. This release only improves the review-first AI handoff workflow.
+## v0.4.4
 
-## [0.4.1] - 2026-05-07
+`v0.4.4` adds the second step in the traceable AI-maintained Wiki loop: static linting.
 
-### Fixed
-- Fixed a Rust ownership error in the planning command implementation where `entry.id` was moved before `entry` was borrowed again for proposed wiki page and instruction generation.
+Main changes:
 
-### Notes
-- This is a prepare-fix release. It does not change `kb prepare` behavior: prepare remains a review-first planning command and still does not call an LLM or directly edit `wiki/`.
+- Added `kb lint-static`.
+- Checks broken `[[WikiLinks]]`, orphan pages, source-derived pages missing `source_ids` / `source_files`, empty pages, and duplicate titles.
+- Does not call an LLM and does not rewrite `wiki/`.
+- Writes a reviewable report under `outputs/reports/`.
 
+## v0.4.3
 
-## [0.4.0] - 2026-05-06
+`v0.4.3` closes the first prepare loop with `kb sync-wiki`.
 
-### Added
-- Added `kb prepare` as a conservative prepare-planning skeleton.
-- Added `kb prepare --new --dry-run` to preview raw files ready for future LLM/wiki preparation.
-- Added `kb prepare --new` to write `processing/prepare_queue.json` and a reviewable proposal file under `processing/proposals/`.
-- Added `kb prepare --file <PATH>` to plan work for one manifest-tracked raw file.
+Main changes:
 
-### Changed
-- Updated README and agent boundary documentation to distinguish prepare planning from autonomous LLM editing.
-- Updated manifest schema version marker to `0.4.0`.
+- `kb sync-wiki` scans YAML front matter under `wiki/`.
+- Reads `source_ids` and `source_files`.
+- Records corresponding `wiki_pages` back into `processing/manifest.json`.
 
-### Notes
-- This release does not call an LLM and does not directly modify `wiki/`. It creates review artifacts that a human or LLM agent can use under Git diff.
+Related `v0.4.2` change:
 
-## [0.3.2] - 2026-05-06
+- `kb prepare` writes a copy-paste agent prompt:
 
-### Added
-- Added `.gitattributes` to define cross-platform line-ending rules.
-- Added binary file rules for common archive, document, image, and executable formats.
+```text
+processing/proposals/prepare_agent_prompt_<timestamp>.md
+```
 
-### Changed
-- Clarified README wording around how future LLM maintainers should maintain Markdown pages under `wiki/`.
-- Updated the README to distinguish current scaffold/manifest behavior from planned LLM-driven `prepare`, `query`, and `lint` commands.
+- `kb prepare` still does not call an LLM and does not directly edit `wiki/`.
 
-### Notes
-- This is a documentation and repository-hygiene release. It does not introduce LLM/wiki preparation, query, lint, vector search, RAG, or a database.
+## v0.4.1
 
-## [0.3.1] - 2026-05-05
+`v0.4.1` is a small prepare-fix release.
 
-### Added
-- Added `kb status --json` for machine-readable manifest summaries.
-- Added `kb status --unprocessed` to list raw files awaiting future prepare work.
-- Added next-step hints after successful `kb bootstrap`.
+Main changes:
 
-### Changed
-- Changed manifest content fingerprints from the earlier FNV-style hash to `sha256:<digest>`; existing FNV entries are migrated without being falsely counted as content changes.
-- Retained disappeared raw files in `processing/manifest.json` with status `raw_missing` instead of dropping their history.
-- Improved ingest duplicate handling: if a destination name already exists, identical content is skipped; different content is saved with a unique suffix instead of being silently skipped.
+- Fixed a Rust ownership issue in `kb prepare` where a manifest entry ID was moved before the entry was later borrowed to generate proposed wiki pages and instructions.
+- No behavior change from `v0.4.0`.
 
-### Notes
-- This remains a manifest/ingest stability release. It still does not introduce LLM/wiki preparation, query, lint, vector search, RAG, or a database.
+## v0.4.0
 
-## [0.3.0] - 2026-05-05
+`v0.4.0` is the first prepare skeleton release.
 
-### Added
-- Added `kb status` for scanning `raw/` and refreshing `processing/manifest.json`.
-- Added manifest entries with relative path, source kind, extension, file size, content hash, status, first-seen timestamp, last-seen timestamp, and future wiki page links.
-- Added `processing/proposals/` as the future review area for AI-generated edit proposals.
-- Added automatic manifest refresh after non-dry-run `kb ingest` and as part of `kb bootstrap` workflows.
+Main changes:
 
-### Changed
-- Updated README and documentation to describe the manifest stage and the new `kb status` command.
-- Updated generated knowledge-base README text to include `processing/manifest.json`.
+- Added a review-first command for planning how raw files should be prepared for Markdown wiki pages.
+- Does not call an LLM.
+- Does not edit `wiki/` directly.
 
-### Notes
-- This release still does not introduce LLM/wiki preparation, query, lint, vector search, RAG, a database, or a JSON agent API. It creates the tracking layer needed for future `kb prepare --new` behavior.
+Useful prepare commands:
 
-## [0.2.0] - 2026-05-05
+```bash
+kb --kb-path /path/to/kb prepare --new --dry-run
+kb --kb-path /path/to/kb prepare --new
+kb --kb-path /path/to/kb prepare --file raw/papers/example.pdf
+```
 
-### Added
-- Added the LLM Wiki rules/schema layer generated by `kb init`.
-- Added generated `rules/LLM_WIKI_SCHEMA.md` as the AI-maintainer operating contract.
-- Added generated templates and policies: `PAPER_PAGE_TEMPLATE.md`, `CONCEPT_PAGE_TEMPLATE.md`, `QUERY_POLICY.md`, and `LINT_POLICY.md`.
-- Added expanded wiki folders for people, methods, comparisons, timelines, and saved questions.
+Generated files:
 
-### Changed
-- Updated initialized `README.md` to describe the three-layer LLM Wiki structure: `raw/`, `wiki/`, and `rules/`.
-- Updated project README and documentation boundaries for the v0.2.0 Schema stage.
+```text
+processing/prepare_queue.json
+processing/proposals/prepare_plan_<timestamp>.md
+```
 
-### Notes
-- This release still does not introduce LLM/wiki preparation, query, lint, vector search, RAG, a database, or a JSON agent API. It establishes the contract layer those future commands should follow.
+## v0.3.2
 
-## [0.1.4] - 2026-05-05
+Small cross-platform hygiene release.
 
-### Added
-- Added cross-platform `kb ingest` command for organizing source files into `raw/` subfolders.
-- Added cross-platform `kb bootstrap` command for running `init + ingest + extract-metadata + build-wiki` in one workflow.
-- Added safe default copy behavior for ingest/bootstrap, with explicit `--move` for destructive reorganization.
-- Added `--recursive` and `--dry-run` support to ingest/bootstrap.
-- Added `raw/archives`, `raw/other`, `processing`, and `references` to the initialized knowledge-base structure.
-- Added `docs/cross-platform-quickstart.md`.
+Main changes:
 
-### Changed
-- Refactored `scripts/build_llm_wiki.bat` into a Windows wrapper around the cross-platform Rust `kb bootstrap` command.
-- Updated README, Windows quick-start, agent-boundary notes, and Claude guardrails for the new cross-platform workflow.
-- Improved custom path resolution for absolute non-existing target paths.
+- Kept README clarification about how future LLM maintainers should update Markdown pages.
+- Added `.gitattributes` to make line-ending behavior explicit across Windows, Linux, and macOS.
 
-### Notes
-- This release keeps the project file-based and does not introduce RAG, vector search, a database, or a JSON agent API.
+Recommended one-time normalization:
 
-## [0.1.3] - 2026-05-05
+```bash
+git add .gitattributes
+git add --renormalize .
+git status
+```
 
-### Added
-- Added `scripts/build_llm_wiki.bat` as a Windows quick-start helper for turning an existing literature folder into an LLM Wiki.
-- The helper can initialize a custom knowledge-base path, organize source files into `raw/` subfolders, extract PDF metadata, and build the wiki in one run.
-- Added optional helper flags: `--copy`, `--recursive`, `--force-init`, `--no-install`, and `--no-pause`.
+## v0.3.1
 
-### Documentation
-- Added README instructions for the Windows one-command quick-start workflow.
+`kb status` now has safer manifest tracking and better inspection output.
 
-### Notes
-- This release does not change the core Rust CLI behavior. It adds an onboarding script around existing `kb` commands.
+Main changes:
 
-## [0.1.2] - 2026-05-05
+- Scans `raw/`.
+- Writes `processing/manifest.json`.
+- Records each raw file's relative path, kind, extension, size, SHA-256 content hash, first-seen time, last-seen time, status, and future wiki page links.
+- Missing raw files are retained as `raw_missing` instead of being silently dropped.
+- Prepares the project for `kb prepare --new`.
 
-### Fixed
-- Cleaned `cargo check` warnings without adding new features.
-- Handled the `stdout().flush()` result in REPL startup.
-- Normalized extracted PDF metadata strings through the existing `clean_string` helper.
-- Marked intentionally reserved model-switch/model-config compatibility helpers with `#[allow(dead_code)]`.
-- Marked intentionally reserved intent helper methods with `#[allow(dead_code)]`.
+Useful status modes:
 
-### Notes
-- This is a warning-cleanup release. It does not introduce RAG, vector search, database storage, or a full JSON agent API.
+```bash
+kb --kb-path /path/to/kb status
+kb --kb-path /path/to/kb status --json
+kb --kb-path /path/to/kb status --unprocessed
+kb --kb-path /path/to/kb status --dry-run
+```
 
-## [0.1.1] - 2026-05-05
+## v0.2.0
 
-### Fixed
-- Unified the user-facing command name as `kb`.
-- Added `--force` to `kb init` and `kb extract-metadata`.
-- Standardized notes input directory as `raw/notes`.
-- Removed domain-specific droplet/microfluidics hard-coding from generic wiki templates.
-- Prevented title-less papers from collapsing to `Untitled.md` by falling back to the PDF filename stem.
-- Corrected `ModelConfigError` so it no longer reports itself as its own source error.
-- Replaced shell-unfriendly `KIMI-k2.5` env var name with `KIMI_K2_5_API_KEY`.
-- Changed model-switch requests to include `request_id` and avoid stale output reuse.
-- Moved runtime model configuration from `.model_config.json` to `.model_config.example.json`.
-- Added runtime model-switch files to `.gitignore`.
+`kb init` creates the third LLM Wiki layer:
 
-### Documentation
-- Updated README to describe only implemented v0.1.1 commands.
-- Rewrote `docs/agent-api.md` as current-boundary notes instead of a future-feature promise.
-- Rewrote `docs/claude.md` to enforce v0.1.1 consistency boundaries.
+```text
+rules/
+├── LLM_WIKI_SCHEMA.md
+├── PAPER_PAGE_TEMPLATE.md
+├── CONCEPT_PAGE_TEMPLATE.md
+├── QUERY_POLICY.md
+└── LINT_POLICY.md
+```
 
-## [0.1.0]
-
-### Added
-- Initial release.
-- Knowledge base initialization.
-- PDF metadata extraction.
-- Wiki page generation (Markdown, Obsidian compatible).
-- Interactive REPL mode with intent parsing.
-- LLM integration with multi-model support.
-- Model configuration management.
-
-### Changed
-- Renamed project from `cli_mini_rust` to `kb-cli`.
-- Changed binary name from `cli` to `kb`.
+This layer is the operating contract for future AI agents. It explains how to treat `raw/`, how to maintain `wiki/`, how to answer questions, and how to lint the Wiki.
