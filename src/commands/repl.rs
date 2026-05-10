@@ -144,6 +144,7 @@ fn is_known_batch_command(command: &str) -> bool {
             | "memory"
             | "grep"
             | "health"
+            | "audit-wiki"
             | "topic"
             | "view"
             | "sync-wiki"
@@ -185,6 +186,7 @@ fn print_help() {
     println!("  keywords <terms...> --dry-run");
     println!("  links --unresolved");
     println!("  health --dry-run");
+    println!("  audit-wiki --dry-run");
     println!("  view --dry-run");
     println!("  topic init <topic>");
     println!("  topic list");
@@ -192,6 +194,7 @@ fn print_help() {
     println!("  topic rank <topic> --dry-run");
     println!("  topic review <topic> --dry-run");
     println!("  tasks --dry-run");
+    println!("  tasks --index-only");
     println!("  memory --task-id ID --summary TEXT");
     println!();
     println!("Boundary:");
@@ -280,6 +283,7 @@ mod tests {
         assert!(is_known_batch_command("query"));
         assert!(is_known_batch_command("refs-index"));
         assert!(is_known_batch_command("health"));
+        assert!(is_known_batch_command("audit-wiki"));
     }
 
     #[test]

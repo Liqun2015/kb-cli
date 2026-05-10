@@ -191,7 +191,7 @@ A deferred task should include:
 - source command
 - priority
 
-`kb tasks` is the shared deterministic handoff command for consolidating this information into `LLM/tasks/`. `kb memory` is the deterministic completion-memory command for recording finished work under `LLM/memory/`. The `LLM/` directory is intentionally a future agent workbench: deterministic commands scout the terrain first, unresolved hard tasks are handed upward to a human manager or explicit LLM/agent skill, and completed outcomes are recorded as auditable project memory.
+`kb tasks` is the shared deterministic handoff command for consolidating this information into `LLM/tasks/index.md`, bounded Worker task files under `LLM/tasks/items/`, and timestamped handoff snapshots under `LLM/tasks/`. `kb memory` is the deterministic completion-memory command for recording finished work under `LLM/memory/`. The `LLM/` directory is intentionally a future agent workbench: deterministic commands scout the terrain first, unresolved hard tasks are handed upward to a human manager or explicit LLM/agent skill, and completed outcomes are recorded as auditable project memory.
 
 Examples:
 

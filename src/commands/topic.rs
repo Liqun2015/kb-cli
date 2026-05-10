@@ -1151,24 +1151,34 @@ fn render_review_queue_markdown(report: &TopicReviewReport) -> String {
     md.push_str(&report.candidate_dir);
     md.push_str("/\n```\n\n");
     md.push_str("## Review Items\n\n");
-    md.push_str("| review_id | candidate_id | source_item | proposed_decision | status | reviewer | evidence |\n");
-    md.push_str("|---|---|---|---|---|---|---|\n");
+    md.push_str("This table is an editable review workbench. Keep the source columns unchanged, then fill the decision columns during human / Manager LLM / Worker LLM review.\n\n");
+    md.push_str("| review_id | candidate_id | source_item | proposed_decision | final_decision | status | reviewer | confidence | evidence | uncertainty | review_notes | accepted_record_path |\n");
+    md.push_str("|---|---|---|---|---|---|---|---|---|---|---|---|\n");
     if report.items.is_empty() {
-        md.push_str("| _none_ | unknown | _none_ | unknown | candidate | unassigned | run `kb topic rank <topic>` after editing literature.md |\n");
+        md.push_str("| _none_ | unknown | _none_ | unknown | pending | candidate | unassigned | low | run `kb topic rank <topic>` after editing literature.md | no candidate rows generated | TODO | topics/<topic>/reviewed/ |\n");
     } else {
         for item in &report.items {
             md.push_str(&format!(
-                "| {} | {} | {} | {} | {} | {} | {} |\n",
+                "| {} | {} | {} | {} | pending | {} | {} | medium | {} | TODO | TODO | topics/{}/reviewed/ |\n",
                 escape_table_cell(&item.review_id),
                 escape_table_cell(&item.candidate_id),
                 escape_table_cell(&item.source_item),
                 escape_table_cell(&item.proposed_decision),
                 escape_table_cell(&item.status),
                 escape_table_cell(&item.reviewer),
-                escape_table_cell(&item.evidence)
+                escape_table_cell(&item.evidence),
+                escape_table_cell(&report.topic_slug)
             ));
         }
     }
+    md.push_str("\n## Decision vocabulary\n\n");
+    md.push_str(
+        "- `final_decision`: `accepted`, `rejected`, `deferred`, or `needs_more_evidence`.\n",
+    );
+    md.push_str("- `confidence`: `high`, `medium`, or `low`.\n");
+    md.push_str(
+        "- `accepted_record_path`: where the final reviewed record should be copied if accepted.\n",
+    );
     md.push_str("\n## Review Rules\n\n");
     md.push_str("- Treat all generated rows as candidates.\n");
     md.push_str("- Do not accept a candidate without evidence.\n");

@@ -4,6 +4,36 @@ All notable changes to `kb-cli` are recorded here.
 
 This project uses small, review-first releases. Many releases are documentation, workflow, or boundary-stabilization releases rather than feature-heavy releases.
 
+## v0.7.3
+
+LLM Task Index Workflow.
+
+Main changes:
+
+- `kb tasks` now writes `LLM/tasks/index.md` as the Manager LLM task dashboard.
+- `kb tasks` now writes bounded Worker task files under `LLM/tasks/items/<task_id>.md`.
+- The existing timestamped `LLM/tasks/llm_tasks_<timestamp>.md` handoff report remains as an audit snapshot.
+- Added `--index-only` for refreshing the Manager/Worker task index without writing a new timestamped snapshot.
+- Added `--no-index` for preserving the old timestamped-report-only behavior.
+- Added documentation for Manager LLM task intake and Worker LLM task assignment.
+
+No hidden LLM call is added. The new task index is a routing document, not an automatic execution mechanism.
+
+## v0.7.2
+
+Transformation Audit and Review Queue Usability.
+
+Main changes:
+
+- Added `kb audit-wiki`, a deterministic proof-audit command for checking whether a folder has become a reviewable Markdown LLM Wiki.
+- The audit checks source materials, rules, manifest, processing outputs, wiki pages, source traceability, reference/index outputs, topic workspaces, explicit LLM handoff records, memory records, and review outputs.
+- The audit writes `outputs/reports/wiki_audit_<timestamp>.md`.
+- Unless disabled with `--no-llm-prompt`, the audit also writes `LLM/tasks/wiki_audit_llm_review_<timestamp>.md` so a Manager LLM can independently evaluate the proof chain.
+- Added review queue usability auditing for `topics/*/review/review_queue.md`.
+- Improved `kb topic review <topic>` output so `review_queue.md` includes editable decision fields: `final_decision`, `confidence`, `uncertainty`, `review_notes`, and `accepted_record_path`.
+- Added `docs/audit-wiki.md`.
+- No hidden LLM call, automatic scientific judgment, wiki rewriting, or automatic topic-candidate acceptance is added.
+
 ## v0.7.1
 
 Topic Review Command Skeleton.

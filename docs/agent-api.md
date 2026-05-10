@@ -23,7 +23,7 @@ This document records what `kb-cli v0.6.0.1` actually supports. It is intentiona
 | `kb refs-index [--path PATH] [--dry-run|--preview] [--json]` | Build bibliographic index relation candidates between extracted references and local papers. |
 | `kb refs-graph [--json|--mermaid|--dot] [--dry-run]` | Export bibliographic relation candidates as graph data for third-party visualization. |
 | `kb keywords [terms...] [--terms-file PATH] [--dry-run] [--json]` | Detect keyword/topic co-occurrence candidates among extracted text files. |
-| `kb tasks [--dry-run|--preview] [--json]` | Generate deferred human/LLM/agent task handoff lists under `LLM/tasks/`. |
+| `kb tasks [--dry-run|--preview] [--json] [--index-only|--no-index]` | Generate deferred human/LLM/agent handoffs, `LLM/tasks/index.md`, and bounded `LLM/tasks/items/<task_id>.md` files. |
 | `kb memory --task-id ID --summary TEXT` | Append completed-task audit memory under `LLM/memory/completed_tasks.md`. |
 | `kb health [--dry-run|--preview] [--json] [--strict]` | Summarize deterministic LLM Wiki and literature-relation health. |
 | `kb shell` | Start deterministic interactive shell mode. |
@@ -229,7 +229,7 @@ Use `kb sync-wiki --dry-run` or `kb sync-wiki --preview` after wiki edits to pre
 
 ## Deferred task handoff
 
-`kb tasks` is a deterministic management command. It gathers unresolved work from simple checks and emits a reviewable handoff list for a human manager or a future explicit LLM/agent skill.
+`kb tasks` is a deterministic management command. It gathers unresolved work from simple checks and emits a reviewable handoff list, a Manager LLM dashboard at `LLM/tasks/index.md`, and bounded Worker task items under `LLM/tasks/items/`.
 
 Each task group should include:
 

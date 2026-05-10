@@ -15,6 +15,7 @@ The guiding rule is simple:
 | Text / reference processing | `extract-text`, `refs`, `refs-index`, `refs-graph`, `keywords`, `extract-metadata` | No LLM | Convert source traces into searchable text, bibliographic relation candidates, and keyword/topic relation evidence. |
 | Handoff / memory | `prepare`, `tasks`, `memory` | No LLM | Prepare reviewable work items and record completed work. |
 | Health / reporting | `health` | No LLM | Summarize relationship-network completeness, review backlog, and pipeline health. |
+| Proof audit | `audit-wiki` | Explicit LLM handoff | Check whether the folder has become a reviewable LLM Wiki and write an LLM audit prompt. |
 | Static viewing | `view` | No LLM | Generate a local read-only HTML dashboard from Markdown/JSON outputs. |
 | Interactive shell | `shell` | No hidden LLM | Deterministic interactive command shell; not a chat interface. |
 | Model configuration | `list-models`, `show-model`, `add-model`, `switch-model`, `delete-model`, `validate-model` | Configuration only | Manage model configuration without turning deterministic commands into implicit LLM calls. |
@@ -157,11 +158,12 @@ The guiding rule is simple:
 
 ### `kb tasks`
 
-- **Ability:** consolidate deterministic findings into Manager/Worker handoff lists.
-- **Primary input:** `raw/`, `processing/text/`, `processing/refs/`, `wiki/`, static checks.
-- **Primary output:** `LLM/tasks/llm_tasks_*.md`.
+- **Ability:** consolidate deterministic findings into Manager/Worker handoff lists and refresh the Manager LLM task dashboard.
+- **Primary input:** `raw/`, `processing/text/`, `processing/refs/`, `wiki/`, `topics/*/review/`, `processing/proposals/`, static checks.
+- **Primary output:** `LLM/tasks/index.md`, `LLM/tasks/items/<task_id>.md`, and `LLM/tasks/llm_tasks_*.md`.
 - **Allows LLM:** no. It prepares tasks for future human/LLM execution.
-- **Deferred work:** all generated task groups should include target agent, goal, requirements, file list, and evidence.
+- **Deferred work:** all generated task groups should include target agent, goal, requirements, file list, and evidence. The Manager LLM starts from `LLM/tasks/index.md`; Worker LLMs receive bounded files under `LLM/tasks/items/`.
+- **Useful modes:** `--index-only` refreshes the Manager/Worker task dashboard without writing a new timestamped snapshot; `--no-index` preserves the older report-only behavior.
 
 ### `kb memory`
 
@@ -180,6 +182,14 @@ The guiding rule is simple:
 - **Primary output:** `outputs/reports/health_*.md`, terminal summary, or JSON.
 - **Allows LLM:** no. It is a dashboard/scouting command for Manager LLM sessions.
 - **Deferred work:** missing extraction, uncertain bibliographic index relations, keyword/topic review, and initial wiki drafting become bounded handoff hints. Use `kb tasks` for consolidated `LLM/tasks/` files.
+
+### `kb audit-wiki`
+
+- **Ability:** audit whether the local folder has moved from a material pile to a reviewable, human/AI-maintainable Markdown LLM Wiki.
+- **Primary input:** `raw/`, `rules/`, `processing/manifest.json`, `processing/text/`, `processing/refs/`, `wiki/`, `topics/`, `LLM/tasks/`, `LLM/memory/`, and `outputs/`.
+- **Primary output:** `outputs/reports/wiki_audit_*.md`; unless `--no-llm-prompt` is used, also `LLM/tasks/wiki_audit_llm_review_*.md`.
+- **Allows LLM:** not as a hidden call. It generates an explicit bounded LLM audit prompt.
+- **Deferred work:** a Manager LLM or human reviewer should use the generated prompt to independently evaluate the proof chain.
 
 ## Interactive shell and model commands
 

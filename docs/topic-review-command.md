@@ -298,3 +298,27 @@ The command is acceptable for `v0.7.1` when:
 8. It supports `--dry-run` or `--preview`.
 9. It supports a simple `--json` report if the existing CLI style supports JSON.
 10. Existing reviewed decisions are never overwritten.
+
+
+## v0.7.2 queue usability update
+
+`review_queue.md` is now treated as an editable review workbench rather than only a candidate list. The generated table should include:
+
+```text
+review_id
+candidate_id
+source_item
+proposed_decision
+final_decision
+status
+reviewer
+confidence
+evidence
+uncertainty
+review_notes
+accepted_record_path
+```
+
+The source columns preserve candidate provenance. The decision columns give a human reviewer, Manager LLM, or Worker LLM a controlled place to record the actual review decision.
+
+Use `kb audit-wiki` to check whether existing review queues have this usable format.

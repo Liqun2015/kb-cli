@@ -31,7 +31,7 @@ processing/refs/refs_index_*.md
 processing/refs/refs_graph_*.json / *.mmd / *.dot
 processing/keywords/keywords_*.md
 outputs/reports/health_*.md
-LLM/tasks/llm_tasks_*.md
+LLM/tasks/index.md and LLM/tasks/llm_tasks_*.md
 LLM/memory/completed_tasks.md
 topics/<topic>/
 ```

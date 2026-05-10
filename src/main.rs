@@ -71,6 +71,8 @@ enum Commands {
     Grep(commands::grep::GrepArgs),
     #[command(about = "Summarize deterministic LLM Wiki and literature-relation health checks")]
     Health(commands::health::HealthArgs),
+    #[command(about = "Audit whether a material pile has become a reviewable LLM Wiki")]
+    AuditWiki(commands::audit_wiki::AuditWikiArgs),
     #[command(about = "Manage topic-specific literature relationship workspaces")]
     Topic(commands::topic::TopicArgs),
     #[command(about = "Generate a static local HTML viewer for LLM Wiki results")]
@@ -135,6 +137,9 @@ fn main() -> anyhow::Result<()> {
         Some(Commands::Memory(args)) => commands::memory::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Grep(args)) => commands::grep::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Health(args)) => commands::health::execute(cli.kb_path.as_deref(), args),
+        Some(Commands::AuditWiki(args)) => {
+            commands::audit_wiki::execute(cli.kb_path.as_deref(), args)
+        }
         Some(Commands::Topic(args)) => commands::topic::execute(cli.kb_path.as_deref(), args),
         Some(Commands::View(args)) => commands::view::execute(cli.kb_path.as_deref(), args),
         Some(Commands::SyncWiki(args)) => {
@@ -176,10 +181,11 @@ fn main() -> anyhow::Result<()> {
             println!("  refs [--path PATH] [--citations] [--json]  Scan text for reference and DOI hints");
             println!("  refs-index [--path PATH] [--dry-run|--preview] [--json]  Build bibliographic index relation candidates");
             println!("  refs-graph [--json|--mermaid|--dot] [--dry-run]  Export refs-index relations as graph data");
-            println!("  tasks [--dry-run|--preview] [--json]  Generate deferred LLM/agent task handoff lists");
+            println!("  tasks [--dry-run|--preview] [--json] [--index-only|--no-index]  Generate LLM task handoff lists and LLM/tasks/index.md");
             println!("  memory --task-id ID --summary TEXT [--file PATH]  Record completed task memory under LLM/memory");
             println!("  grep <pattern> [--path PATH] [--regex] [--json]  Search text files with line numbers");
             println!("  health [--dry-run|--preview] [--json] [--strict]  Summarize LLM Wiki relationship health");
+            println!("  audit-wiki [--json] [--strict]  Prove/check whether the folder is a reviewable LLM Wiki");
             println!("  topic init <topic> [--title TITLE] [--force]  Initialize a topic relationship workspace");
             println!("  topic list [--json]          List topic relationship workspaces");
             println!(

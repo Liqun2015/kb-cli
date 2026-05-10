@@ -10,13 +10,22 @@ topics/thermal-metamaterials/importance/
 
 ## Review Items
 
-| review_id | candidate_id | source_item | proposed_decision | status | reviewer | evidence |
-|---|---|---|---|---|---|---|
-| tr-0001 | importance-thermal-0001 | wiki/papers/transformation-thermodynamics-review.md | core | candidate | unassigned | wiki/papers/transformation-thermodynamics-review.md |
+This table is an editable review workbench. Keep the source columns unchanged, then fill the decision columns during human / Manager LLM / Worker LLM review.
+
+| review_id | candidate_id | source_item | proposed_decision | final_decision | status | reviewer | confidence | evidence | uncertainty | review_notes | accepted_record_path |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| tr-0001 | importance-thermal-0001 | wiki/papers/transformation-thermodynamics-review.md | core | pending | candidate | unassigned | medium | wiki/papers/transformation-thermodynamics-review.md | TODO | TODO | topics/thermal-metamaterials/reviewed/ |
+
+## Decision vocabulary
+
+- `final_decision`: `accepted`, `rejected`, `deferred`, or `needs_more_evidence`.
+- `confidence`: `high`, `medium`, or `low`.
+- `accepted_record_path`: where the final reviewed record should be copied if accepted.
 
 ## Review Rules
 
-- Treat all items as candidates.
+- Treat all generated rows as candidates.
 - Do not accept a candidate without evidence.
-- Preserve uncertainty.
-- Store reviewed decisions under `topics/<topic>/reviewed/`.
+- Preserve uncertainty instead of forcing a decision.
+- Store accepted, rejected, or deferred decisions under `topics/<topic>/reviewed/`.
+- This queue does not perform scientific judgment and does not call an LLM.

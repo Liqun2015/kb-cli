@@ -51,7 +51,7 @@ Use `kb-cli` commands to collect that evidence, then hand bounded evidence to th
 | `kb refs-index` | Build bibliographic index relation candidates | `processing/text/`, `raw/papers/`, metadata | `processing/refs/` | review citation/index relations | human identity confirmation |
 | `kb refs-graph` | Export bibliographic relation candidates as graph data | `processing/refs/refs_index_*.md` | `processing/refs/refs_graph_*.json` / `.mmd` / `.dot` | visualize relation certainty | human review of uncertain edges |
 | `kb keywords` | Detect keyword/topic co-occurrence candidates | `processing/text/` | `processing/keywords/keywords_*.md` / JSON | find topic-level evidence | semantic meaning / idea relations |
-| `kb tasks` | Generate deferred work lists | project state | `LLM/tasks/` | assign work to an LLM/agent | execution of tasks |
+| `kb tasks` | Generate deferred work lists and task index | project state | `LLM/tasks/index.md`, `LLM/tasks/items/` | assign bounded work to Manager/Worker LLMs | execution of tasks |
 | `kb memory` | Record completed task outcomes | operator input | `LLM/memory/` | inspect project history | validation of quality |
 
 ## Standard Manager-led maintenance loop
@@ -71,10 +71,11 @@ Example:
 
 ```bash
 kb tasks
-# Read the newest LLM/tasks/llm_tasks_*.md
+# Manager LLM starts from LLM/tasks/index.md
+# Worker LLM receives one bounded LLM/tasks/items/<task_id>.md file
 # Perform one task only, under Git review
 kb lint-static
-kb memory --task-id wiki-link-repair-001 --summary "Repaired broken WikiLinks found by lint-static." --source-task LLM/tasks/llm_tasks_YYYYMMDD_HHMMSS.md
+kb memory --task-id wiki-link-repair-001 --summary "Repaired broken WikiLinks found by lint-static." --source-task LLM/tasks/items/<task_id>.md
 ```
 
 ## Use `--json` when the LLM must parse output
@@ -154,7 +155,7 @@ kb memory \
   --title "Normalize reference hints" \
   --summary "Reviewed refs output and normalized DOI mentions in wiki/papers/example.md." \
   --file wiki/papers/example.md \
-  --source-task LLM/tasks/llm_tasks_YYYYMMDD_HHMMSS.md \
+  --source-task LLM/tasks/items/<task_id>.md \
   --follow-up "Citation graph still requires explicit agent design."
 ```
 

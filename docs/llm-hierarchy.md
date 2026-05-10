@@ -98,14 +98,14 @@ A task handed from the Manager LLM to a Worker LLM should include:
 - expected output;
 - completion-memory requirements.
 
-This is why `kb tasks` writes structured handoff files under `LLM/tasks/`.
+This is why `kb tasks` writes a Manager LLM dashboard at `LLM/tasks/index.md` and bounded Worker task files under `LLM/tasks/items/`.
 
 ## Completion rule
 
 After a worker finishes meaningful work, the Manager LLM or human operator should record the outcome:
 
 ```bash
-kb memory --task-id TASK_ID --summary "What was completed" --source-task LLM/tasks/llm_tasks_YYYYMMDD_HHMMSS.md
+kb memory --task-id TASK_ID --summary "What was completed" --source-task LLM/tasks/items/<task_id>.md
 ```
 
 `LLM/memory/` is the project-local audit memory. It is not hidden model memory.

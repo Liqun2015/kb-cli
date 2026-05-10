@@ -6,7 +6,41 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.1`
+Current version: `v0.7.3`
+
+### v0.7.3
+
+LLM Task Index Workflow.
+
+This version makes `LLM/tasks/index.md` a first-class Manager LLM dashboard. Running:
+
+```bash
+kb tasks
+```
+
+now writes:
+
+```text
+LLM/tasks/index.md
+LLM/tasks/items/<task_id>.md
+LLM/tasks/llm_tasks_<timestamp>.md
+```
+
+The index is the task list for the Manager LLM. The item files are bounded Worker LLM / human task files. The timestamped report remains an audit snapshot.
+
+### v0.7.2
+
+Transformation Audit and Review Queue Usability.
+
+This version adds:
+
+```bash
+kb audit-wiki
+```
+
+The command checks whether a folder has moved from a loose material pile into a reviewable, human/AI-maintainable Markdown LLM Wiki. It performs deterministic layer checks, audits topic review queue usability, writes an audit report under `outputs/reports/`, and generates an explicit LLM review prompt under `LLM/tasks/`.
+
+It also improves the `kb topic review <topic>` queue format so reviewers can record `final_decision`, `confidence`, `uncertainty`, `review_notes`, and `accepted_record_path`.
 
 ### v0.7.1
 
@@ -69,7 +103,7 @@ KnowledgeBase/
 ├── rules/            # Human / AI maintenance rules
 ├── topics/           # Topic-specific relationship workspaces
 ├── LLM/              # Explicit future LLM/agent workbench
-│   ├── tasks/        # Deferred task handoff reports
+│   ├── tasks/        # Manager index, Worker task items, and handoff reports
 │   └── memory/       # Completed-task audit memory
 ├── processing/       # Deterministic intermediate outputs
 ├── outputs/          # Generated reports and static viewer output
@@ -135,12 +169,13 @@ The expected workflow is:
 1. Put source materials into `raw/`
 2. Use deterministic commands to inspect, extract, index, and lint files
 3. Use `kb prepare` or `kb tasks` to generate reviewable task materials
-4. Build or update Markdown knowledge pages under `wiki/`
-5. Use topic commands to inspect topic-specific relationship workspaces
-6. Use ranking commands to generate topic-local importance candidates
-7. Use `kb topic review <topic>` to build a review queue from candidates
-8. Let human reviewers or explicit AI agents revise the outputs under Git review
-9. Record accepted decisions under `topics/<topic>/reviewed/` and `LLM/memory/`
+4. Use `LLM/tasks/index.md` as the Manager LLM task dashboard
+5. Build or update Markdown knowledge pages under `wiki/`
+6. Use topic commands to inspect topic-specific relationship workspaces
+7. Use ranking commands to generate topic-local importance candidates
+8. Use `kb topic review <topic>` to build a review queue from candidates
+9. Let human reviewers or explicit AI agents revise the outputs under Git review
+10. Record accepted decisions under `topics/<topic>/reviewed/` and `LLM/memory/`
 
 This workflow is not meant to replace human judgment. It is meant to make AI-assisted knowledge maintenance more structured, inspectable, and reproducible.
 
@@ -163,7 +198,8 @@ This workflow is not meant to replace human judgment. It is meant to make AI-ass
 | `kb refs-graph` | Export bibliographic index candidates as graph data. |
 | `kb keywords` | Detect keyword/topic co-occurrence candidates. |
 | `kb health` | Summarize deterministic LLM Wiki health. |
-| `kb tasks` | Generate deferred human/LLM/agent task handoff lists. |
+| `kb audit-wiki` | Audit whether the folder has become a reviewable human/AI-maintainable Markdown LLM Wiki. |
+| `kb tasks` | Generate deferred task handoff lists, Worker task items, and `LLM/tasks/index.md`. |
 | `kb memory` | Append completed-task records under `LLM/memory/`. |
 | `kb topic init <topic>` | Create a topic-specific relationship workspace. |
 | `kb topic list` | List topic workspaces. |
@@ -173,7 +209,60 @@ This workflow is not meant to replace human judgment. It is meant to make AI-ass
 | `kb view` | Generate and open the static HTML review dashboard. |
 | `kb shell` | Start a deterministic interactive command shell. |
 
-For detailed command behavior, see `docs/commands.md` and `docs/topic-review-command.md`.
+For detailed command behavior, see `docs/commands.md`, `docs/llm-task-index.md`, `docs/audit-wiki.md`, and `docs/topic-review-command.md`.
+
+## LLM Task Index Workflow
+
+Starting in `v0.7.3`, `kb tasks` creates a Manager LLM dashboard and bounded Worker task files:
+
+```bash
+kb tasks
+kb tasks --index-only
+kb tasks --no-index
+```
+
+Default output:
+
+```text
+LLM/tasks/index.md                 # Manager LLM task dashboard
+LLM/tasks/items/<task_id>.md        # bounded Worker LLM / human task files
+LLM/tasks/llm_tasks_<timestamp>.md  # timestamped audit snapshot
+```
+
+The intended handoff is:
+
+```text
+Manager LLM opens LLM/tasks/index.md
+        ↓
+selects one pending task or topic review queue
+        ↓
+assigns one bounded item to a Worker LLM / human reviewer
+        ↓
+Worker output is reviewed with Git diff
+        ↓
+accepted work is recorded with kb memory
+```
+
+See `docs/tasks.md`, `docs/task-lifecycle.md`, and `docs/llm-task-index.md`.
+
+## Transformation Audit
+
+Starting in `v0.7.2`, the project can audit its own central claim:
+
+```bash
+kb audit-wiki
+```
+
+The command checks the presence and traceability of source materials, processing artifacts, Markdown wiki pages, reference/index outputs, topic workspaces, review queues, explicit LLM handoff tasks, completed memory records, and generated review outputs.
+
+It writes:
+
+```text
+outputs/reports/wiki_audit_<timestamp>.md
+LLM/tasks/wiki_audit_llm_review_<timestamp>.md
+```
+
+The first file is deterministic evidence. The second file is a bounded prompt for a Manager LLM to independently review whether the proof chain is convincing.
 
 ## Topic-local Importance Ranking
 

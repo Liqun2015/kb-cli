@@ -214,13 +214,17 @@ A future queue file may live at:
 topics/<topic>/review/review_queue.md
 ```
 
-Suggested columns:
+Suggested columns after the v0.7.2 usability update:
 
 ```markdown
-| review_id | candidate_id | source_item | proposed_decision | status | reviewer | evidence |
-|---|---|---|---|---|---|---|
-| tr-0001 | importance-0001 | wiki/papers/example.md | core | candidate | human | processing/text/example.txt |
+| review_id | candidate_id | source_item | proposed_decision | final_decision | status | reviewer | confidence | evidence | uncertainty | review_notes | accepted_record_path |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| tr-0001 | importance-0001 | wiki/papers/example.md | core | pending | candidate | human | medium | processing/text/example.txt | TODO | TODO | topics/<topic>/reviewed/ |
 ```
+
+The first four columns preserve provenance and proposed candidate meaning. The later columns make the queue usable as a review workbench: reviewers can record a final decision, confidence, uncertainty, notes, and the path where an accepted record should be written.
+
+Use `kb audit-wiki` to check whether existing queues include the required review-workbench columns.
 
 ## Review Log
 
