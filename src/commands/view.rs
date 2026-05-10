@@ -223,6 +223,12 @@ fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
 fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
     let generated_at = html_escape(&Utc::now().to_rfc3339());
     let kb_display = html_escape(&kb_path.display().to_string());
+    let kb_name_raw = kb_path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .filter(|name| !name.trim().is_empty())
+        .unwrap_or("LLM Wiki");
+    let kb_name = html_escape(kb_name_raw);
 
     let mut nav_buttons = String::new();
     let mut sidebar_links = String::new();
@@ -251,7 +257,7 @@ fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
 
     let mut html = String::new();
     html.push_str("<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\" />\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n");
-    html.push_str("<title>LLM Wiki Viewer</title>\n");
+    html.push_str(&format!("<title>{} - LLM Wiki Viewer</title>\n", kb_name));
     html.push_str("<style>\n");
     html.push_str(VIEWER_CSS);
     html.push_str("\n</style>\n</head>\n<body>\n<div class=\"container\">\n");
@@ -271,7 +277,9 @@ fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
     html.push_str(
         "</div>\n</aside>\n<button class=\"toggle-sidebar\" id=\"toggleBtn\">‹</button>\n",
     );
-    html.push_str("<main class=\"main\">\n<header><h1>LLM Wiki Static Viewer</h1><p class=\"subtitle\">Markdown/JSON results rendered as a local, read-only review dashboard.</p></header>\n");
+    html.push_str("<main class=\"main\">\n<header><h1>");
+    html.push_str(&kb_name);
+    html.push_str("</h1><p class=\"subtitle\">LLM Wiki of your knowledge base for the purpose of swift and high quality research</p></header>\n");
     html.push_str("<nav class=\"nav-tabs\">\n");
     html.push_str(&nav_buttons);
     html.push_str("</nav>\n");

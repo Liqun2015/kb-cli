@@ -186,3 +186,19 @@ kb view --dry-run
 ```
 
 The command should report the planned `outputs/html/index.html` path without writing files.
+
+
+## Topic workspace inspection smoke checks
+
+```bash
+kb topic init example-topic --dry-run
+kb topic list --json
+kb topic status example-topic --json
+```
+
+These commands should remain deterministic structural checks.
+
+
+## v0.6.7 check
+
+Before release, run `kb topic rank example-topic --dry-run` and ensure generated/non-generated paths stay under `topics/<topic>/importance/`.

@@ -173,3 +173,8 @@ Do not create a universal score that overrides topic judgment.
 Do not treat citation count as the only importance measure.
 
 Do not let model confidence replace human review for core literature decisions.
+
+
+## Deterministic candidate generation
+
+`kb topic rank <topic>` may propose `core`, `important`, `background`, or `peripheral` labels using simple topic-local signals. These are candidates only. Confirmed labels belong in `topics/<topic>/importance/confirmed_importance.md`.

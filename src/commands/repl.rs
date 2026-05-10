@@ -187,6 +187,9 @@ fn print_help() {
     println!("  health --dry-run");
     println!("  view --dry-run");
     println!("  topic init <topic>");
+    println!("  topic list");
+    println!("  topic status <topic>");
+    println!("  topic rank <topic> --dry-run");
     println!("  tasks --dry-run");
     println!("  memory --task-id ID --summary TEXT");
     println!();

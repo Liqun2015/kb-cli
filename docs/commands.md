@@ -225,7 +225,7 @@ processing/refs/  global bibliographic index relations
 topics/<topic>/   topic-local causal, method, evidence, idea, and importance relations
 ```
 
-Before adding topic-specific commands, read `docs/topic-relationships.md`. `kb topic init` is implemented as deterministic scaffolding. Future commands such as `kb topic status` and `kb topic graph` should remain deterministic commands that help Manager LLMs and humans maintain topic overlays without silently making causal or scientific-idea claims.
+Before adding topic-specific commands, read `docs/topic-relationships.md`. `kb topic init` is implemented as deterministic scaffolding. Future commands such as `kb topic graph` should remain deterministic commands that help Manager LLMs and humans maintain topic overlays without silently making causal or scientific-idea claims.
 
 ## Topic schema foundation added in v0.6.3
 
@@ -244,15 +244,27 @@ Future commands such as `kb topic`, `kb relation-review`, or topic graph exporte
 ## `kb topic`
 
 - **Category:** topic-specific relationship workspace command.
-- **Current subcommand:** `kb topic init <topic>`.
+- **Current subcommands:** `kb topic init <topic>`, `kb topic list`, `kb topic status <topic>`, and `kb topic rank <topic>`.
 - **Primary input:** topic name or slug.
-- **Primary output:** `topics/<topic>/` workspace with scope, literature, importance, relations, review, graph, tasks, and memory files.
+- **Primary output:** `topics/<topic>/` workspace files and topic-local reports under `topics/<topic>/importance/`.
 - **LLM allowed:** no. This command only creates deterministic scaffolding.
-- **Deferred work:** Manager LLM / Worker LLM / human reviewers fill and review topic-local importance and relation records later.
+- **Deferred work:** Manager LLM / Worker LLM / human reviewers fill and review topic-local importance and relation records later. `kb topic rank` produces candidates only; it does not decide final importance.
 
 Example:
 
 ```bash
 kb topic init thermal-metamaterials
 kb topic init thermal-metamaterials --title "Thermal Metamaterials"
+kb topic list
+kb topic status thermal-metamaterials
+kb topic rank thermal-metamaterials --dry-run
 ```
+
+### `kb topic rank <topic>`
+
+- **Ability:** generate deterministic topic-local literature importance candidates.
+- **Primary input:** `topics/<topic>/literature.md`, topic-local Markdown files, and weak global references from `processing/refs/refs_index_*.md`.
+- **Primary output:** `topics/<topic>/importance/importance_candidates_*.md`, terminal summary, or JSON.
+- **Allows LLM:** no.
+- **Deferred work:** core/important labels require human review before they influence graph node size or research conclusions.
+- **Layer rule:** importance is topic-specific, so rank/review outputs belong under `topics/<topic>/`, not under global `processing/` folders.

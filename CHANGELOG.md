@@ -1,3 +1,32 @@
+## v0.6.7 - topic-local importance candidate ranking
+
+- Added `kb topic rank <topic>` to generate deterministic, topic-specific literature importance candidates.
+- The command reads `topics/<topic>/literature.md`, counts supporting mentions inside the topic workspace, and optionally uses existing `processing/refs/refs_index_*.md` mentions as weak evidence.
+- Reports are written under `topics/<topic>/importance/importance_candidates_YYYYMMDD_HHMMSS.md`, not under global `processing/` directories.
+- Added JSON and dry-run modes.
+- Kept the boundary conservative: no LLM calls, no final importance decisions, no citation identity guarantees, and no topic-causality inference.
+- Fixed a topic status source typo introduced in the previous packaging so `kb topic status` can compile cleanly.
+
+## v0.6.6.1 - kb view title and subtitle polish
+
+- Updated the static HTML viewer header so the main title uses the current knowledge-base directory name, for example `quantum`.
+- Replaced the viewer subtitle with: `LLM Wiki of your knowledge base for the purpose of swift and high quality research`.
+- Kept `kb view` as a static, read-only HTML viewer; no local command execution, browser service, or LLM call was added.
+
+## v0.6.6 - topic list and status checks
+
+- Added `kb topic list` to enumerate topic-specific literature relationship workspaces under `topics/`.
+- Added `kb topic status <topic>` to check whether a topic workspace has the expected directories and template files.
+- Added `--json` output for both `topic list` and `topic status`; added `--strict` for status checks.
+- Kept the behavior deterministic: no LLM calls, no topic relation inference, no importance ranking, and no file repair behavior.
+- Updated topic, command-map, shell, Manager/Worker workflow, and release documentation.
+
+## v0.6.5.1 - README shell safety note placement
+
+- Moved the `v0.6.0.1` strict shell safety note to immediately before the `Command map and task lifecycle` section in `README.md`.
+- Kept the meaning unchanged: `kb shell` is a strict whitelist command shell; unknown input is a safe no-op and never triggers intent guessing, natural-language interpretation, or LLM calls.
+- No command behavior, HTML viewer behavior, topic workspace behavior, or LLM behavior was changed.
+
 ## v0.6.5 - topic init workspace skeleton
 
 - Added `kb topic init <topic>` to create a topic-specific literature relationship workspace under `topics/<topic>/`.

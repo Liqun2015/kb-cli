@@ -100,3 +100,16 @@ Starting in `v0.6.4.2`, the left sidebar keeps the `kb-view>` display command pa
 ## Windows browser opening note
 
 On Windows, `kb view` opens the generated `outputs/html/index.html` through `rundll32.exe url.dll,FileProtocolHandler` instead of `cmd /C start`. This is more robust on systems where `start` reports access denied for local HTML files. Use `kb view --no-open` to generate the viewer without opening a browser.
+
+
+## v0.6.6.1 title behavior
+
+The generated `outputs/html/index.html` uses the current knowledge-base directory name as the main page title. For example, when the knowledge base path is `D:\github\llm-wiki\quantum`, the HTML header shows `quantum` instead of a generic viewer title.
+
+The viewer subtitle is:
+
+```text
+LLM Wiki of your knowledge base for the purpose of swift and high quality research
+```
+
+This is display-only polish. It does not change `kb view` safety boundaries: the page remains static and read-only, and the sidebar command box cannot execute local kb commands.

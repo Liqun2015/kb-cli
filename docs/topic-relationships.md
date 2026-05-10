@@ -217,15 +217,15 @@ Potential future commands should be incremental:
 
 ```text
 kb topic init <topic>        Create the recommended topic directory skeleton. Implemented in v0.6.5.
-kb topic list                List topic overlays.
-kb topic status <topic>      Summarize scope, literature, relations, tasks, and memory.
+kb topic list                List topic overlays. Implemented in v0.6.6.
+kb topic status <topic>      Check topic workspace structure. Implemented in v0.6.6.
 kb topic graph <topic>       Export a topic-specific graph.
 kb topic tasks <topic>       Generate bounded Worker LLM / human review tasks for a topic.
 ```
 
 These commands should remain deterministic. They should prepare evidence and tasks for Manager LLM and Worker LLM workflows, not silently make semantic conclusions.
 
-## Schema documents added in v0.6.3
+## Schema documents added in v0.6.2
 
 The topic overlay roadmap is implemented through a small set of conservative schema documents:
 
@@ -257,3 +257,8 @@ Humans confirm high-impact causal, contradiction, bibliographic identity, and co
 ```
 
 Do not treat a topic relation schema as permission to auto-generate a causal graph.
+
+
+## Topic-local importance ranking
+
+Use `kb topic rank <topic>` to generate deterministic importance candidates for one topic workspace. The output must stay under `topics/<topic>/importance/`. Do not put topic-local importance decisions under global `processing/` directories.

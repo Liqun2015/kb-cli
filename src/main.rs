@@ -181,6 +181,11 @@ fn main() -> anyhow::Result<()> {
             println!("  grep <pattern> [--path PATH] [--regex] [--json]  Search text files with line numbers");
             println!("  health [--dry-run|--preview] [--json] [--strict]  Summarize LLM Wiki relationship health");
             println!("  topic init <topic> [--title TITLE] [--force]  Initialize a topic relationship workspace");
+            println!("  topic list [--json]          List topic relationship workspaces");
+            println!(
+                "  topic status <topic> [--json|--strict]  Check topic workspace completeness"
+            );
+            println!("  topic rank <topic> [--json] [--dry-run]  Generate topic-local importance candidates");
             println!("  view [--no-open] [--dry-run|--preview] [--output-dir DIR]  Generate/open static HTML viewer");
             println!(
                 "  shell                         Enter deterministic interactive command shell"

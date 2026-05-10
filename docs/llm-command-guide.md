@@ -313,3 +313,20 @@ kb topic init <topic>
 ```
 
 After initialization, Manager LLM should inspect `topics/<topic>/scope.md` and `topics/<topic>/literature.md` before assigning Worker LLM tasks.
+
+
+## Topic workspace inspection
+
+Manager LLM may use:
+
+```bash
+kb topic list
+kb topic status <topic>
+```
+
+before assigning topic-local Worker LLM tasks. These commands only inspect the topic workspace structure. They do not validate the truth of topic-local relations.
+
+
+## Topic importance workflow
+
+Manager LLM may run `kb topic rank <topic> --dry-run` or inspect its generated report to decide which papers need human review. Worker LLMs must treat rank output as candidate evidence only, not as final authority.

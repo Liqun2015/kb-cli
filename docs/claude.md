@@ -340,3 +340,13 @@ Do not implement a universal causal graph. Do not auto-confirm causal, contradic
 ## Topic workspace rule
 
 Use `kb topic init <topic>` only to create topic-specific workspace scaffolding. Do not treat the generated files as confirmed relations. Worker LLMs may fill topic-local relation candidates only with evidence, and high-impact causal, contradiction, improvement, and core-literature claims require human review.
+
+
+## Topic workspace inspection commands
+
+`kb topic list` and `kb topic status <topic>` are deterministic structure checks for `topics/<topic>/`. They may be used by Manager LLMs before assigning Worker LLM topic-relation tasks. They must not call LLM APIs, infer relationships, rank literature, or modify topic files.
+
+
+## Topic importance rule
+
+When using `kb topic rank <topic>`, treat the output as a deterministic candidate list only. Do not promote a paper to `core` or `important` in final prose unless the topic review files or human instructions support that decision.

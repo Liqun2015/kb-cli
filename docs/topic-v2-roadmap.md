@@ -58,21 +58,25 @@ scientific idea links
 
 Topic relationship overlay roadmap.
 
-### v0.6.3
+### v0.6.2
 
 Topic relation schema and literature importance schema.
 
 ### v0.6.3
 
-Topic template files and optional `kb topic` planning notes.
+Upgrade graph export fields for directed/topic relation compatibility.
 
 ### v0.6.4
 
-Upgrade graph export fields for directed/topic relation compatibility.
+Static HTML viewer for reviewing generated Markdown/JSON results.
 
 ### v0.6.5
 
 `kb topic init <topic>` creates the topic workspace skeleton for scope, literature, importance, relations, review, graph, tasks, and memory.
+
+### v0.6.6
+
+`kb topic list` and `kb topic status <topic>` inspect topic workspaces before Manager LLM assigns topic-local Worker LLM tasks.
 
 ### later
 
@@ -90,6 +94,8 @@ kb refs-index
 kb refs-graph
 kb keywords
 kb tasks
+kb topic list
+kb topic status <topic>
 ```
 
 Then it should inspect the relevant topic directory:
@@ -129,3 +135,8 @@ core literature decisions
 important causal claims
 high-impact contradiction claims
 ```
+
+
+## v0.6.7 topic-local importance candidates
+
+`kb topic rank <topic>` is the first conservative implementation step after topic workspace scaffolding. It writes candidate importance reports under `topics/<topic>/importance/` because literature importance depends on the research topic. It does not decide final importance and does not call an LLM.

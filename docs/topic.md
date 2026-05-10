@@ -11,6 +11,11 @@ kb topic init thermal-metamaterials
 kb topic init thermal-metamaterials --title "Thermal Metamaterials"
 kb topic init thermal-metamaterials --dry-run
 kb topic init thermal-metamaterials --force
+kb topic list
+kb topic list --json
+kb topic status thermal-metamaterials
+kb topic status thermal-metamaterials --json
+kb topic status thermal-metamaterials --strict
 ```
 
 The topic name is normalized into a filesystem-friendly slug. For example:
@@ -81,3 +86,79 @@ topics/<topic>/
 - build a topic graph;
 - rewrite wiki pages;
 - move global citation/index records out of `processing/refs/`.
+
+
+## `kb topic list`
+
+Lists existing topic workspaces under `topics/`. This command only reads the filesystem. It does not infer topic relationships or call an LLM.
+
+```bash
+kb topic list
+kb topic list --json
+```
+
+The output reports the topic slug, title, path, and whether `scope.md` and `literature.md` exist.
+
+## `kb topic status <topic>`
+
+Checks whether one topic workspace contains the expected topic overlay directories and template files.
+
+```bash
+kb topic status thermal-metamaterials
+kb topic status thermal-metamaterials --json
+kb topic status thermal-metamaterials --strict
+```
+
+`--strict` returns a non-zero exit code when required topic files or directories are missing. This is useful for Manager LLM or CI-style checks before assigning Worker LLM tasks.
+
+Boundary: `topic status` is a structural check only. It does not decide whether topic-local importance, causal, method, evidence, or idea relations are true.
+
+## `kb topic rank <topic>`
+
+Generates deterministic topic-local literature importance candidates.
+
+```bash
+kb topic rank thermal-metamaterials
+kb topic rank thermal-metamaterials --dry-run
+kb topic rank thermal-metamaterials --json
+kb topic rank thermal-metamaterials --limit 25
+```
+
+The command reads the topic workspace, especially:
+
+```text
+topics/<topic>/literature.md
+topics/<topic>/relations/
+topics/<topic>/importance/
+topics/<topic>/review/
+processing/refs/refs_index_*.md
+```
+
+Output is written under the topic directory:
+
+```text
+topics/<topic>/importance/importance_candidates_YYYYMMDD_HHMMSS.md
+```
+
+It does **not** write to a global `processing/rank/` directory because importance is topic-specific.
+
+### Ranking boundary
+
+`kb topic rank` is a deterministic candidate generator. It does not decide final importance.
+
+It may use simple evidence such as:
+
+- whether a paper is listed in `literature.md`;
+- whether its role text contains markers such as `core`, `method`, `review`, `background`, or `peripheral`;
+- how often the paper is mentioned inside the topic workspace;
+- whether the same paper string appears in global bibliographic index outputs.
+
+The resulting `core`, `important`, `background`, or `peripheral` labels are candidates only. Human review is required before high-impact labels drive graph node size or topic conclusions.
+
+### Review flow
+
+1. Add topic papers to `topics/<topic>/literature.md`.
+2. Run `kb topic rank <topic>`.
+3. Review generated candidates under `topics/<topic>/importance/`.
+4. Record accepted decisions in `topics/<topic>/importance/confirmed_importance.md`.
+5. Use `topics/<topic>/review/importance_review.md` for disputed or high-impact decisions.

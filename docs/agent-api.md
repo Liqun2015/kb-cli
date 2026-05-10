@@ -316,3 +316,13 @@ These documents are schema contracts for future Manager LLM, Worker LLM, and thi
 ## Topic workspace command
 
 `kb topic init <topic>` creates deterministic topic workspace scaffolding under `topics/<topic>/`. It is safe for Manager LLM sessions to request this command when a concrete topic needs a local relationship overlay. It does not call an LLM, infer relations, rank literature, or modify global bibliographic index files under `processing/refs/`.
+
+
+## Topic workspace inspection commands
+
+`kb topic list` and `kb topic status <topic>` are deterministic structure checks for `topics/<topic>/`. They may be used by Manager LLMs before assigning Worker LLM topic-relation tasks. They must not call LLM APIs, infer relationships, rank literature, or modify topic files.
+
+
+## Topic rank handoff
+
+`kb topic rank <topic>` produces topic-local importance candidates under `topics/<topic>/importance/`. Agents must not treat these labels as final unless they also appear in `confirmed_importance.md` or have explicit human-review evidence.
