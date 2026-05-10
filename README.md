@@ -6,15 +6,15 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.6.9`
+Current version: `v0.7.0`
 
-### v0.6.9
+### v0.7.0
 
-README cleanup and changelog split.
+Topic Review Workflow Foundation.
 
-This version turns `README.md` back into a concise project entry page, moves long historical release notes into `CHANGELOG.md`, and moves the detailed Manager LLM / Worker LLM maintenance workflow into `docs/llm-maintenance.md`.
+This version defines the review workflow that connects `kb topic rank <topic>` outputs to human/AI review, accepted topic-local relationship records, and completed memory records. It introduces explicit documentation for topic review queues, evidence-backed decisions, accepted/rejected/deferred statuses, and review-safe handoff between Manager LLMs, Worker LLMs, and human reviewers.
 
-No core CLI behavior is changed in this version.
+This release is still conservative: it defines the workflow and command contract before adding automatic topic-level scientific interpretation.
 
 ## Project Idea
 
@@ -166,6 +166,28 @@ topics/quantum/importance/
 
 These files should be reviewed by humans or downstream AI agents before being treated as reliable knowledge. The ranking output is a structured review aid, not an automatic final judgment.
 
+## Topic Review Workflow
+
+Starting in `v0.7.0`, topic-local importance and relationship work is treated as a review workflow rather than a one-step ranking result.
+
+The intended path is:
+
+```text
+kb topic rank <topic>
+        ↓
+topics/<topic>/importance/ candidates
+        ↓
+review queue with evidence, decision status, and uncertainty notes
+        ↓
+human / Manager LLM / Worker LLM review
+        ↓
+accepted topic-local decisions under topics/<topic>/reviewed/
+        ↓
+completion record under LLM/memory/
+```
+
+See `docs/topic-review-workflow.md` and `docs/topic-review-schema.md`.
+
 ## Relationship Layers
 
 LLM Wiki is not merely a local document archive. Its central purpose is to maintain an evolving, reviewable, and evidence-backed relationship network among references.
@@ -254,6 +276,8 @@ docs/topic-relationships.md           Topic-specific relationship overlay roadma
 docs/topic-relation-schema.md         Controlled fields for topic-local directed relation records
 docs/literature-importance-schema.md  Lightweight global/topic-local literature importance schema
 docs/topic-v2-roadmap.md              Conservative topic-overlay roadmap
+docs/topic-review-workflow.md         Review workflow for topic-local ranking and relation decisions
+docs/topic-review-schema.md           Review record fields and status vocabulary
 docs/third-party-skills/              Third-party graph visualization skill guidance
 ```
 
@@ -273,7 +297,7 @@ docs/shell.md                    Deterministic `kb shell` usage
 
 ## Current Scope
 
-This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, manifest tracking, static linting, deterministic keyword search, WikiLink scanning, Rust-native grep, best-effort text extraction, reference-hint scanning, bibliographic index candidate building, graph export, keyword candidate reports, task handoff reports, completed-task memory records, topic workspaces, topic-local importance candidates, and a static HTML viewer.
+This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, manifest tracking, static linting, deterministic keyword search, WikiLink scanning, Rust-native grep, best-effort text extraction, reference-hint scanning, bibliographic index candidate building, graph export, keyword candidate reports, task handoff reports, completed-task memory records, topic workspaces, topic-local importance candidates, topic review workflow documentation, and a static HTML viewer.
 
 It still does **not** provide full RAG, vector search, embeddings, OCR, hidden LLM cleanup, autonomous LLM/wiki preparation, or automatic scientific interpretation.
 
@@ -327,7 +351,7 @@ For documentation-only releases, at minimum review the Markdown diff:
 
 ```bash
 git status
-git diff README.md CHANGELOG.md docs/llm-maintenance.md
+git diff README.md CHANGELOG.md docs/llm-maintenance.md docs/topic-review-workflow.md docs/topic-review-schema.md
 ```
 
 ## License

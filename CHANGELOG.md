@@ -4,6 +4,19 @@ All notable changes to `kb-cli` are recorded here.
 
 This project uses small, review-first releases. Many releases are documentation, workflow, or boundary-stabilization releases rather than feature-heavy releases.
 
+## v0.7.0
+
+Topic Review Workflow Foundation.
+
+Main changes:
+
+- Defined the review workflow that connects `kb topic rank <topic>` outputs to accepted topic-local decisions.
+- Added `docs/topic-review-workflow.md` to describe the path from importance candidates to review queue, accepted records, rejected records, deferred work, and completion memory.
+- Added `docs/topic-review-schema.md` to define review-safe fields, status vocabulary, evidence requirements, uncertainty notes, and forbidden overclaims.
+- Updated `README.md` to make topic review a first-class workflow after topic-local importance ranking.
+- Preserved the distinction between global bibliographic index relations under `processing/refs/` and topic-specific interpretive relations under `topics/<topic>/`.
+- No automatic topic-level scientific interpretation, hidden LLM execution, vector search, or autonomous wiki rewriting is added in this version.
+
 ## v0.6.9
 
 README cleanup and changelog split.
