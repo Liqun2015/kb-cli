@@ -6,7 +6,29 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.3`
+Current version: `v0.7.4`
+
+### v0.7.4
+
+Paper Section Extraction for Literature Relations.
+
+This version adds:
+
+```bash
+kb extract-sections
+```
+
+The command slices `Introduction` and `References` sections from extracted paper text under `processing/text/` and writes them under:
+
+```text
+processing/sections/<source-key>/introduction.txt
+processing/sections/<source-key>/references.txt
+processing/sections/<source-key>/section_manifest.md
+```
+
+These two sections are treated as high-value evidence for building literature relationships: `Introduction` usually exposes motivation, gaps, and foundational citations; `References` exposes the explicit citation boundary. If deterministic slicing fails, the command writes an explicit OCR/LLM fallback task for image-based papers or ambiguous section boundaries.
+
+No hidden OCR, hidden LLM call, citation-identity judgment, or scientific relationship inference is added.
 
 ### v0.7.3
 
@@ -105,7 +127,7 @@ KnowledgeBase/
 ├── LLM/              # Explicit future LLM/agent workbench
 │   ├── tasks/        # Manager index, Worker task items, and handoff reports
 │   └── memory/       # Completed-task audit memory
-├── processing/       # Deterministic intermediate outputs
+├── processing/       # Deterministic intermediate outputs, extracted text, and section slices
 ├── outputs/          # Generated reports and static viewer output
 ├── references/       # Templates and reference materials
 └── logs/             # Metadata and logs
@@ -167,7 +189,7 @@ By default, `bootstrap` uses safe copy mode unless `--move` is explicitly provid
 The expected workflow is:
 
 1. Put source materials into `raw/`
-2. Use deterministic commands to inspect, extract, index, and lint files
+2. Use deterministic commands to inspect, extract, section, index, and lint files
 3. Use `kb prepare` or `kb tasks` to generate reviewable task materials
 4. Use `LLM/tasks/index.md` as the Manager LLM task dashboard
 5. Build or update Markdown knowledge pages under `wiki/`
@@ -193,6 +215,7 @@ This workflow is not meant to replace human judgment. It is meant to make AI-ass
 | `kb query <terms...>` | Search Markdown pages with local keyword matching. |
 | `kb grep <pattern>` | Search text-like files with line-level matching. |
 | `kb extract-text` | Extract plain text into `processing/text/`. |
+| `kb extract-sections` | Slice Introduction and References into `processing/sections/`. |
 | `kb refs` | Scan extracted text for reference headings, entries, DOI values, and citation hints. |
 | `kb refs-index` | Build bibliographic index relation candidates. |
 | `kb refs-graph` | Export bibliographic index candidates as graph data. |
@@ -209,7 +232,7 @@ This workflow is not meant to replace human judgment. It is meant to make AI-ass
 | `kb view` | Generate and open the static HTML review dashboard. |
 | `kb shell` | Start a deterministic interactive command shell. |
 
-For detailed command behavior, see `docs/commands.md`, `docs/llm-task-index.md`, `docs/audit-wiki.md`, and `docs/topic-review-command.md`.
+For detailed command behavior, see `docs/commands.md`, `docs/extract-sections.md`, `docs/llm-task-index.md`, `docs/audit-wiki.md`, and `docs/topic-review-command.md`.
 
 ## LLM Task Index Workflow
 

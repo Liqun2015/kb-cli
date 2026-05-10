@@ -4,6 +4,24 @@ All notable changes to `kb-cli` are recorded here.
 
 This project uses small, review-first releases. Many releases are documentation, workflow, or boundary-stabilization releases rather than feature-heavy releases.
 
+## v0.7.4
+
+Paper Section Extraction for Literature Relations.
+
+Main changes:
+
+- Added `kb extract-sections`.
+- The command reads extracted text from `processing/text/` by default.
+- It writes per-paper section outputs under `processing/sections/<source-key>/`:
+  - `introduction.txt`
+  - `references.txt`
+  - `section_manifest.md`
+- `Introduction` and `References` are treated as primary data sources for later literature relationship reconstruction.
+- If deterministic section slicing fails or sections are suspiciously short, the command generates an explicit OCR/LLM fallback task under `LLM/tasks/items/`.
+- `kb tasks` now detects missing or incomplete section outputs and adds a `paper-section-extraction-001` Worker task to the Manager LLM task index.
+- Added `docs/extract-sections.md`.
+- No hidden OCR, hidden LLM call, automatic citation identity reconciliation, or scientific relationship inference is added.
+
 ## v0.7.3
 
 LLM Task Index Workflow.

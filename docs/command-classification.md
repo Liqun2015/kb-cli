@@ -63,6 +63,7 @@ Examples:
 
 ```text
 kb extract-text
+kb extract-sections
 kb extract-metadata
 kb refs
 future: kb extract-images
@@ -76,7 +77,7 @@ Rules:
 - OCR, LLM cleanup, layout repair, and semantic reconstruction must be explicit future modes, not default behavior.
 - These commands may become agent entry points later, but only through explicit flags or subcommands.
 
-For example, `kb extract-text` is currently a simple text extraction command. It is also reserved as the future entry point for a PDF Text Conversion Agent. That future agent must be opt-in, not implicit. `kb refs` is also in this category: it scans extracted text for reference hints, but it does not build a semantic citation graph or call an LLM.
+For example, `kb extract-text` is a simple text extraction command, and `kb extract-sections` is a deterministic section slicing command for `Introduction` and `References`. OCR, multimodal reading, and LLM cleanup must remain explicit Worker tasks, not implicit command behavior. `kb refs` is also in this category: it scans extracted text for reference hints, but it does not build a semantic citation graph or call an LLM.
 
 ### 4. Task preparation commands
 
@@ -196,6 +197,7 @@ A deferred task should include:
 Examples:
 
 - `extract-text` may identify PDFs that need OCR or LLM-assisted layout repair.
+- `extract-sections` may identify missing `Introduction` / `References` sections that need OCR or LLM-assisted section recovery.
 - `refs` may identify reference hints that need semantic reconciliation.
 - `lint-static` may identify broken links or missing source front matter that need Wiki maintenance.
 

@@ -12,7 +12,7 @@ The guiding rule is simple:
 |---|---|---:|---|
 | Deterministic core | `init`, `ingest`, `bootstrap`, `status`, `sync-wiki`, `lint-static`, `build-wiki` | No LLM | Maintain the file structure, manifest, wiki skeleton, and static checks. |
 | Search / inspection | `query`, `grep`, `links` | No LLM | Locate pages, lines, and WikiLink relations for later review. |
-| Text / reference processing | `extract-text`, `refs`, `refs-index`, `refs-graph`, `keywords`, `extract-metadata` | No LLM | Convert source traces into searchable text, bibliographic relation candidates, and keyword/topic relation evidence. |
+| Text / reference processing | `extract-text`, `extract-sections`, `refs`, `refs-index`, `refs-graph`, `keywords`, `extract-metadata` | No LLM | Convert source traces into searchable text, section-level evidence, bibliographic relation candidates, and keyword/topic relation evidence. |
 | Handoff / memory | `prepare`, `tasks`, `memory` | No LLM | Prepare reviewable work items and record completed work. |
 | Health / reporting | `health` | No LLM | Summarize relationship-network completeness, review backlog, and pipeline health. |
 | Proof audit | `audit-wiki` | Explicit LLM handoff | Check whether the folder has become a reviewable LLM Wiki and write an LLM audit prompt. |
@@ -106,6 +106,15 @@ The guiding rule is simple:
 - **Allows LLM:** no by default.
 - **Deferred work:** OCR, layout repair, garbled text repair, table reconstruction, and LLM cleanup must be explicit future modes or Worker tasks.
 
+### `kb extract-sections`
+
+- **Ability:** slice `Introduction` and `References` from extracted paper text.
+- **Primary input:** `processing/text/` or a text file passed with `--path`.
+- **Primary output:** `processing/sections/<source-key>/introduction.txt`, `references.txt`, and `section_manifest.md`.
+- **Allows LLM:** no by default.
+- **Deferred work:** scanned/image-based PDFs, bad OCR, missing headings, and ambiguous section boundaries should become explicit `Paper Section OCR/LLM Worker` tasks.
+- **Why it matters:** Introduction and References are high-value inputs for building literature relationships among papers.
+
 ### `kb refs`
 
 - **Ability:** scan extracted text for reference headings, bibliography entries, DOI values, and optional citation markers.
@@ -159,7 +168,7 @@ The guiding rule is simple:
 ### `kb tasks`
 
 - **Ability:** consolidate deterministic findings into Manager/Worker handoff lists and refresh the Manager LLM task dashboard.
-- **Primary input:** `raw/`, `processing/text/`, `processing/refs/`, `wiki/`, `topics/*/review/`, `processing/proposals/`, static checks.
+- **Primary input:** `raw/`, `processing/text/`, `processing/sections/`, `processing/refs/`, `wiki/`, `topics/*/review/`, `processing/proposals/`, static checks.
 - **Primary output:** `LLM/tasks/index.md`, `LLM/tasks/items/<task_id>.md`, and `LLM/tasks/llm_tasks_*.md`.
 - **Allows LLM:** no. It prepares tasks for future human/LLM execution.
 - **Deferred work:** all generated task groups should include target agent, goal, requirements, file list, and evidence. The Manager LLM starts from `LLM/tasks/index.md`; Worker LLMs receive bounded files under `LLM/tasks/items/`.
@@ -181,7 +190,7 @@ The guiding rule is simple:
 - **Primary input:** `raw/`, `processing/text/`, `processing/refs/`, `processing/keywords/`, `wiki/`, `LLM/tasks/`, `LLM/memory/`, `outputs/reports/`.
 - **Primary output:** `outputs/reports/health_*.md`, terminal summary, or JSON.
 - **Allows LLM:** no. It is a dashboard/scouting command for Manager LLM sessions.
-- **Deferred work:** missing extraction, uncertain bibliographic index relations, keyword/topic review, and initial wiki drafting become bounded handoff hints. Use `kb tasks` for consolidated `LLM/tasks/` files.
+- **Deferred work:** missing extraction, missing Introduction/References sections, uncertain bibliographic index relations, keyword/topic review, and initial wiki drafting become bounded handoff hints. Use `kb tasks` for consolidated `LLM/tasks/` files.
 
 ### `kb audit-wiki`
 

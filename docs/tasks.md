@@ -151,3 +151,15 @@ LLM/memory/completed_tasks.md
 ```
 
 This keeps completed work inspectable without relying on chat history or hidden model state.
+
+## Paper section extraction tasks
+
+Starting in `v0.7.4`, `kb tasks` also checks whether extracted paper text has corresponding section files under:
+
+```text
+processing/sections/<source-key>/introduction.txt
+processing/sections/<source-key>/references.txt
+```
+
+If these files are missing or suspiciously short, `kb tasks` adds a `paper-section-extraction-001` task for a `Paper Section OCR/LLM Worker`. The Worker should recover the two sections from text, OCR, or multimodal LLM reading, but the work must remain explicit and reviewable.
+

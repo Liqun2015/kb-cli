@@ -154,3 +154,14 @@ It does not:
 - replace human review
 
 It only makes the task intake point clear enough for a Manager LLM to begin work safely.
+
+
+## Section extraction task intake
+
+Starting in `v0.7.4`, the Manager LLM task index may include:
+
+```text
+paper-section-extraction-001
+```
+
+This task means that deterministic section slicing did not produce usable `Introduction` and `References` files under `processing/sections/`. The Manager LLM should assign it to a `Paper Section OCR/LLM Worker`, not to a relationship-interpretation Worker. The goal is section capture, not summary or scientific judgment.

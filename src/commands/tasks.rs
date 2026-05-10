@@ -121,6 +121,9 @@ fn run_task_scan(kb_path: &Path, args: &TasksArgs) -> Result<TasksReport> {
     if let Some(task) = scan_pdf_text_conversion_tasks(kb_path)? {
         tasks.push(task);
     }
+    if let Some(task) = scan_paper_section_extraction_tasks(kb_path)? {
+        tasks.push(task);
+    }
     if let Some(task) = scan_reference_reconciliation_tasks(kb_path)? {
         tasks.push(task);
     }
@@ -145,7 +148,7 @@ fn run_task_scan(kb_path: &Path, args: &TasksArgs) -> Result<TasksReport> {
     };
 
     Ok(TasksReport {
-        schema_version: "0.7.3".to_string(),
+        schema_version: "0.7.4".to_string(),
         generated_by: "kb-cli tasks".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         dry_run: args.dry_run || args.preview,
@@ -210,6 +213,77 @@ fn scan_pdf_text_conversion_tasks(kb_path: &Path) -> Result<Option<DeferredTask>
         files,
         evidence,
         source_command: "kb extract-text".to_string(),
+        priority: "high".to_string(),
+    }))
+}
+
+fn scan_paper_section_extraction_tasks(kb_path: &Path) -> Result<Option<DeferredTask>> {
+    let text_dir = kb_path.join("processing/text");
+    if !text_dir.exists() {
+        return Ok(None);
+    }
+
+    let sections_dir = kb_path.join("processing/sections");
+    let mut files = Vec::new();
+    let mut evidence = Vec::new();
+
+    for text_file in collect_files_with_extensions(&text_dir, &["txt", "md"])? {
+        let article_dir = section_output_dir_for(kb_path, &sections_dir, &text_file);
+        let intro_path = article_dir.join("introduction.txt");
+        let refs_path = article_dir.join("references.txt");
+        let intro_missing_or_empty = !intro_path.exists()
+            || intro_path
+                .metadata()
+                .map(|metadata| metadata.len() < 120)
+                .unwrap_or(true);
+        let refs_missing_or_empty = !refs_path.exists()
+            || refs_path
+                .metadata()
+                .map(|metadata| metadata.len() < 120)
+                .unwrap_or(true);
+
+        if intro_missing_or_empty || refs_missing_or_empty {
+            let rel_text = relative_path_string(kb_path, &text_file);
+            files.push(rel_text.clone());
+            evidence.push(format!(
+                "{} -> {} / {} (introduction: {}, references: {})",
+                rel_text,
+                relative_path_string(kb_path, &intro_path),
+                relative_path_string(kb_path, &refs_path),
+                if intro_missing_or_empty {
+                    "missing_or_short"
+                } else {
+                    "present"
+                },
+                if refs_missing_or_empty {
+                    "missing_or_short"
+                } else {
+                    "present"
+                },
+            ));
+        }
+    }
+
+    if files.is_empty() {
+        return Ok(None);
+    }
+
+    Ok(Some(DeferredTask {
+        id: "paper-section-extraction-001".to_string(),
+        category: "paper_section_extraction".to_string(),
+        target_agent: "Paper Section OCR/LLM Worker".to_string(),
+        goal: "Recover Introduction and References sections for papers whose deterministic section slicing is missing or incomplete.".to_string(),
+        requirements: vec![
+            "Run `kb extract-sections` first and use its output as the deterministic baseline.".to_string(),
+            "For scanned/image-based PDFs, use explicit OCR or multimodal LLM reading; do not pretend deterministic extraction succeeded.".to_string(),
+            "Write recovered sections to processing/sections/<source-key>/introduction.txt and references.txt.".to_string(),
+            "Preserve original wording as much as possible; do not summarize these section text files.".to_string(),
+            "Record uncertainty and extraction notes in section_manifest.md.".to_string(),
+            "Do not modify raw/ source files.".to_string(),
+        ],
+        files,
+        evidence,
+        source_command: "kb extract-sections".to_string(),
         priority: "high".to_string(),
     }))
 }
@@ -567,6 +641,37 @@ fn has_extension(path: &Path, exts: &[&str]) -> bool {
     };
     let ext = ext.to_ascii_lowercase();
     exts.iter().any(|candidate| *candidate == ext)
+}
+
+fn section_output_dir_for(kb_path: &Path, output_dir: &Path, source: &Path) -> PathBuf {
+    let text_root = kb_path.join("processing/text");
+    let rel = source
+        .strip_prefix(&text_root)
+        .or_else(|_| source.strip_prefix(kb_path))
+        .unwrap_or(source);
+    let mut stem = rel.to_string_lossy().replace('\\', "__").replace('/', "__");
+    if let Some(idx) = stem.rfind('.') {
+        stem.truncate(idx);
+    }
+    output_dir.join(sanitize_path_component(&stem))
+}
+fn sanitize_path_component(value: &str) -> String {
+    let cleaned = value
+        .chars()
+        .map(|ch| {
+            if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' || ch == '.' {
+                ch
+            } else {
+                '_'
+            }
+        })
+        .collect::<String>();
+    let trimmed = cleaned.trim_matches('_');
+    if trimmed.is_empty() {
+        "source".to_string()
+    } else {
+        trimmed.to_string()
+    }
 }
 
 fn text_output_path_for(kb_path: &Path, output_dir: &Path, source: &Path) -> PathBuf {

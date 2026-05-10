@@ -92,6 +92,8 @@ enum Commands {
         about = "Extract plain text from supported source files with deterministic best-effort methods"
     )]
     ExtractText(commands::extract_text::ExtractTextArgs),
+    #[command(about = "Slice Introduction and References sections from extracted paper text")]
+    ExtractSections(commands::extract_sections::ExtractSectionsArgs),
     #[command(
         name = "shell",
         alias = "repl",
@@ -155,6 +157,9 @@ fn main() -> anyhow::Result<()> {
         Some(Commands::ExtractText(args)) => {
             commands::extract_text::execute(cli.kb_path.as_deref(), args)
         }
+        Some(Commands::ExtractSections(args)) => {
+            commands::extract_sections::execute(cli.kb_path.as_deref(), args)
+        }
         Some(Commands::Shell) => commands::repl::execute(cli.kb_path.as_deref()),
         Some(Commands::ListModels) => commands::model::execute_list_models(),
         Some(Commands::ShowModel) => commands::model::execute_show_model(),
@@ -173,6 +178,7 @@ fn main() -> anyhow::Result<()> {
             );
             println!("  extract-metadata [--force]  Extract PDF metadata");
             println!("  extract-text [--dry-run|--preview] [--force] [--json]  Extract text into processing/text");
+            println!("  extract-sections [--dry-run|--preview] [--force] [--json]  Slice Introduction/References into processing/sections");
             println!("  build-wiki                  Build wiki pages");
             println!("  prepare [--new|--file PATH] [--dry-run|--preview]  Prepare LLM/wiki handoff artifacts");
             println!("  query <terms...> [--limit N] [--snippets N] [--json] [--title-only]  Search wiki Markdown pages");

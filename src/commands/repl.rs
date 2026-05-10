@@ -152,6 +152,7 @@ fn is_known_batch_command(command: &str) -> bool {
             | "status"
             | "extract-metadata"
             | "extract-text"
+            | "extract-sections"
             | "list-models"
             | "show-model"
             | "add-model"
@@ -180,6 +181,7 @@ fn print_help() {
     println!("  query <terms...>");
     println!("  grep <pattern> --path processing/text");
     println!("  extract-text --dry-run");
+    println!("  extract-sections --dry-run");
     println!("  refs --path processing/text");
     println!("  refs-index --dry-run");
     println!("  refs-graph --json --dry-run");
