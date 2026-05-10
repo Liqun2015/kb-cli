@@ -1,3 +1,10 @@
+## v0.6.7.1 - README opening notes cleanup
+
+- Reorganized the opening notes in `README.md` into a clear `Recent version notes` list.
+- Kept the current version line separate from the version notes.
+- Moved the strict shell safety note into the same version-notes block so the README opening has a cleaner three-part structure: project description, current version, and recent notes.
+- No command behavior, topic behavior, HTML viewer behavior, or LLM behavior was changed.
+
 ## v0.6.7 - topic-local importance candidate ranking
 
 - Added `kb topic rank <topic>` to generate deterministic, topic-specific literature importance candidates.

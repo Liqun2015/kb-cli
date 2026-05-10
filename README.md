@@ -2,15 +2,17 @@
 
 > A small Rust CLI for building and maintaining a local Markdown LLM Wiki.
 >
-> Current version: `v0.6.7`
-> **v0.6.7 note:** `kb topic rank <topic>` now generates deterministic topic-local literature importance candidates under `topics/<topic>/importance/` for later human review.
-> **v0.6.6.1 note:** `kb view` now uses the knowledge-base directory name as the HTML viewer title and updates the viewer subtitle for the research-oriented LLM Wiki purpose.
-> **v0.6.6 note:** `kb topic list` and `kb topic status <topic>` now inspect topic-specific relationship workspaces without making semantic claims.
-> **v0.6.5 note:** `kb topic init <topic>` now creates a conservative topic-specific relationship workspace under `topics/<topic>/`.
+> Current version: `v0.6.7.1`
+
+Recent version notes:
+
+- **v0.6.7:** `kb topic rank <topic>` generates deterministic topic-local literature importance candidates under `topics/<topic>/importance/` for later human review.
+- **v0.6.6.1:** `kb view` uses the knowledge-base directory name as the HTML viewer title and updates the viewer subtitle for the research-oriented LLM Wiki purpose.
+- **v0.6.6:** `kb topic list` and `kb topic status <topic>` inspect topic-specific relationship workspaces without making semantic claims.
+- **v0.6.5:** `kb topic init <topic>` creates a conservative topic-specific relationship workspace under `topics/<topic>/`.
+- **v0.6.0.1:** `kb shell` is a strict whitelist command shell. Unknown input is a safe no-op: it does not guess intent, interpret natural language, or call an LLM.
 
 `kb-cli` follows a Karpathy-style local knowledge workflow: keep source materials in `raw/`, use `kb prepare` to generate reviewable task materials, maintain Markdown knowledge pages under `wiki/`, and constrain future human/AI maintainers through the `rules/` layer.
-
-> **v0.6.0.1 note:** `kb shell` is now a strict whitelist command shell. Unknown input is a safe no-op: it does not guess intent, interpret natural language, or call an LLM.
 
 ## Command map and task lifecycle
 
