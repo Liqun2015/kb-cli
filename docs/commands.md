@@ -244,11 +244,11 @@ Future commands such as `kb topic`, `kb relation-review`, or topic graph exporte
 ## `kb topic`
 
 - **Category:** topic-specific relationship workspace command.
-- **Current subcommands:** `kb topic init <topic>`, `kb topic list`, `kb topic status <topic>`, and `kb topic rank <topic>`.
+- **Current subcommands:** `kb topic init <topic>`, `kb topic list`, `kb topic status <topic>`, `kb topic rank <topic>`, and `kb topic review <topic>`.
 - **Primary input:** topic name or slug.
-- **Primary output:** `topics/<topic>/` workspace files and topic-local reports under `topics/<topic>/importance/`.
+- **Primary output:** `topics/<topic>/` workspace files, topic-local reports under `topics/<topic>/importance/`, and review queues under `topics/<topic>/review/`.
 - **LLM allowed:** no. This command only creates deterministic scaffolding.
-- **Deferred work:** Manager LLM / Worker LLM / human reviewers fill and review topic-local importance and relation records later. `kb topic rank` produces candidates only; it does not decide final importance.
+- **Deferred work:** Manager LLM / Worker LLM / human reviewers fill and review topic-local importance and relation records later. `kb topic rank` produces candidates only; `kb topic review` turns those candidates into a queue only. Neither command decides final importance.
 
 Example:
 
@@ -258,6 +258,7 @@ kb topic init thermal-metamaterials --title "Thermal Metamaterials"
 kb topic list
 kb topic status thermal-metamaterials
 kb topic rank thermal-metamaterials --dry-run
+kb topic review thermal-metamaterials --dry-run
 ```
 
 ### `kb topic rank <topic>`
@@ -268,3 +269,24 @@ kb topic rank thermal-metamaterials --dry-run
 - **Allows LLM:** no.
 - **Deferred work:** core/important labels require human review before they influence graph node size or research conclusions.
 - **Layer rule:** importance is topic-specific, so rank/review outputs belong under `topics/<topic>/`, not under global `processing/` folders.
+
+
+### `kb topic review <topic>`
+
+- **Ability:** build a deterministic review queue from topic-local importance candidates.
+- **Primary input:** candidate files under `topics/<topic>/importance/`.
+- **Primary output:** `topics/<topic>/review/review_queue.md` and `topics/<topic>/review/review_summary.md`.
+- **Allows LLM:** no.
+- **Overwrite rule:** existing queue and summary files are not overwritten unless `--force` is used.
+- **Layer rule:** reviewed decisions belong under `topics/<topic>/reviewed/`; this command does not write accepted/rejected/deferred decisions.
+
+Example:
+
+```bash
+kb topic review thermal-metamaterials
+kb topic review thermal-metamaterials --dry-run
+kb topic review thermal-metamaterials --json
+kb topic review thermal-metamaterials --force
+```
+
+`kb topic review` does not perform scientific judgment. Every generated row remains in `candidate` status.

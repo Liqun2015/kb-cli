@@ -19,6 +19,8 @@ pub enum TopicCommand {
     Status(TopicStatusArgs),
     #[command(about = "Generate topic-local literature importance candidates")]
     Rank(TopicRankArgs),
+    #[command(about = "Build a deterministic review queue from topic-local importance candidates")]
+    Review(TopicReviewArgs),
 }
 
 #[derive(Debug, Clone, Args)]
@@ -98,6 +100,27 @@ pub struct TopicRankArgs {
     pub json: bool,
 }
 
+#[derive(Debug, Clone, Args)]
+pub struct TopicReviewArgs {
+    #[arg(value_name = "TOPIC", help = "Topic name or slug to review")]
+    pub topic: String,
+
+    #[arg(long, help = "Preview review queue generation without writing files")]
+    pub dry_run: bool,
+
+    #[arg(long, help = "Alias for --dry-run")]
+    pub preview: bool,
+
+    #[arg(long, help = "Print a machine-readable JSON topic review report")]
+    pub json: bool,
+
+    #[arg(
+        long,
+        help = "Overwrite existing review_queue.md and review_summary.md files"
+    )]
+    pub force: bool,
+}
+
 #[derive(Debug, Default)]
 struct InitSummary {
     topic_slug: String,
@@ -116,6 +139,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &TopicArgs) -> Result<()> {
         TopicCommand::List(list_args) => execute_list(custom_kb, list_args),
         TopicCommand::Status(status_args) => execute_status(custom_kb, status_args),
         TopicCommand::Rank(rank_args) => execute_rank(custom_kb, rank_args),
+        TopicCommand::Review(review_args) => execute_review(custom_kb, review_args),
     }
 }
 
@@ -154,6 +178,39 @@ struct TopicRankReviewHint {
     requirements: Vec<String>,
     files: Vec<String>,
     evidence: Vec<String>,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct TopicReviewReport {
+    schema_version: String,
+    generated_by: String,
+    generated_at: String,
+    topic_slug: String,
+    topic_path: String,
+    candidate_dir: String,
+    review_dir: String,
+    queue_path: String,
+    summary_path: String,
+    dry_run: bool,
+    force: bool,
+    written: bool,
+    candidate_files: usize,
+    review_items: usize,
+    empty_or_unreadable_candidates: usize,
+    warnings: Vec<String>,
+    items: Vec<TopicReviewItem>,
+    next_steps: Vec<String>,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+struct TopicReviewItem {
+    review_id: String,
+    candidate_id: String,
+    source_item: String,
+    proposed_decision: String,
+    status: String,
+    reviewer: String,
+    evidence: String,
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -636,6 +693,577 @@ fn print_rank_report(report: &TopicRankReport) {
     }
 }
 
+fn execute_review(custom_kb: Option<&Path>, args: &TopicReviewArgs) -> Result<()> {
+    let kb_path = crate::commands::init::get_kb_path(custom_kb);
+    let slug = topic_slug(&args.topic);
+    if slug.is_empty() {
+        return Err(anyhow!(
+            "topic name must contain at least one letter or digit"
+        ));
+    }
+
+    let topic_root = kb_path.join("topics").join(&slug);
+    if !topic_root.exists() {
+        return Err(anyhow!(
+            "topic workspace not found: {}. Hint: run `kb topic init {}` first.",
+            relative_path_string(&kb_path, &topic_root),
+            slug
+        ));
+    }
+
+    let importance_dir = topic_root.join("importance");
+    if !importance_dir.is_dir() {
+        return Err(anyhow!(
+            "importance candidate directory not found: {}. Hint: run `kb topic rank {}` first.",
+            relative_path_string(&kb_path, &importance_dir),
+            slug
+        ));
+    }
+
+    let mut report = build_topic_review_report(&kb_path, &slug, &topic_root, args)?;
+    let dry_run = args.dry_run || args.preview;
+
+    if !dry_run {
+        let queue_path = topic_root.join("review").join("review_queue.md");
+        let summary_path = topic_root.join("review").join("review_summary.md");
+        if !args.force {
+            if queue_path.exists() {
+                return Err(anyhow!(
+                    "review_queue.md already exists. Use --force to overwrite: {}",
+                    relative_path_string(&kb_path, &queue_path)
+                ));
+            }
+            if summary_path.exists() {
+                return Err(anyhow!(
+                    "review_summary.md already exists. Use --force to overwrite: {}",
+                    relative_path_string(&kb_path, &summary_path)
+                ));
+            }
+        }
+
+        fs::create_dir_all(topic_root.join("review"))?;
+        report.written = true;
+        fs::write(&queue_path, render_review_queue_markdown(&report))?;
+        fs::write(&summary_path, render_review_summary_markdown(&report))?;
+    }
+
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&report)?);
+    } else {
+        print_review_report(&report);
+    }
+    Ok(())
+}
+
+fn build_topic_review_report(
+    kb_path: &Path,
+    slug: &str,
+    topic_root: &Path,
+    args: &TopicReviewArgs,
+) -> Result<TopicReviewReport> {
+    let dry_run = args.dry_run || args.preview;
+    let importance_dir = topic_root.join("importance");
+    let review_dir = topic_root.join("review");
+    let queue_path = review_dir.join("review_queue.md");
+    let summary_path = review_dir.join("review_summary.md");
+    let candidate_files = discover_topic_review_candidate_files(&importance_dir)?;
+
+    let mut warnings = Vec::new();
+    let mut empty_or_unreadable_candidates = 0usize;
+    let mut items = Vec::new();
+
+    for file in &candidate_files {
+        let relative_file = relative_path_string(kb_path, file);
+        let text = match fs::read_to_string(file) {
+            Ok(text) => text,
+            Err(err) => {
+                empty_or_unreadable_candidates += 1;
+                warnings.push(format!("could not read {relative_file}: {err}"));
+                continue;
+            }
+        };
+
+        if text.trim().is_empty() {
+            empty_or_unreadable_candidates += 1;
+            warnings.push(format!("empty candidate file skipped: {relative_file}"));
+            continue;
+        }
+
+        let parsed = parse_review_items_from_candidate_text(kb_path, file, &relative_file, &text);
+        if parsed.is_empty() {
+            if looks_like_empty_topic_template(file, &text) {
+                warnings.push(format!(
+                    "template-like candidate file has no reviewable rows: {relative_file}"
+                ));
+                continue;
+            }
+            items.push(fallback_review_item(
+                kb_path,
+                file,
+                &relative_file,
+                &text,
+                items.len() + 1,
+            ));
+        } else {
+            items.extend(parsed);
+        }
+    }
+
+    for (index, item) in items.iter_mut().enumerate() {
+        item.review_id = format!("tr-{index:04}", index = index + 1);
+    }
+
+    if candidate_files.is_empty() {
+        warnings.push(format!(
+            "no topic-local importance candidate files found under topics/{slug}/importance/"
+        ));
+    }
+    if items.is_empty() {
+        warnings.push(
+            "no review items generated; run `kb topic rank <topic>` after editing literature.md"
+                .to_string(),
+        );
+    }
+    if dry_run {
+        if queue_path.exists() && !args.force {
+            warnings.push(format!(
+                "existing queue would not be overwritten without --force: {}",
+                relative_path_string(kb_path, &queue_path)
+            ));
+        }
+        if summary_path.exists() && !args.force {
+            warnings.push(format!(
+                "existing summary would not be overwritten without --force: {}",
+                relative_path_string(kb_path, &summary_path)
+            ));
+        }
+    }
+
+    let next_steps = if items.is_empty() {
+        vec![
+            format!("Add papers to topics/{slug}/literature.md."),
+            format!("Run `kb topic rank {slug}` to generate topic-local importance candidates."),
+            format!("Run `kb topic review {slug}` again to build a review queue."),
+        ]
+    } else {
+        vec![
+            format!("Review one item at a time in topics/{slug}/review/review_queue.md."),
+            "Do not accept a candidate without evidence.".to_string(),
+            format!(
+                "Record accepted, rejected, or deferred decisions under topics/{slug}/reviewed/."
+            ),
+        ]
+    };
+
+    Ok(TopicReviewReport {
+        schema_version: "topic-review.v0.7.1".to_string(),
+        generated_by: "kb-cli topic review".to_string(),
+        generated_at: chrono::Utc::now().to_rfc3339(),
+        topic_slug: slug.to_string(),
+        topic_path: relative_path_string(kb_path, topic_root),
+        candidate_dir: relative_path_string(kb_path, &importance_dir),
+        review_dir: relative_path_string(kb_path, &review_dir),
+        queue_path: relative_path_string(kb_path, &queue_path),
+        summary_path: relative_path_string(kb_path, &summary_path),
+        dry_run,
+        force: args.force,
+        written: false,
+        candidate_files: candidate_files.len(),
+        review_items: items.len(),
+        empty_or_unreadable_candidates,
+        warnings,
+        items,
+        next_steps,
+    })
+}
+
+fn discover_topic_review_candidate_files(importance_dir: &Path) -> Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+    if !importance_dir.exists() {
+        return Ok(files);
+    }
+    for entry in walkdir::WalkDir::new(importance_dir)
+        .min_depth(1)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+    {
+        if !entry.file_type().is_file() {
+            continue;
+        }
+        let path = entry.path();
+        if !is_review_candidate_extension(path) || is_non_candidate_importance_file(path) {
+            continue;
+        }
+        files.push(path.to_path_buf());
+    }
+    files.sort_by(|a, b| a.to_string_lossy().cmp(&b.to_string_lossy()));
+    Ok(files)
+}
+
+fn is_review_candidate_extension(path: &Path) -> bool {
+    matches!(
+        path.extension().and_then(|ext| ext.to_str()).map(|ext| ext.to_ascii_lowercase()),
+        Some(ext) if matches!(ext.as_str(), "md" | "markdown" | "json" | "toml" | "yaml" | "yml")
+    )
+}
+
+fn is_non_candidate_importance_file(path: &Path) -> bool {
+    let name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    name == "confirmed_importance.md" || name == "importance_review.md"
+}
+
+fn parse_review_items_from_candidate_text(
+    kb_path: &Path,
+    path: &Path,
+    _relative_file: &str,
+    text: &str,
+) -> Vec<TopicReviewItem> {
+    let mut items = Vec::new();
+    let mut header: Option<Vec<String>> = None;
+    let mut row_index = 0usize;
+
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if !trimmed.starts_with('|') || !trimmed.ends_with('|') {
+            continue;
+        }
+        let cells = split_markdown_table_row(trimmed);
+        if cells.is_empty() {
+            continue;
+        }
+        if cells
+            .iter()
+            .all(|cell| cell.chars().all(|ch| matches!(ch, '-' | ':' | ' ')))
+        {
+            continue;
+        }
+        if header.is_none() && cells.iter().any(|cell| normalize_header(cell) == "paper") {
+            header = Some(cells.iter().map(|cell| normalize_header(cell)).collect());
+            continue;
+        }
+        let Some(header_cells) = &header else {
+            continue;
+        };
+        let paper = value_for_header(&cells, header_cells, &["paper", "source_item", "item"])
+            .unwrap_or_default();
+        if !is_real_candidate_value(&paper) {
+            continue;
+        }
+
+        row_index += 1;
+        let proposed_decision = value_for_header(
+            &cells,
+            header_cells,
+            &[
+                "proposed_importance_level",
+                "importance_level",
+                "proposed_decision",
+                "importance",
+                "level",
+            ],
+        )
+        .filter(|value| is_real_candidate_value(value))
+        .unwrap_or_else(|| extract_proposed_decision(text));
+        let evidence = value_for_header(&cells, header_cells, &["evidence", "source", "sources"])
+            .filter(|value| is_real_candidate_value(value))
+            .unwrap_or_else(|| extract_evidence(text));
+        let source_item = format!("{}#row-{}", relative_path_string(kb_path, path), row_index);
+        items.push(TopicReviewItem {
+            review_id: String::new(),
+            candidate_id: candidate_id_from_value(&paper, row_index),
+            source_item,
+            proposed_decision,
+            status: "candidate".to_string(),
+            reviewer: "unassigned".to_string(),
+            evidence,
+        });
+    }
+
+    items
+}
+
+fn fallback_review_item(
+    _kb_path: &Path,
+    path: &Path,
+    relative_file: &str,
+    text: &str,
+    index: usize,
+) -> TopicReviewItem {
+    TopicReviewItem {
+        review_id: String::new(),
+        candidate_id: extract_candidate_id(text, path, index),
+        source_item: relative_file.to_string(),
+        proposed_decision: extract_proposed_decision(text),
+        status: "candidate".to_string(),
+        reviewer: "unassigned".to_string(),
+        evidence: extract_evidence(text),
+    }
+}
+
+fn split_markdown_table_row(line: &str) -> Vec<String> {
+    line.trim_matches('|')
+        .split('|')
+        .map(|cell| cell.trim().replace("\\|", "|"))
+        .collect()
+}
+
+fn normalize_header(input: &str) -> String {
+    input
+        .trim()
+        .trim_matches('`')
+        .to_ascii_lowercase()
+        .replace(' ', "_")
+        .replace('-', "_")
+}
+
+fn value_for_header(cells: &[String], header: &[String], names: &[&str]) -> Option<String> {
+    header.iter().enumerate().find_map(|(index, name)| {
+        if names.iter().any(|candidate| name == candidate) {
+            cells.get(index).map(|value| value.trim().to_string())
+        } else {
+            None
+        }
+    })
+}
+
+fn is_real_candidate_value(value: &str) -> bool {
+    let trimmed = value.trim();
+    if trimmed.is_empty() {
+        return false;
+    }
+    !matches!(
+        trimmed.to_ascii_lowercase().as_str(),
+        "todo" | "_none_" | "none" | "unknown" | "paper" | "item"
+    )
+}
+
+fn extract_field(text: &str, keys: &[&str]) -> Option<String> {
+    for line in text.lines() {
+        let trimmed = line.trim().trim_start_matches('-').trim();
+        let Some((key, value)) = trimmed.split_once(':') else {
+            continue;
+        };
+        let normalized_key = normalize_header(key);
+        if keys.iter().any(|candidate| normalized_key == *candidate) {
+            let cleaned = value
+                .trim()
+                .trim_matches('`')
+                .trim_matches('"')
+                .trim_matches('\'')
+                .trim()
+                .to_string();
+            if !cleaned.is_empty() {
+                return Some(cleaned);
+            }
+        }
+    }
+    None
+}
+
+fn extract_candidate_id(text: &str, path: &Path, index: usize) -> String {
+    extract_field(text, &["candidate_id", "id", "review_candidate_id"])
+        .filter(|value| is_real_candidate_value(value))
+        .unwrap_or_else(|| {
+            let stem = path
+                .file_stem()
+                .and_then(|stem| stem.to_str())
+                .map(topic_slug)
+                .filter(|value| !value.is_empty())
+                .unwrap_or_else(|| format!("candidate-{index:04}"));
+            format!("importance-{stem}")
+        })
+}
+
+fn candidate_id_from_value(value: &str, index: usize) -> String {
+    let slug = topic_slug(value);
+    if slug.is_empty() {
+        format!("candidate-{index:04}")
+    } else {
+        format!("importance-{slug}")
+    }
+}
+
+fn extract_proposed_decision(text: &str) -> String {
+    if let Some(value) = extract_field(
+        text,
+        &[
+            "proposed_decision",
+            "proposed_importance_level",
+            "importance_level",
+            "importance",
+        ],
+    ) {
+        return value;
+    }
+    let lower = text.to_ascii_lowercase();
+    for label in [
+        "core",
+        "supporting",
+        "important",
+        "background",
+        "peripheral",
+        "unknown",
+    ] {
+        if lower.contains(label) {
+            return label.to_string();
+        }
+    }
+    "unknown".to_string()
+}
+
+fn extract_evidence(text: &str) -> String {
+    if let Some(value) = extract_field(text, &["evidence", "source", "sources"]) {
+        return value;
+    }
+    for line in text.lines() {
+        let trimmed = line.trim();
+        if trimmed.contains("processing/")
+            || trimmed.contains("wiki/")
+            || trimmed.contains("raw/")
+            || trimmed.contains("topics/")
+        {
+            return trimmed.trim_matches('|').trim().to_string();
+        }
+    }
+    "see candidate file".to_string()
+}
+
+fn looks_like_empty_topic_template(path: &Path, text: &str) -> bool {
+    let name = path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    name == "importance_candidates.md" && text.to_ascii_lowercase().contains("| todo |")
+}
+
+fn render_review_queue_markdown(report: &TopicReviewReport) -> String {
+    let mut md = String::new();
+    md.push_str(&format!("# Topic Review Queue: {}\n\n", report.topic_slug));
+    md.push_str(&format!("Generated by: `{}`\n\n", report.generated_by));
+    md.push_str(&format!("Generated at: `{}`\n\n", report.generated_at));
+    md.push_str("Candidate source directory:\n\n");
+    md.push_str("```text\n");
+    md.push_str(&report.candidate_dir);
+    md.push_str("/\n```\n\n");
+    md.push_str("## Review Items\n\n");
+    md.push_str("| review_id | candidate_id | source_item | proposed_decision | status | reviewer | evidence |\n");
+    md.push_str("|---|---|---|---|---|---|---|\n");
+    if report.items.is_empty() {
+        md.push_str("| _none_ | unknown | _none_ | unknown | candidate | unassigned | run `kb topic rank <topic>` after editing literature.md |\n");
+    } else {
+        for item in &report.items {
+            md.push_str(&format!(
+                "| {} | {} | {} | {} | {} | {} | {} |\n",
+                escape_table_cell(&item.review_id),
+                escape_table_cell(&item.candidate_id),
+                escape_table_cell(&item.source_item),
+                escape_table_cell(&item.proposed_decision),
+                escape_table_cell(&item.status),
+                escape_table_cell(&item.reviewer),
+                escape_table_cell(&item.evidence)
+            ));
+        }
+    }
+    md.push_str("\n## Review Rules\n\n");
+    md.push_str("- Treat all generated rows as candidates.\n");
+    md.push_str("- Do not accept a candidate without evidence.\n");
+    md.push_str("- Preserve uncertainty instead of forcing a decision.\n");
+    md.push_str(
+        "- Store accepted, rejected, or deferred decisions under `topics/<topic>/reviewed/`.\n",
+    );
+    md.push_str("- This queue does not perform scientific judgment and does not call an LLM.\n");
+    md
+}
+
+fn render_review_summary_markdown(report: &TopicReviewReport) -> String {
+    let mut md = String::new();
+    md.push_str(&format!(
+        "# Topic Review Summary: {}\n\n",
+        report.topic_slug
+    ));
+    md.push_str(&format!("- Topic: `{}`\n", report.topic_slug));
+    md.push_str(&format!(
+        "- Candidate directory: `{}/`\n",
+        report.candidate_dir
+    ));
+    md.push_str(&format!("- Review directory: `{}/`\n", report.review_dir));
+    md.push_str(&format!(
+        "- Candidate files found: {}\n",
+        report.candidate_files
+    ));
+    md.push_str(&format!(
+        "- Review items generated: {}\n",
+        report.review_items
+    ));
+    md.push_str(&format!(
+        "- Empty or unreadable candidates: {}\n",
+        report.empty_or_unreadable_candidates
+    ));
+    md.push_str(&format!("- Generated queue: `{}`\n", report.queue_path));
+    md.push_str(&format!("- Generated summary: `{}`\n", report.summary_path));
+    md.push_str(&format!("- Dry run: `{}`\n", report.dry_run));
+    md.push_str(&format!("- Written: `{}`\n", report.written));
+
+    if !report.warnings.is_empty() {
+        md.push_str("\n## Warnings\n\n");
+        for warning in &report.warnings {
+            md.push_str(&format!("- {}\n", warning));
+        }
+    }
+
+    md.push_str("\n## Next Step\n\n");
+    for step in &report.next_steps {
+        md.push_str(&format!("- {step}\n"));
+    }
+    md
+}
+
+fn print_review_report(report: &TopicReviewReport) {
+    println!("Topic review queue:");
+    println!("  topic       : {}", report.topic_slug);
+    println!("  candidates  : {} files", report.candidate_files);
+    println!("  review items: {}", report.review_items);
+    println!("  dry run     : {}", report.dry_run);
+    println!("  written     : {}", report.written);
+    println!("  queue       : {}", report.queue_path);
+    println!("  summary     : {}", report.summary_path);
+
+    if report.items.is_empty() {
+        println!();
+        println!("No topic-local importance candidates found.");
+    } else {
+        println!();
+        println!("Review items:");
+        for item in &report.items {
+            println!(
+                "- {} | {} | {} | {}",
+                item.review_id, item.candidate_id, item.proposed_decision, item.source_item
+            );
+        }
+    }
+
+    if !report.warnings.is_empty() {
+        println!();
+        println!("Warnings:");
+        for warning in &report.warnings {
+            println!("  - {warning}");
+        }
+    }
+
+    if !report.next_steps.is_empty() {
+        println!();
+        println!("Next steps:");
+        for step in &report.next_steps {
+            println!("  - {step}");
+        }
+    }
+}
+
 fn collect_topic_text(topic_root: &Path) -> Result<String> {
     let mut text = String::new();
     if !topic_root.exists() {
@@ -860,6 +1488,7 @@ fn required_topic_dirs() -> Vec<&'static str> {
         "importance",
         "relations",
         "review",
+        "reviewed",
         "graph",
         "tasks",
         "memory",
@@ -881,6 +1510,7 @@ fn required_topic_files() -> Vec<&'static str> {
         "review/relation_review.md",
         "review/importance_review.md",
         "review/unresolved.md",
+        "reviewed/README.md",
         "graph/README.md",
         "tasks/README.md",
         "memory/confirmed_relations.md",
@@ -940,6 +1570,7 @@ fn execute_init(custom_kb: Option<&Path>, args: &TopicInitArgs) -> Result<()> {
         "importance",
         "relations",
         "review",
+        "reviewed",
         "graph",
         "tasks",
         "memory",
@@ -1037,6 +1668,10 @@ fn topic_templates(slug: &str, title: &str) -> Vec<TopicTemplate> {
             content: render_review_file(slug, title, "unresolved"),
         },
         TopicTemplate {
+            path: PathBuf::from("reviewed/README.md"),
+            content: render_reviewed_readme(slug, title),
+        },
+        TopicTemplate {
             path: PathBuf::from("graph/README.md"),
             content: render_graph_readme(slug, title),
         },
@@ -1072,7 +1707,8 @@ Topic-local importance, causal, method, evidence, and idea relations stay here.
 - `literature.md` lists literature included in this topic.
 - `importance/` records topic-local importance candidates, reviews, and confirmed labels.
 - `relations/` records topic-local explanatory relation candidates and confirmed relations.
-- `review/` stores human-review tables for uncertain topic-local claims.
+- `review/` stores review queues and working review tables for uncertain topic-local claims.
+- `reviewed/` stores accepted, rejected, or deferred topic-review decisions.
 - `graph/` stores topic graph exports.
 - `tasks/` stores Worker LLM / human task handoff files for this topic.
 - `memory/` stores completed task records and confirmed relation memories.
@@ -1208,6 +1844,27 @@ Use this file for topic-local human review.
 | item | proposed_decision | final_decision | reviewer | evidence | date |
 |---|---|---|---|---|---|
 | TODO | pending | pending | TODO | TODO | TODO |
+"#
+    )
+}
+
+fn render_reviewed_readme(slug: &str, title: &str) -> String {
+    format!(
+        r#"# Reviewed Topic Decisions: {title}
+
+Topic slug: `{slug}`
+
+Store accepted, rejected, or deferred topic-review decisions here after human or explicit Manager LLM review.
+
+Recommended files for later versions:
+
+```text
+accepted.md
+rejected.md
+deferred.md
+```
+
+Do not write automatic decisions here from `kb topic review`. That command only builds a queue under `review/`.
 "#
     )
 }
@@ -1355,6 +2012,21 @@ fn topic_title(input: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use anyhow::Result;
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn unique_test_kb(name: &str) -> std::path::PathBuf {
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("system clock before unix epoch")
+            .as_nanos();
+        std::env::temp_dir().join(format!(
+            "kb_cli_topic_{}_{}_{}",
+            name,
+            std::process::id(),
+            nanos
+        ))
+    }
 
     #[test]
     fn topic_slug_is_stable() {
@@ -1364,5 +2036,94 @@ mod tests {
             "microfluidic-dialysis"
         );
         assert_eq!(topic_slug("!!!"), "");
+    }
+
+    #[test]
+    fn topic_review_parses_rank_table_rows() {
+        let text = r#"# Topic Importance Candidates: thermal
+
+| paper | proposed_importance_level | score | status | needs_human_review | reasons | evidence |
+|---|---:|---:|---|---|---|---|
+| Classic Thermal Cloak | core | 80 | candidate | true | listed in topic literature.md | processing/refs/refs_index.md |
+| Background Heat Paper | background | 25 | candidate | false | listed in topic literature.md | wiki/papers/background.md |
+"#;
+        let path = PathBuf::from("topics/thermal/importance/importance_candidates_20260511.md");
+        let items = parse_review_items_from_candidate_text(
+            Path::new("."),
+            &path,
+            "topics/thermal/importance/importance_candidates_20260511.md",
+            text,
+        );
+        assert_eq!(items.len(), 2);
+        assert_eq!(items[0].candidate_id, "importance-classic-thermal-cloak");
+        assert_eq!(items[0].proposed_decision, "core");
+        assert_eq!(items[0].status, "candidate");
+        assert_eq!(items[0].reviewer, "unassigned");
+        assert!(items[0].source_item.ends_with("#row-1"));
+        assert!(items[1].evidence.contains("wiki/papers/background.md"));
+    }
+
+    #[test]
+    fn topic_review_discovers_candidate_files_conservatively() -> Result<()> {
+        let kb_path = unique_test_kb("review_discovery");
+        let importance_dir = kb_path.join("topics/thermal/importance");
+        fs::create_dir_all(&importance_dir)?;
+        fs::write(
+            importance_dir.join("importance_candidates_1.md"),
+            "candidate_id: one",
+        )?;
+        fs::write(
+            importance_dir.join("importance_review.md"),
+            "not a candidate",
+        )?;
+        fs::write(
+            importance_dir.join("confirmed_importance.md"),
+            "not a candidate",
+        )?;
+        fs::write(
+            importance_dir.join("candidate.json"),
+            r#"{"candidate_id":"two"}"#,
+        )?;
+        fs::write(importance_dir.join("ignore.txt"), "not accepted")?;
+
+        let files = discover_topic_review_candidate_files(&importance_dir)?;
+        let names = files
+            .iter()
+            .filter_map(|path| path.file_name().and_then(|name| name.to_str()))
+            .collect::<Vec<_>>();
+        assert_eq!(names, vec!["candidate.json", "importance_candidates_1.md"]);
+
+        let _ = fs::remove_dir_all(&kb_path);
+        Ok(())
+    }
+
+    #[test]
+    fn topic_review_report_builds_stable_ids() -> Result<()> {
+        let kb_path = unique_test_kb("review_report");
+        let topic_root = kb_path.join("topics/thermal");
+        fs::create_dir_all(topic_root.join("importance"))?;
+        fs::write(
+            topic_root.join("importance/importance_candidates_1.md"),
+            "| paper | proposed_importance_level | evidence |
+|---|---|---|
+| Paper A | core | raw/papers/a.pdf |
+| Paper B | background | raw/papers/b.pdf |
+",
+        )?;
+        let args = TopicReviewArgs {
+            topic: "thermal".to_string(),
+            dry_run: true,
+            preview: false,
+            json: false,
+            force: false,
+        };
+        let report = build_topic_review_report(&kb_path, "thermal", &topic_root, &args)?;
+        assert_eq!(report.review_items, 2);
+        assert_eq!(report.items[0].review_id, "tr-0001");
+        assert_eq!(report.items[1].review_id, "tr-0002");
+        assert!(!report.written);
+
+        let _ = fs::remove_dir_all(&kb_path);
+        Ok(())
     }
 }

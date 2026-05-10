@@ -261,4 +261,4 @@ Do not treat a topic relation schema as permission to auto-generate a causal gra
 
 ## Topic-local importance ranking
 
-Use `kb topic rank <topic>` to generate deterministic importance candidates for one topic workspace. The output must stay under `topics/<topic>/importance/`. Do not put topic-local importance decisions under global `processing/` directories.
+Use `kb topic rank <topic>` to generate deterministic importance candidates for one topic workspace. The output must stay under `topics/<topic>/importance/`. Then use `kb topic review <topic>` to build `topics/<topic>/review/review_queue.md` and `topics/<topic>/review/review_summary.md`. Do not put topic-local importance decisions under global `processing/` directories.

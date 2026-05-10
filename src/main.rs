@@ -186,6 +186,9 @@ fn main() -> anyhow::Result<()> {
                 "  topic status <topic> [--json|--strict]  Check topic workspace completeness"
             );
             println!("  topic rank <topic> [--json] [--dry-run]  Generate topic-local importance candidates");
+            println!(
+                "  topic review <topic> [--json] [--dry-run] [--force]  Build a topic review queue"
+            );
             println!("  view [--no-open] [--dry-run|--preview] [--output-dir DIR]  Generate/open static HTML viewer");
             println!(
                 "  shell                         Enter deterministic interactive command shell"

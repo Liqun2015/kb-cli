@@ -4,6 +4,23 @@ All notable changes to `kb-cli` are recorded here.
 
 This project uses small, review-first releases. Many releases are documentation, workflow, or boundary-stabilization releases rather than feature-heavy releases.
 
+## v0.7.1
+
+Topic Review Command Skeleton.
+
+Main changes:
+
+- Implemented the deterministic `kb topic review <topic>` command skeleton.
+- Added `docs/topic-review-command.md` to describe inputs, outputs, options, safety boundaries, and acceptance criteria for the command.
+- Updated the topic review workflow so `kb topic rank <topic>` can be followed by `kb topic review <topic>`.
+- Defined default output files under `topics/<topic>/review/`:
+  - `review_queue.md`
+  - `review_summary.md`
+- Added implementation notes for a conservative Rust command skeleton under `docs/implementation-notes/topic-review-command-rust.md`.
+- Added small topic-review examples under `examples/topic-review/`.
+- `kb topic review <topic>` does not accept, reject, or reinterpret candidates automatically. It only builds a queue and summary from existing candidate files.
+- No hidden LLM call, vector search, semantic importance judgment, autonomous wiki editing, or automatic topic graph construction is added in this version.
+
 ## v0.7.0
 
 Topic Review Workflow Foundation.

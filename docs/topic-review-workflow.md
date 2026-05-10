@@ -1,48 +1,35 @@
 # Topic Review Workflow
 
-This document defines how topic-local importance candidates and topic-specific relationship candidates should move from generated outputs to reviewed knowledge.
+This document describes how topic-local importance and relationship candidates should move from generated candidate files to reviewed topic-local knowledge.
 
-`kb topic rank <topic>` may generate deterministic topic-local importance candidates, but a candidate is not a conclusion. A topic review workflow is needed before a ranking, relation, or interpretation becomes accepted knowledge.
+Starting in `v0.7.1`, the first deterministic command skeleton is defined as:
 
-## Goal
-
-The goal of topic review is to convert topic-local candidates into explicit, evidence-backed, reviewable decisions.
-
-The workflow should answer questions such as:
-
-- Which papers are central to this topic?
-- Which papers are supporting, peripheral, or background?
-- Which topic-specific relations are plausible but still uncertain?
-- Which claims are accepted, rejected, or deferred?
-- What evidence supports each decision?
-
-## Core Rule
-
-A topic-local review decision must not be treated as global bibliographic truth.
-
-Global bibliographic relations belong under:
-
-```text
-processing/refs/
+```bash
+kb topic review <topic>
 ```
 
-Topic-specific interpretive decisions belong under:
+The command is intentionally conservative. It builds a review queue and summary from existing topic-local candidate files. It must not automatically accept, reject, or reinterpret scientific claims.
+
+## Purpose
+
+`kb topic rank <topic>` may generate topic-local importance candidates, but generated candidates are not reviewed knowledge. The topic review workflow creates a bounded, evidence-backed path from candidate files to human-reviewed or explicitly delegated decisions.
+
+The goal is to make topic-local judgments:
+
+- visible
+- evidence-backed
+- Git-diff friendly
+- reviewable by humans or explicit LLM roles
+- clearly separated from global bibliographic relations
+
+## Directory Layout
+
+A topic workspace should follow this shape:
 
 ```text
 topics/<topic>/
-```
-
-For example, `Paper A cites Paper B` is a global bibliographic relation. But `Paper A is core literature for thermal metamaterials` is topic-local and should be stored under the relevant topic workspace.
-
-## Intended Directory Layout
-
-A reviewed topic workspace may use the following structure:
-
-```text
-topics/<topic>/
-├── README.md
-├── importance/          # generated importance candidates
 ├── relations/           # topic-specific relation candidates
+├── importance/          # topic-local importance candidates
 ├── review/              # review queue and working review records
 ├── reviewed/            # accepted / rejected / deferred review results
 ├── evidence/            # optional copied evidence snippets or evidence indexes
@@ -58,7 +45,7 @@ topics/<topic>/
         ↓
 2. Generate topic-local candidates
         ↓
-3. Build a review queue
+3. Build a deterministic review queue
         ↓
 4. Review one bounded item at a time
         ↓
@@ -86,26 +73,50 @@ The output under `topics/<topic>/importance/` should be treated as review input.
 
 ### 3. Build a review queue
 
-A future command may be introduced as:
+`v0.7.1` defines the first deterministic command skeleton:
 
 ```bash
-kb topic review <topic> --build-queue
+kb topic review <topic>
 ```
 
-Until that command exists, a Manager LLM or human reviewer may create a queue manually under:
+The command reads candidate files from:
+
+```text
+topics/<topic>/importance/
+```
+
+and write:
+
+```text
+topics/<topic>/review/review_queue.md
+topics/<topic>/review/review_summary.md
+```
+
+The command may also create the review directory when missing:
 
 ```text
 topics/<topic>/review/
 ```
 
-Each review item should include:
+The queue should include one row per candidate file or candidate item that can be reviewed later.
 
-- candidate ID
-- source file or paper ID
-- proposed topic-local status
-- evidence lines or evidence file references
-- uncertainty notes
-- expected reviewer decision
+Suggested queue columns:
+
+```markdown
+| review_id | candidate_id | source_item | proposed_decision | status | reviewer | evidence |
+|---|---|---|---|---|---|---|
+| tr-0001 | importance-0001 | wiki/papers/example.md | core | candidate | unassigned | processing/text/example.txt |
+```
+
+The summary should state:
+
+- topic name
+- candidate directory
+- number of candidate files found
+- number of review items generated
+- output paths
+- warnings, such as missing importance directory or empty evidence fields
+- next recommended human / Manager LLM action
 
 ### 4. Review one item at a time
 
@@ -200,6 +211,7 @@ If evidence is missing, the item should remain `candidate`, `deferred`, or `need
 A Manager LLM may:
 
 - inspect topic workspaces
+- run `kb topic review <topic>` to build a review queue
 - collect candidate records
 - group candidates into bounded review tasks
 - assign review tasks to Worker LLMs or human reviewers
@@ -239,18 +251,31 @@ Do not:
 - use hidden LLM calls inside deterministic commands
 - claim full scientific correctness from keyword co-occurrence alone
 
-## Minimal v0.7.0 Outcome
+## Minimal v0.7.1 Outcome
 
-The minimal outcome for `v0.7.0` is a documented topic review workflow. The command implementation may come later.
+The minimal outcome for `v0.7.1` is a deterministic queue-building command contract.
 
-A future implementation can add:
+The command supports this basic path:
 
 ```bash
-kb topic review <topic> --build-queue
+kb topic rank <topic>
+kb topic review <topic>
+```
+
+After running, users should see:
+
+```text
+topics/<topic>/review/review_queue.md
+topics/<topic>/review/review_summary.md
+```
+
+A future implementation may add:
+
+```bash
 kb topic review <topic> --status
 kb topic review <topic> --accept <candidate-id>
 kb topic review <topic> --reject <candidate-id>
 kb topic review <topic> --defer <candidate-id>
 ```
 
-For now, the important step is to make the review model explicit before adding automation.
+For now, the important step is to connect ranking output to a review queue without adding automatic scientific judgment.

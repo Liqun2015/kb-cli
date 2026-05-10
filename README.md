@@ -6,15 +6,32 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.0`
+Current version: `v0.7.1`
+
+### v0.7.1
+
+Topic Review Command Skeleton.
+
+This version adds the first deterministic command skeleton for the topic review workflow:
+
+```bash
+kb topic review <topic>
+```
+
+The command reads topic-local importance candidates under `topics/<topic>/importance/` and generates a review workspace under `topics/<topic>/review/`, including:
+
+```text
+topics/<topic>/review/review_queue.md
+topics/<topic>/review/review_summary.md
+```
+
+The command must not accept, reject, or reinterpret candidates automatically. It only organizes reviewable files so a human reviewer, Manager LLM, or Worker LLM can inspect one bounded item at a time.
 
 ### v0.7.0
 
 Topic Review Workflow Foundation.
 
-This version defines the review workflow that connects `kb topic rank <topic>` outputs to human/AI review, accepted topic-local relationship records, and completed memory records. It introduces explicit documentation for topic review queues, evidence-backed decisions, accepted/rejected/deferred statuses, and review-safe handoff between Manager LLMs, Worker LLMs, and human reviewers.
-
-This release is still conservative: it defines the workflow and command contract before adding automatic topic-level scientific interpretation.
+This version defines the review workflow that connects `kb topic rank <topic>` outputs to human/AI review, accepted topic-local relationship records, and completed memory records.
 
 ## Project Idea
 
@@ -60,7 +77,15 @@ KnowledgeBase/
 └── logs/             # Metadata and logs
 ```
 
-The structure is intentionally simple. Most files are plain Markdown, JSON, or reviewable text outputs, so the knowledge base can be inspected, edited, version-controlled, and maintained over time.
+Topic-specific review work lives under:
+
+```text
+topics/<topic>/
+├── importance/       # generated topic-local importance candidates
+├── review/           # review queue and working review files
+├── reviewed/         # accepted / rejected / deferred decisions
+└── graph/            # optional topic-specific graph overlays
+```
 
 ## Installation
 
@@ -113,8 +138,9 @@ The expected workflow is:
 4. Build or update Markdown knowledge pages under `wiki/`
 5. Use topic commands to inspect topic-specific relationship workspaces
 6. Use ranking commands to generate topic-local importance candidates
-7. Let human reviewers or explicit AI agents revise the outputs under Git review
-8. Record accepted decisions under `LLM/memory/`
+7. Use `kb topic review <topic>` to build a review queue from candidates
+8. Let human reviewers or explicit AI agents revise the outputs under Git review
+9. Record accepted decisions under `topics/<topic>/reviewed/` and `LLM/memory/`
 
 This workflow is not meant to replace human judgment. It is meant to make AI-assisted knowledge maintenance more structured, inspectable, and reproducible.
 
@@ -143,10 +169,11 @@ This workflow is not meant to replace human judgment. It is meant to make AI-ass
 | `kb topic list` | List topic workspaces. |
 | `kb topic status <topic>` | Inspect a topic workspace. |
 | `kb topic rank <topic>` | Generate deterministic topic-local importance candidates. |
+| `kb topic review <topic>` | Build a deterministic review queue from topic-local candidates. |
 | `kb view` | Generate and open the static HTML review dashboard. |
 | `kb shell` | Start a deterministic interactive command shell. |
 
-For detailed command behavior, see `docs/commands.md`.
+For detailed command behavior, see `docs/commands.md` and `docs/topic-review-command.md`.
 
 ## Topic-local Importance Ranking
 
@@ -168,7 +195,11 @@ These files should be reviewed by humans or downstream AI agents before being tr
 
 ## Topic Review Workflow
 
-Starting in `v0.7.0`, topic-local importance and relationship work is treated as a review workflow rather than a one-step ranking result.
+Starting in `v0.7.1`, the first deterministic command skeleton is defined for building a topic review queue:
+
+```bash
+kb topic review <topic>
+```
 
 The intended path is:
 
@@ -177,7 +208,10 @@ kb topic rank <topic>
         ↓
 topics/<topic>/importance/ candidates
         ↓
-review queue with evidence, decision status, and uncertainty notes
+kb topic review <topic>
+        ↓
+topics/<topic>/review/review_queue.md
+topics/<topic>/review/review_summary.md
         ↓
 human / Manager LLM / Worker LLM review
         ↓
@@ -186,7 +220,13 @@ accepted topic-local decisions under topics/<topic>/reviewed/
 completion record under LLM/memory/
 ```
 
-See `docs/topic-review-workflow.md` and `docs/topic-review-schema.md`.
+See:
+
+```text
+docs/topic-review-workflow.md
+docs/topic-review-schema.md
+docs/topic-review-command.md
+```
 
 ## Relationship Layers
 
@@ -218,90 +258,20 @@ Git diff / human review
 wiki/ + topics/ + LLM/memory/
 ```
 
-See `docs/llm-maintenance.md` for the detailed workflow.
-
-## Static HTML Viewer
-
-`kb view` generates a local, static HTML review dashboard:
-
-```bash
-kb view
-kb view --no-open
-```
-
-Default output:
-
-```text
-outputs/html/index.html
-```
-
-The viewer is intentionally safe and simple. It displays local review information and does not execute local `kb` commands, call LLMs, or modify files.
+See `docs/llm-maintenance.md`.
 
 ## Documentation Map
 
-Start here:
-
 ```text
-CHANGELOG.md                 Release history
-docs/commands.md             Command overview and command category map
-docs/llm-maintenance.md      Manager LLM / Worker LLM maintenance workflow
-docs/task-lifecycle.md       Task handoff status vocabulary and memory workflow
-docs/llm-command-guide.md    Practical guide for LLMs using structured kb commands
-docs/llm-hierarchy.md        Manager LLM / Worker LLM role hierarchy
+CHANGELOG.md                         Release history
+docs/commands.md                     Command overview
+docs/llm-maintenance.md              Manager LLM / Worker LLM maintenance model
+docs/topic-review-workflow.md        Topic review workflow
+docs/topic-review-schema.md          Topic review record schema
+docs/topic-review-command.md         v0.7.1 command contract for kb topic review <topic>
+docs/implementation-notes/topic-review-command-rust.md
+                                      Suggested Rust implementation notes for v0.7.1
 ```
-
-Command docs:
-
-```text
-docs/query.md                Local keyword query skeleton
-docs/links.md                WikiLink scan and deterministic link-resolution hints
-docs/grep.md                 Rust-native line-level text search
-docs/extract-text.md         Deterministic text extraction and future PDF conversion-agent boundary
-docs/refs.md                 Deterministic reference-hint scanning over extracted text
-docs/refs-index.md           Bibliographic index relation candidate building
-docs/refs-graph.md           Graph export for bibliographic index relations
-docs/keywords.md             Keyword/topic co-occurrence candidate scanner
-docs/health.md               Deterministic LLM Wiki relationship-health dashboard
-docs/tasks.md                Deferred human/LLM/agent task handoff lists
-docs/memory.md               Completed-task memory records under LLM/memory/
-docs/view.md                 Static HTML viewer generated by kb view
-```
-
-Topic and relationship docs:
-
-```text
-docs/literature-relationships.md      Reference-relationship core principle
-docs/topic.md                         Topic workspace command reference
-docs/topic-relationships.md           Topic-specific relationship overlay roadmap
-docs/topic-relation-schema.md         Controlled fields for topic-local directed relation records
-docs/literature-importance-schema.md  Lightweight global/topic-local literature importance schema
-docs/topic-v2-roadmap.md              Conservative topic-overlay roadmap
-docs/topic-review-workflow.md         Review workflow for topic-local ranking and relation decisions
-docs/topic-review-schema.md           Review record fields and status vocabulary
-docs/third-party-skills/              Third-party graph visualization skill guidance
-```
-
-Platform and development docs:
-
-```text
-docs/windows-quickstart.md       PowerShell and .bat helper
-docs/unix-quickstart.md          macOS/Linux bash or zsh
-docs/cross-platform-quickstart.md Shared command flow
-docs/platform-notes.md           Path and wrapper-script policy
-docs/git-workflow.md             Review-first Git commit/push workflow
-docs/release-checklist.md        Small-release checklist
-docs/command-classification.md   Command categories and LLM/OCR boundary rules
-docs/cli-shell-principle.md      Batch mode / shell mode / LLM boundary
-docs/shell.md                    Deterministic `kb shell` usage
-```
-
-## Current Scope
-
-This version provides a conservative, file-based local LLM Wiki scaffold. It includes cross-platform bootstrap/ingest workflows, the generated Wiki rule/schema layer, manifest tracking, static linting, deterministic keyword search, WikiLink scanning, Rust-native grep, best-effort text extraction, reference-hint scanning, bibliographic index candidate building, graph export, keyword candidate reports, task handoff reports, completed-task memory records, topic workspaces, topic-local importance candidates, topic review workflow documentation, and a static HTML viewer.
-
-It still does **not** provide full RAG, vector search, embeddings, OCR, hidden LLM cleanup, autonomous LLM/wiki preparation, or automatic scientific interpretation.
-
-`kb prepare` currently plans and documents prepare work; it does not call an LLM or edit `wiki/` by itself.
 
 ## Non-goals
 
@@ -312,47 +282,6 @@ It still does **not** provide full RAG, vector search, embeddings, OCR, hidden L
 - a replacement for human literature review
 - a semantic search engine by default
 - a system that claims knowledge correctness without review
-- a hidden LLM chat surface inside `kb shell`
-
-Its purpose is to provide a clear local structure and CLI workflow for maintaining research-oriented Markdown knowledge bases.
-
-## Development Notes
-
-This project is developed conservatively.
-
-When adding new commands, prefer:
-
-- explicit file outputs
-- reviewable intermediate results
-- deterministic behavior where possible
-- simple folder conventions
-- clear distinction between generated candidates and reviewed knowledge
-
-Avoid:
-
-- hidden state
-- opaque automatic rewriting
-- unreviewable semantic claims
-- unnecessary changes to existing directory conventions
-- implicit LLM behavior triggered from free-form shell text
-
-## Testing and Release Check
-
-Before tagging or handing a build to another agent, run:
-
-```bash
-cargo fmt --check
-cargo test
-cargo check
-cargo build --release
-```
-
-For documentation-only releases, at minimum review the Markdown diff:
-
-```bash
-git status
-git diff README.md CHANGELOG.md docs/llm-maintenance.md docs/topic-review-workflow.md docs/topic-review-schema.md
-```
 
 ## License
 

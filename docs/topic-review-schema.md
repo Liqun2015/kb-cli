@@ -200,6 +200,12 @@ updated_at: 2026-05-10
 notes: Defer until PDF layout or equations are reviewed.
 ```
 
+## v0.7.1 Queue-building Note
+
+`v0.7.1` defines `kb topic review <topic>` as a deterministic queue builder. The command populates `topics/<topic>/review/review_queue.md` from candidate files, and leaves every generated row in `candidate` status.
+
+It must not write accepted/rejected/deferred decisions. Those belong under `topics/<topic>/reviewed/` after explicit review.
+
 ## Review Queue File
 
 A future queue file may live at:

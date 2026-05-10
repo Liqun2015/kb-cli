@@ -190,6 +190,7 @@ fn print_help() {
     println!("  topic list");
     println!("  topic status <topic>");
     println!("  topic rank <topic> --dry-run");
+    println!("  topic review <topic> --dry-run");
     println!("  tasks --dry-run");
     println!("  memory --task-id ID --summary TEXT");
     println!();
