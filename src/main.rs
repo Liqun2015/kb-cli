@@ -7,6 +7,7 @@ mod intent;
 
 #[derive(Parser)]
 #[command(name = "kb")]
+#[command(version = env!("CARGO_PKG_VERSION"))]
 #[command(about = "A minimal CLI for local knowledge base management", long_about = None)]
 struct Cli {
     #[arg(
