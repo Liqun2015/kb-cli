@@ -4,6 +4,25 @@ All notable changes to `kb-cli` are recorded here.
 
 This project uses small, review-first releases. Many releases are documentation, workflow, or boundary-stabilization releases rather than feature-heavy releases.
 
+## v0.7.5
+
+View Relations Mode.
+
+Main changes:
+
+- Extended the existing `kb view` command with a new `--relations` mode.
+- `kb view --relations` generates:
+  - `outputs/html/relationship_viewer.html`
+  - `outputs/html/relationship_data.json`
+- Added `--topic <topic>` for default topic focus in the relationship viewer.
+- Added `--data-only` for generating only the relationship JSON data source.
+- Kept regular `kb view` behavior unchanged for `outputs/html/index.html`.
+- Added cross-links between the regular dashboard and the relationship graph viewer.
+- The relationship viewer is static and read-only; it does not call LLMs, execute commands, or mark candidate relations as confirmed.
+- Solid edges represent confirmed or accepted relations; dashed edges represent candidate or LLM-review-needed relations; dotted edges represent missing or unresolved references.
+
+No `kb view-relations` command is added. The relationship graph is part of the unified `kb view` viewing system.
+
 ## v0.7.4
 
 Paper Section Extraction for Literature Relations.

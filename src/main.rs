@@ -201,7 +201,7 @@ fn main() -> anyhow::Result<()> {
             println!(
                 "  topic review <topic> [--json] [--dry-run] [--force]  Build a topic review queue"
             );
-            println!("  view [--no-open] [--dry-run|--preview] [--output-dir DIR]  Generate/open static HTML viewer");
+            println!("  view [--relations] [--topic TOPIC] [--data-only] [--no-open]  Generate static HTML viewers");
             println!(
                 "  shell                         Enter deterministic interactive command shell"
             );

@@ -6,7 +6,37 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.4`
+Current version: `v0.7.5`
+
+### v0.7.5
+
+View Relations Mode.
+
+This version extends the existing `kb view` command with a relationship graph review mode:
+
+```bash
+kb view --relations
+kb view --relations --no-open
+kb view --relations --topic thermal-metamaterials
+kb view --relations --data-only
+```
+
+The regular dashboard remains:
+
+```bash
+kb view
+```
+
+`kb view --relations` generates:
+
+```text
+outputs/html/relationship_viewer.html
+outputs/html/relationship_data.json
+```
+
+The page visualizes paper-level bibliographic index relations and topic-local academic viewpoint / importance candidates before LLM execution. Confirmed or accepted edges are rendered as solid lines, candidate or LLM-review-needed edges as dashed lines, and missing or unresolved references as dotted lines.
+
+No new `kb view-relations` command is added. The relationship graph remains part of the unified `kb view` HTML viewing system.
 
 ### v0.7.4
 
@@ -230,6 +260,9 @@ This workflow is not meant to replace human judgment. It is meant to make AI-ass
 | `kb topic rank <topic>` | Generate deterministic topic-local importance candidates. |
 | `kb topic review <topic>` | Build a deterministic review queue from topic-local candidates. |
 | `kb view` | Generate and open the static HTML review dashboard. |
+| `kb view --relations` | Generate the relationship graph review page and `relationship_data.json`. |
+| `kb view --relations --topic <topic>` | Generate the relationship graph review page focused on a topic. |
+| `kb view --relations --data-only` | Generate only `outputs/html/relationship_data.json`. |
 | `kb shell` | Start a deterministic interactive command shell. |
 
 For detailed command behavior, see `docs/commands.md`, `docs/extract-sections.md`, `docs/llm-task-index.md`, `docs/audit-wiki.md`, and `docs/topic-review-command.md`.

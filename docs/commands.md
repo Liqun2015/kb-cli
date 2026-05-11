@@ -202,13 +202,17 @@ The guiding rule is simple:
 
 ## Interactive shell and model commands
 
-### `kb view` / `kb view --no-open`
+### `kb view` / `kb view --relations`
 
-- **Ability:** generate a static local HTML viewer for generated LLM Wiki artifacts.
+- **Ability:** generate static local HTML viewers for generated LLM Wiki artifacts.
+- **Regular dashboard:** `kb view` writes `outputs/html/index.html`.
+- **Relationship review mode:** `kb view --relations` writes `outputs/html/relationship_viewer.html` and `outputs/html/relationship_data.json`.
+- **Topic focus:** `kb view --relations --topic <topic>` keeps global data but sets the requested topic as the default focus when available.
+- **Data-only export:** `kb view --relations --data-only` writes only `relationship_data.json`.
 - **Primary input:** `wiki/`, `processing/refs/`, `processing/keywords/`, `outputs/reports/`, `LLM/tasks/`, `LLM/memory/`, and `topics/`.
-- **Primary output:** `outputs/html/index.html`.
 - **Allows LLM:** no.
-- **Deferred work:** none. The page command box is display-only and must not execute local commands or interpret natural language.
+- **Deferred work:** relationship edges marked candidate, ambiguous, missing, or `needs_llm_review` are review inputs for Manager/Worker LLM workflows. The viewer itself is display-only and must not execute local commands or interpret natural language.
+- **Boundary:** do not add a separate `kb view-relations` command; relationship graph viewing belongs under `kb view --relations`.
 
 ### `kb shell`
 
