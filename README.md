@@ -6,29 +6,38 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.6`
+Current version: `v0.7.7`
 
-### v0.7.6
+### v0.7.7
 
-Command Naming Cleanup.
+Workspace Layout for Existing Literature Folders.
 
-This version makes `kb setup` the preferred one-command entry point for creating a usable local LLM Wiki from source materials:
+This version makes `kb setup` friendlier for real literature folders. The recommended workflow is now:
 
 ```bash
-kb setup
-kb setup --dry-run
-kb setup --move
+kb --source /path/to/literature-folder setup --recursive
 ```
 
-`kb setup` runs:
+It creates a clean child workspace:
+
+```text
+/path/to/literature-folder/knowledgebase/
+├── raw/
+├── wiki/
+├── rules/
+├── processing/
+├── outputs/
+├── LLM/
+└── topics/
+```
+
+The original literature folder remains the human source-material pile. The generated `knowledgebase/` directory is the LLM Wiki workspace. `setup` then runs:
 
 ```text
 init -> ingest -> extract-metadata -> build-wiki
 ```
 
-Safe copy mode remains the default unless `--move` is explicitly provided. The older `kb bootstrap` command remains available as a compatibility alias, but new documentation should prefer `kb setup`.
-
-This version also updates stale version markers and shell display text so `kb shell` reports the package version from Cargo.
+Safe copy mode remains the default unless `--move` is explicitly provided. `kb bootstrap` remains available as a compatibility alias for `kb setup`. Advanced users can still use `--kb-path` to initialize or operate on a specific knowledge base directory.
 
 ### v0.7.5
 
@@ -171,7 +180,7 @@ Later, `kb-cli` also follows the idea that knowledge nodes can be ranked around 
 A typical `kb-cli` knowledge base is organized around reviewable layers:
 
 ```text
-KnowledgeBase/
+knowledgebase/
 ├── raw/              # Original source materials
 ├── wiki/             # Markdown knowledge pages
 ├── rules/            # Human / AI maintenance rules
@@ -210,38 +219,57 @@ kb
 
 ## Quick Start
 
-Turn an existing literature folder into a local LLM Wiki:
+Turn an existing literature folder into a local LLM Wiki without polluting the original folder:
 
 ```bash
-kb --kb-path /path/to/your/literature-folder setup
+kb --source /path/to/your/literature-folder setup --recursive
 ```
 
 Windows example:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum" setup
+kb --source "D:\github\LLM-wiki\quantum" setup --recursive
 ```
 
 macOS/Linux example:
 
 ```bash
-kb --kb-path "$HOME/github/LLM-wiki/quantum" setup
+kb --source "$HOME/github/LLM-wiki/quantum" setup --recursive
 ```
 
-The setup command runs:
+This creates:
+
+```text
+/path/to/your/literature-folder/knowledgebase/
+```
+
+and runs:
 
 ```text
 init -> ingest -> extract-metadata -> build-wiki
 ```
 
-By default, `setup` uses safe copy mode unless `--move` is explicitly provided. `bootstrap` is kept as a compatibility alias.
+Use preview mode first when working with a large or messy literature directory:
+
+```bash
+kb --source /path/to/your/literature-folder setup --recursive --preview
+```
+
+By default, `setup` copies files into `knowledgebase/raw/`. Use `--move` only when you explicitly want to move source files.
+
+Advanced/manual layout remains available:
+
+```bash
+kb --kb-path /path/to/specific/knowledgebase init
+kb --source /path/to/literature-folder --kb-path /path/to/specific/knowledgebase ingest --recursive
+```
 
 ## Core Workflow
 
 The expected workflow is:
 
-1. Put source materials into `raw/`
-2. Use deterministic commands to inspect, extract, section, index, and lint files
+1. Keep source materials in the original literature folder
+2. Use `kb --source <folder> setup --recursive` to create the `knowledgebase/` workspace and copy materials into `knowledgebase/raw/`
 3. Use `kb prepare` or `kb tasks` to generate reviewable task materials
 4. Use `LLM/tasks/index.md` as the Manager LLM task dashboard
 5. Build or update Markdown knowledge pages under `wiki/`
@@ -259,7 +287,7 @@ This workflow is not meant to replace human judgment. It is meant to make AI-ass
 |---|---|
 | `kb init` | Create the local LLM Wiki structure and generated rules layer. |
 | `kb ingest --copy` | Organize source files into `raw/` subfolders. |
-| `kb setup` | Run `init + ingest + extract-metadata + build-wiki`. |
+| `kb --source <folder> setup --recursive` | Create `<folder>/knowledgebase`, then run `init + ingest + extract-metadata + build-wiki`. |
 | `kb status` | Refresh and inspect `processing/manifest.json`. |
 | `kb prepare --new` | Generate reviewable task materials without calling an LLM. |
 | `kb sync-wiki` | Link accepted wiki pages back to the manifest. |

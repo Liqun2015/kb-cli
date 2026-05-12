@@ -1,14 +1,14 @@
 # Agent/API Boundary Notes
 
-This document records what `kb-cli v0.7.6` actually supports. It is intentionally conservative.
+This document records what `kb-cli v0.7.7` actually supports. It is intentionally conservative.
 
 ## Implemented CLI commands
 
 | Command | Purpose |
 |---|---|
 | `kb init [--force]` | Create the local LLM Wiki directory structure and generated `rules/` layer. |
-| `kb ingest [--copy\|--move] [--recursive] [--dry-run\|--preview]` | Organize source files into `raw/` subfolders. |
-| `kb setup [--copy\|--move] [--dry-run\|--preview]` | Run `init + ingest + extract-metadata + build-wiki`. `kb bootstrap` is a compatibility alias. |
+| `kb [--source PATH] [--kb-path PATH] ingest [--copy\|--move] [--recursive] [--dry-run\|--preview]` | Organize source files from the source directory into `raw/` subfolders. |
+| `kb --source <folder> setup [--recursive] [--copy\|--move] [--dry-run\|--preview]` | Create `<folder>/knowledgebase` by default, then run `init + ingest + extract-metadata + build-wiki`. `kb bootstrap` is a compatibility alias. |
 | `kb extract-metadata [--force]` | Extract PDF metadata from `raw/papers/`. |
 | `kb build-wiki` | Generate Markdown wiki pages and indexes. |
 | `kb status [--dry-run\|--preview] [--json] [--unprocessed]` | Refresh `processing/manifest.json`, print JSON summary, or list unprocessed raw files. |
@@ -76,7 +76,7 @@ Agents should read `rules/LLM_WIKI_SCHEMA.md` before making broad Wiki changes.
 The recommended machine-facing one-command workflow is:
 
 ```bash
-kb --kb-path /path/to/kb setup
+kb --source /path/to/literature-folder setup --recursive
 ```
 
 This is cross-platform because the workflow is implemented inside the Rust CLI, not inside a Windows-only batch file.
@@ -87,10 +87,10 @@ This is cross-platform because the workflow is implemented inside the Rust CLI, 
 `kb status` is implemented:
 
 ```bash
-kb --kb-path /path/to/kb status
-kb --kb-path /path/to/kb status --json
-kb --kb-path /path/to/kb status --unprocessed
-kb --kb-path /path/to/kb status --dry-run
+kb --kb-path /path/to/literature-folder/knowledgebase status
+kb --kb-path /path/to/literature-folder/knowledgebase status --json
+kb --kb-path /path/to/literature-folder/knowledgebase status --unprocessed
+kb --kb-path /path/to/literature-folder/knowledgebase status --dry-run
 ```
 
 Current behavior:
@@ -118,10 +118,10 @@ It does not call an LLM, does not edit `wiki/`, and does not mark manifest entri
 `kb lint-static` is implemented as a deterministic local Markdown health check. It does not call an LLM and does not rewrite `wiki/`.
 
 ```bash
-kb --kb-path /path/to/kb lint-static
-kb --kb-path /path/to/kb lint-static --no-report
-kb --kb-path /path/to/kb lint-static --json
-kb --kb-path /path/to/kb lint-static --strict
+kb --kb-path /path/to/literature-folder/knowledgebase lint-static
+kb --kb-path /path/to/literature-folder/knowledgebase lint-static --no-report
+kb --kb-path /path/to/literature-folder/knowledgebase lint-static --json
+kb --kb-path /path/to/literature-folder/knowledgebase lint-static --strict
 ```
 
 Reports are written under `outputs/reports/` unless `--dry-run`, `--preview`, or `--no-report` is used. `--no-report` is specific to `lint-static`.
@@ -132,10 +132,10 @@ Reports are written under `outputs/reports/` unless `--dry-run`, `--preview`, or
 `kb query` is implemented in v0.5.0 as deterministic local keyword search over `wiki/**/*.md`.
 
 ```bash
-kb --kb-path /path/to/kb query thermal cloak
-kb --kb-path /path/to/kb query thermal cloak --limit 5
-kb --kb-path /path/to/kb query thermal cloak --json
-kb --kb-path /path/to/kb query thermal cloak --title-only
+kb --kb-path /path/to/literature-folder/knowledgebase query thermal cloak
+kb --kb-path /path/to/literature-folder/knowledgebase query thermal cloak --limit 5
+kb --kb-path /path/to/literature-folder/knowledgebase query thermal cloak --json
+kb --kb-path /path/to/literature-folder/knowledgebase query thermal cloak --title-only
 ```
 
 Current behavior:
@@ -202,19 +202,19 @@ long-running background daemon
 `ingest` and `setup` default to copy mode unless `--move` is explicitly provided. Recursive mode skips generated/project folders such as:
 
 ```text
-raw, wiki, processing, references, topics, outputs, logs, .git, .obsidian, target, node_modules
+raw, wiki, processing, references, topics, outputs, logs, knowledgebase, .git, .obsidian, target, node_modules
 ```
 
 For automation, prefer running a dry run first:
 
 ```bash
-kb --kb-path /path/to/kb setup --dry-run
+kb --source /path/to/literature-folder setup --recursive --dry-run
 ```
 
 Then run the real command:
 
 ```bash
-kb --kb-path /path/to/kb setup
+kb --source /path/to/literature-folder setup --recursive
 ```
 
 ## Output style

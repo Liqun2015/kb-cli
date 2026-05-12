@@ -15,16 +15,25 @@ struct Cli {
         long = "kb-path",
         value_name = "PATH",
         global = true,
-        help = "Knowledge base directory name or path (default: KnowledgeBase)"
+        help = "Knowledge base directory path. For setup with --source, this overrides the default <source>/knowledgebase workspace."
     )]
     kb_path: Option<PathBuf>,
+
+    #[arg(
+        short = 's',
+        long = "source",
+        value_name = "PATH",
+        global = true,
+        help = "Existing source-material directory for setup/ingest. Setup defaults to creating <source>/knowledgebase."
+    )]
+    source: Option<PathBuf>,
     #[command(subcommand)]
     command: Option<Commands>,
 }
 
 #[derive(Subcommand)]
 enum Commands {
-    #[command(about = "Initialize or ensure KnowledgeBase directory structure")]
+    #[command(about = "Initialize or ensure knowledge base directory structure")]
     Init {
         #[arg(
             long,
@@ -124,9 +133,11 @@ fn main() -> anyhow::Result<()> {
 
     match &cli.command {
         Some(Commands::Init { force }) => commands::init::execute(cli.kb_path.as_deref(), *force),
-        Some(Commands::Ingest(args)) => commands::ingest::execute(cli.kb_path.as_deref(), args),
+        Some(Commands::Ingest(args)) => {
+            commands::ingest::execute(cli.kb_path.as_deref(), cli.source.as_deref(), args)
+        }
         Some(Commands::Setup(args)) => {
-            commands::ingest::execute_setup(cli.kb_path.as_deref(), args)
+            commands::ingest::execute_setup(cli.kb_path.as_deref(), cli.source.as_deref(), args)
         }
         Some(Commands::BuildWiki) => commands::build_wiki::execute(cli.kb_path.as_deref()),
         Some(Commands::Prepare(args)) => commands::prepare::execute(cli.kb_path.as_deref(), args),
@@ -180,6 +191,9 @@ fn main() -> anyhow::Result<()> {
             println!("  ingest [--copy|--move]      Organize files into raw/ subfolders");
             println!(
                 "  setup [--copy|--move]       Set up KB: init, ingest, extract metadata, build wiki"
+            );
+            println!(
+                "       use --source PATH to create PATH/knowledgebase as the default workspace"
             );
             println!("  bootstrap                   Compatibility alias for setup");
             println!("  extract-metadata [--force]  Extract PDF metadata");

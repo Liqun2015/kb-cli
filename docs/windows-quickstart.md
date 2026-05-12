@@ -2,7 +2,7 @@
 
 This guide is written for PowerShell on Windows. The safest workflow is still the cross-platform Rust CLI; the batch file is only a convenience wrapper. For macOS/Linux, use `docs/unix-quickstart.md`.
 
-Current version: `v0.7.6`
+Current version: `v0.7.7`
 
 ## 1. Install Rust once
 
@@ -45,7 +45,7 @@ $env:USERPROFILE\.cargo\bin
 Recommended safe command:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum" setup
+kb --source "D:\github\LLM-wiki\quantum" setup --recursive
 ```
 
 This runs:
@@ -54,16 +54,16 @@ This runs:
 init -> ingest -> extract-metadata -> build-wiki
 ```
 
-It will create or ensure:
+It will create or ensure these folders under `knowledgebase\`:
 
 ```text
-raw\
-wiki\
-rules\
-processing\
-outputs\
-references\
-logs\
+knowledgebase\raw\
+knowledgebase\wiki\
+knowledgebase\rules\
+knowledgebase\processing\
+knowledgebase\outputs\
+knowledgebase\references\
+knowledgebase\logs\
 ```
 
 ## 4. Preview before writing
@@ -71,39 +71,39 @@ logs\
 For a dry run, use either `--dry-run` or its alias `--preview`:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum" ingest --copy --dry-run
-kb --kb-path "D:\github\LLM-wiki\quantum" ingest --copy --preview
+kb --source "D:\github\LLM-wiki\quantum" --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" ingest --copy --recursive --dry-run
+kb --source "D:\github\LLM-wiki\quantum" --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" ingest --copy --recursive --preview
 ```
 
 For linting only, the clearest wording is `--no-report`:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum" lint-static --no-report
+kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" lint-static --no-report
 ```
 
 Equivalent aliases still work:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum" lint-static --dry-run
-kb --kb-path "D:\github\LLM-wiki\quantum" lint-static --preview
+kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" lint-static --dry-run
+kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" lint-static --preview
 ```
 
-## 5. Recommended v0.5.10 verification flow
+## 5. Recommended verification flow
 
 After setup or after an AI/human edits `wiki\`, run:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum" status
-kb --kb-path "D:\github\LLM-wiki\quantum" sync-wiki --dry-run
-kb --kb-path "D:\github\LLM-wiki\quantum" sync-wiki
-kb --kb-path "D:\github\LLM-wiki\quantum" lint-static
-kb --kb-path "D:\github\LLM-wiki\quantum" query thermal cloak
+kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" status
+kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" sync-wiki --dry-run
+kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" sync-wiki
+kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" lint-static
+kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" query thermal cloak
 ```
 
 Open the generated lint report here:
 
 ```text
-D:\github\LLM-wiki\quantum\outputs\reports\lint_static_<timestamp>.md
+D:\github\LLM-wiki\quantum\knowledgebase\outputs\reports\lint_static_<timestamp>.md
 ```
 
 ## 6. Build kb-cli itself when needed
@@ -168,7 +168,7 @@ where.exe kb
 Always pass an explicit path:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum" status
+kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" status
 ```
 
 ### A path contains spaces
@@ -176,7 +176,7 @@ kb --kb-path "D:\github\LLM-wiki\quantum" status
 Quote it:
 
 ```powershell
-kb --kb-path "D:\My Knowledge Bases\quantum" setup
+kb --source "D:\My Knowledge Bases\quantum" setup --recursive
 ```
 
 ### Lint reports too many orphan pages

@@ -33,7 +33,7 @@ The guiding rule is simple:
 ### `kb ingest`
 
 - **Ability:** organize source files into `raw/` subfolders and register them for later processing.
-- **Primary input:** files under the KB root or selected search scope.
+- **Primary input:** files under the source directory; with `--source`, files may live outside the knowledge base workspace.
 - **Primary output:** `raw/papers/`, `raw/notes/`, `raw/images/`, `raw/datasets/`, `processing/manifest.json`.
 - **Allows LLM:** no.
 - **Deferred work:** ambiguous file meaning, paper interpretation, and semantic classification should be deferred to later tasks.
@@ -41,8 +41,8 @@ The guiding rule is simple:
 ### `kb setup`
 
 - **Ability:** run the safe one-command setup path: `init -> ingest -> extract-metadata -> build-wiki`.
-- **Primary input:** knowledge-base path and source files under the KB root or selected search scope.
-- **Primary output:** initialized folders, organized `raw/` materials, refreshed metadata, and wiki skeleton pages.
+- **Primary input:** a source-material directory; by default `kb --source <folder> setup` creates `<folder>/knowledgebase` as the workspace.
+- **Primary output:** a `knowledgebase/` workspace containing initialized folders, organized `raw/` materials, refreshed metadata, and wiki skeleton pages.
 - **Allows LLM:** no.
 - **Deferred work:** semantic synthesis, citation reconciliation, OCR/layout repair, and relationship judgment remain explicit LLM/human review tasks.
 - **Compatibility:** `kb bootstrap` remains available as an older alias, but documentation should prefer `kb setup`.

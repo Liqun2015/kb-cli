@@ -4,6 +4,23 @@ All notable changes to `kb-cli` are recorded here.
 
 This project uses small, review-first releases. Many releases are documentation, workflow, or boundary-stabilization releases rather than feature-heavy releases.
 
+## v0.7.7
+
+Workspace Layout for Existing Literature Folders.
+
+Main changes:
+
+- Added global `--source <PATH>` for setup/ingest workflows.
+- `kb --source <literature-folder> setup --recursive` now creates a clean `<literature-folder>/knowledgebase/` child workspace by default.
+- `setup` prints both the source directory and the knowledge base workspace before running.
+- `ingest` can now read from an external source directory while writing into a separate knowledge base workspace.
+- Recursive ingest skips the generated `knowledgebase/` workspace so it does not ingest its own outputs.
+- Added `setup --name <DIR>` to customize the child workspace name when `--kb-path` is not provided.
+- Kept `--kb-path` as the advanced/manual layout override and kept `bootstrap` as the compatibility alias for `setup`.
+- Updated documentation to recommend the source-folder-to-child-workspace layout.
+
+No hidden LLM call, semantic duplicate detection, or automatic scientific relationship inference is added.
+
 ## v0.7.5
 
 View Relations Mode.

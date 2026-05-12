@@ -6,7 +6,7 @@ This guide gives the shared workflow. For platform-specific details, see:
 - `docs/unix-quickstart.md`
 - `docs/platform-notes.md`
 
-Current version: `v0.7.6`
+Current version: `v0.7.7`
 
 ## 1. Install `kb`
 
@@ -27,19 +27,19 @@ kb --help
 Use safe copy mode first:
 
 ```bash
-kb --kb-path /path/to/literature-folder setup
+kb --source /path/to/literature-folder setup --recursive
 ```
 
 Windows example:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum" setup
+kb --source "D:\github\LLM-wiki\quantum" setup --recursive
 ```
 
 macOS/Linux example:
 
 ```bash
-kb --kb-path "$HOME/github/LLM-wiki/quantum" setup
+kb --source "$HOME/github/LLM-wiki/quantum" setup --recursive
 ```
 
 This runs:
@@ -51,7 +51,7 @@ init -> ingest -> extract-metadata -> build-wiki
 It also refreshes:
 
 ```text
-processing/manifest.json
+knowledgebase/processing/manifest.json
 ```
 
 `init` also creates the generated rules layer:
@@ -67,13 +67,13 @@ rules/LINT_POLICY.md
 ## 3. Preview before changing files
 
 ```bash
-kb --kb-path /path/to/literature-folder setup --dry-run
+kb --source /path/to/literature-folder setup --recursive --dry-run
 ```
 
 `--preview` is an equivalent alias where dry-run behavior is supported:
 
 ```bash
-kb --kb-path /path/to/literature-folder setup --preview
+kb --source /path/to/literature-folder setup --recursive --preview
 ```
 
 ## 4. Move instead of copy
@@ -81,40 +81,40 @@ kb --kb-path /path/to/literature-folder setup --preview
 Only use this when you intentionally want to reorganize the folder:
 
 ```bash
-kb --kb-path /path/to/literature-folder setup --move
+kb --source /path/to/literature-folder setup --recursive --move
 ```
 
 ## 5. Include subfolders
 
 ```bash
-kb --kb-path /path/to/literature-folder setup --recursive
+kb --source /path/to/literature-folder setup --recursive
 ```
 
-Recursive mode skips managed/generated folders including `raw`, `wiki`, `processing`, `references`, `topics`, `outputs`, `logs`, `.git`, `.obsidian`, `target`, and `node_modules`.
+Recursive mode skips managed/generated folders including `knowledgebase`, `raw`, `wiki`, `processing`, `references`, `topics`, `outputs`, `logs`, `.git`, `.obsidian`, `target`, and `node_modules`.
 
 ## 6. Manual workflow
 
 ```bash
-kb --kb-path /path/to/literature-folder init
-kb --kb-path /path/to/literature-folder ingest --copy
-kb --kb-path /path/to/literature-folder extract-metadata
-kb --kb-path /path/to/literature-folder build-wiki
-kb --kb-path /path/to/literature-folder status
-kb --kb-path /path/to/literature-folder prepare --new --dry-run
+kb --kb-path /path/to/literature-folder/knowledgebase init
+kb --source /path/to/literature-folder --kb-path /path/to/literature-folder/knowledgebase ingest --copy --recursive
+kb --kb-path /path/to/literature-folder/knowledgebase extract-metadata
+kb --kb-path /path/to/literature-folder/knowledgebase build-wiki
+kb --kb-path /path/to/literature-folder/knowledgebase status
+kb --kb-path /path/to/literature-folder/knowledgebase prepare --new --dry-run
 ```
 
 ## 7. Inspect manifest status
 
 ```bash
-kb --kb-path /path/to/literature-folder status
-kb --kb-path /path/to/literature-folder status --json
-kb --kb-path /path/to/literature-folder status --unprocessed
+kb --kb-path /path/to/literature-folder/knowledgebase status
+kb --kb-path /path/to/literature-folder/knowledgebase status --json
+kb --kb-path /path/to/literature-folder/knowledgebase status --unprocessed
 ```
 
 The manifest is written to:
 
 ```text
-/path/to/literature-folder/processing/manifest.json
+/path/to/literature-folder/knowledgebase/processing/manifest.json
 ```
 
 ## 8. Plan prepare work
@@ -122,13 +122,13 @@ The manifest is written to:
 After `status` has created `processing/manifest.json`, preview future AI/human wiki-maintenance work:
 
 ```bash
-kb --kb-path /path/to/literature-folder prepare --new --dry-run
+kb --kb-path /path/to/literature-folder/knowledgebase prepare --new --dry-run
 ```
 
 Write review artifacts:
 
 ```bash
-kb --kb-path /path/to/literature-folder prepare --new
+kb --kb-path /path/to/literature-folder/knowledgebase prepare --new
 ```
 
 This writes `processing/prepare_queue.json` and proposal files under `processing/proposals/`. It does not call an LLM or edit `wiki/`.

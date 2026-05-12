@@ -47,6 +47,13 @@ pub struct SetupArgs {
     pub ingest: IngestArgs,
 
     #[arg(
+        long = "name",
+        default_value = "knowledgebase",
+        help = "Workspace directory name created under --source when --kb-path is not provided."
+    )]
+    pub name: String,
+
+    #[arg(
         long = "force-init",
         help = "Pass --force to init before ingesting files."
     )]
@@ -152,10 +159,15 @@ impl SourceKind {
     }
 }
 
-pub fn execute(custom_kb: Option<&Path>, args: &IngestArgs) -> Result<()> {
+pub fn execute(
+    custom_kb: Option<&Path>,
+    custom_source: Option<&Path>,
+    args: &IngestArgs,
+) -> Result<()> {
     validate_mode(args)?;
 
-    let kb_path = crate::commands::init::get_kb_path(custom_kb);
+    let kb_path = resolve_kb_path_for_ingest(custom_kb, custom_source);
+    let source_path = resolve_source_path(custom_source, &kb_path);
     let mode = ingest_mode(args);
 
     if !kb_path.exists() {
@@ -165,9 +177,17 @@ pub fn execute(custom_kb: Option<&Path>, args: &IngestArgs) -> Result<()> {
         ));
     }
 
+    if !source_path.is_dir() {
+        return Err(anyhow!(
+            "source path is not a directory: {}",
+            source_path.display()
+        ));
+    }
+
     ensure_raw_dirs(&kb_path)?;
 
-    println!("Ingesting source files from: {}", kb_path.display());
+    println!("Knowledge base: {}", kb_path.display());
+    println!("Ingesting source files from: {}", source_path.display());
     println!(
         "Mode: {}{}",
         match mode {
@@ -179,10 +199,10 @@ pub fn execute(custom_kb: Option<&Path>, args: &IngestArgs) -> Result<()> {
     println!("Recursive: {}", if args.recursive { "yes" } else { "no" });
 
     let mut summary = IngestSummary::default();
-    let files = collect_source_files(&kb_path, args.recursive)?;
+    let files = collect_source_files(&source_path, &kb_path, args.recursive)?;
 
     for file in files {
-        if should_skip_file(&kb_path, &file) {
+        if should_skip_file(&source_path, &kb_path, &file) {
             summary.skipped += 1;
             continue;
         }
@@ -248,18 +268,36 @@ pub fn execute(custom_kb: Option<&Path>, args: &IngestArgs) -> Result<()> {
     Ok(())
 }
 
-pub fn execute_setup(custom_kb: Option<&Path>, args: &SetupArgs) -> Result<()> {
+pub fn execute_setup(
+    custom_kb: Option<&Path>,
+    custom_source: Option<&Path>,
+    args: &SetupArgs,
+) -> Result<()> {
     validate_mode(&args.ingest)?;
+    if args.name.trim().is_empty() {
+        return Err(anyhow!("workspace name cannot be empty"));
+    }
+
+    let (kb_path, source_path) = resolve_setup_paths(custom_kb, custom_source, args.name.trim());
 
     println!("Setup started.");
+    println!("Source directory: {}", source_path.display());
+    println!("Knowledge base workspace: {}", kb_path.display());
 
-    crate::commands::init::execute(custom_kb, args.force_init)?;
+    if !source_path.is_dir() {
+        return Err(anyhow!(
+            "source path is not a directory: {}",
+            source_path.display()
+        ));
+    }
+
+    crate::commands::init::execute(Some(&kb_path), args.force_init)?;
 
     if args.no_ingest {
         println!("\nSkipping ingest because --no-ingest was provided.");
     } else {
         println!("\nRunning ingest...");
-        execute(custom_kb, &args.ingest)?;
+        execute(Some(&kb_path), Some(&source_path), &args.ingest)?;
 
         if args.ingest.is_dry_run() {
             println!("\nDry run complete. Skipping metadata extraction and wiki build.");
@@ -271,17 +309,16 @@ pub fn execute_setup(custom_kb: Option<&Path>, args: &SetupArgs) -> Result<()> {
         println!("\nSkipping metadata extraction because --skip-metadata was provided.");
     } else {
         println!("\nRunning metadata extraction...");
-        crate::commands::extract_metadata::execute(custom_kb, args.force_metadata)?;
+        crate::commands::extract_metadata::execute(Some(&kb_path), args.force_metadata)?;
     }
 
     if args.skip_build {
         println!("\nSkipping wiki build because --skip-build was provided.");
     } else {
         println!("\nBuilding wiki...");
-        crate::commands::build_wiki::execute(custom_kb)?;
+        crate::commands::build_wiki::execute(Some(&kb_path))?;
     }
 
-    let kb_path = crate::commands::init::get_kb_path(custom_kb);
     println!("\nSetup complete.");
     println!("Wiki home: {}", kb_path.join("wiki/Home.md").display());
     println!("\nNext steps:");
@@ -292,6 +329,47 @@ pub fn execute_setup(custom_kb: Option<&Path>, args: &SetupArgs) -> Result<()> {
         kb_path.display()
     );
     Ok(())
+}
+
+fn resolve_kb_path_for_ingest(custom_kb: Option<&Path>, custom_source: Option<&Path>) -> PathBuf {
+    if let Some(path) = custom_kb {
+        return crate::commands::init::resolve_user_path(path);
+    }
+
+    if let Some(source) = custom_source {
+        return crate::commands::init::resolve_user_path(source)
+            .join(crate::commands::init::DEFAULT_WORKSPACE_DIR);
+    }
+
+    crate::commands::init::get_kb_path(None)
+}
+
+fn resolve_source_path(custom_source: Option<&Path>, kb_path: &Path) -> PathBuf {
+    custom_source
+        .map(crate::commands::init::resolve_user_path)
+        .unwrap_or_else(|| kb_path.to_path_buf())
+}
+
+fn resolve_setup_paths(
+    custom_kb: Option<&Path>,
+    custom_source: Option<&Path>,
+    workspace_name: &str,
+) -> (PathBuf, PathBuf) {
+    let source_path = custom_source
+        .map(crate::commands::init::resolve_user_path)
+        .unwrap_or_else(|| {
+            if custom_kb.is_some() {
+                crate::commands::init::resolve_user_path(custom_kb.unwrap())
+            } else {
+                std::env::current_dir().unwrap()
+            }
+        });
+
+    let kb_path = custom_kb
+        .map(crate::commands::init::resolve_user_path)
+        .unwrap_or_else(|| source_path.join(workspace_name));
+
+    (kb_path, source_path)
 }
 
 fn validate_mode(args: &IngestArgs) -> Result<()> {
@@ -326,20 +404,24 @@ fn ensure_raw_dirs(kb_path: &Path) -> Result<()> {
     Ok(())
 }
 
-fn collect_source_files(kb_path: &Path, recursive: bool) -> Result<Vec<PathBuf>> {
+fn collect_source_files(
+    source_path: &Path,
+    kb_path: &Path,
+    recursive: bool,
+) -> Result<Vec<PathBuf>> {
     let mut files = Vec::new();
 
     if recursive {
-        let walker = WalkDir::new(kb_path)
+        let walker = WalkDir::new(source_path)
             .into_iter()
-            .filter_entry(|entry| should_descend(entry));
+            .filter_entry(|entry| should_descend(entry, source_path, kb_path));
         for entry in walker.filter_map(|entry| entry.ok()) {
             if entry.file_type().is_file() {
                 files.push(entry.path().to_path_buf());
             }
         }
     } else {
-        for entry in fs::read_dir(kb_path)? {
+        for entry in fs::read_dir(source_path)? {
             let entry = entry?;
             let path = entry.path();
             if path.is_file() {
@@ -352,9 +434,13 @@ fn collect_source_files(kb_path: &Path, recursive: bool) -> Result<Vec<PathBuf>>
     Ok(files)
 }
 
-fn should_descend(entry: &DirEntry) -> bool {
+fn should_descend(entry: &DirEntry, source_path: &Path, kb_path: &Path) -> bool {
     if entry.depth() == 0 {
         return true;
+    }
+
+    if source_path != kb_path && entry.path().starts_with(kb_path) {
+        return false;
     }
 
     let name = entry.file_name().to_string_lossy().to_lowercase();
@@ -371,6 +457,7 @@ fn should_descend(entry: &DirEntry) -> bool {
             | ".git"
             | ".obsidian"
             | "target"
+            | "knowledgebase"
             | "node_modules"
             | ".venv"
             | "venv"
@@ -378,7 +465,11 @@ fn should_descend(entry: &DirEntry) -> bool {
     )
 }
 
-fn should_skip_file(kb_path: &Path, file: &Path) -> bool {
+fn should_skip_file(source_path: &Path, kb_path: &Path, file: &Path) -> bool {
+    if source_path != kb_path && file.starts_with(kb_path) {
+        return true;
+    }
+
     if is_inside_managed_dir(kb_path, file) {
         return true;
     }

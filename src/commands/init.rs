@@ -2,46 +2,62 @@ use anyhow::Result;
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// Get the knowledge base path based on command line argument
+pub const DEFAULT_WORKSPACE_DIR: &str = "knowledgebase";
+pub const LEGACY_WORKSPACE_DIR: &str = "KnowledgeBase";
+
+/// Resolve a user-provided path. Relative paths are interpreted from the current directory.
+pub fn resolve_user_path(path: &Path) -> PathBuf {
+    if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        std::env::current_dir().unwrap().join(path)
+    }
+}
+
+/// Get the knowledge base path based on command line argument.
+///
+/// v0.7.7 prefers the lowercase `knowledgebase/` workspace directory,
+/// while still detecting the older `KnowledgeBase/` layout for compatibility.
 pub fn get_kb_path(custom_kb: Option<&Path>) -> PathBuf {
     if let Some(path) = custom_kb {
-        if path.is_absolute() || path.exists() {
-            return path.to_path_buf();
-        }
-        return std::env::current_dir().unwrap().join(path);
+        return resolve_user_path(path);
     }
 
-    // Default: look for KnowledgeBase in current directory
     let root = std::env::current_dir().unwrap();
-    let current_kb = root.join("KnowledgeBase");
 
-    // Try current directory first
-    if current_kb.exists() {
-        return current_kb;
-    }
-
-    // If not found in current, check parent directory
-    if let Some(parent) = root.parent() {
-        let parent_kb = parent.join("KnowledgeBase");
-        if parent_kb.exists() {
-            return parent_kb;
+    for candidate in [
+        root.join(DEFAULT_WORKSPACE_DIR),
+        root.join(LEGACY_WORKSPACE_DIR),
+    ] {
+        if candidate.exists() {
+            return candidate;
         }
     }
 
-    // Default to current directory
-    current_kb
+    if let Some(parent) = root.parent() {
+        for candidate in [
+            parent.join(DEFAULT_WORKSPACE_DIR),
+            parent.join(LEGACY_WORKSPACE_DIR),
+        ] {
+            if candidate.exists() {
+                return candidate;
+            }
+        }
+    }
+
+    root.join(DEFAULT_WORKSPACE_DIR)
 }
 
 pub fn execute(custom_kb: Option<&Path>, force: bool) -> Result<()> {
     let kb_path = get_kb_path(custom_kb);
 
     println!(
-        "Initializing or ensuring KnowledgeBase at: {}",
+        "Initializing or ensuring knowledge base at: {}",
         kb_path.display()
     );
 
     if kb_path.exists() {
-        println!("KnowledgeBase path already exists. Ensuring directory structure...");
+        println!("Knowledge base path already exists. Ensuring directory structure...");
         println!("Current directories:");
         list_existing_dirs(&kb_path);
     }
@@ -262,14 +278,14 @@ rules/LINT_POLICY.md
 
 ```bash
 # One-command cross-platform setup
-kb --kb-path /path/to/this/folder setup
+kb --source /path/to/literature-folder setup --recursive
 
 # Manual workflow
-kb --kb-path /path/to/this/folder init
-kb --kb-path /path/to/this/folder ingest --copy
-kb --kb-path /path/to/this/folder extract-metadata
-kb --kb-path /path/to/this/folder build-wiki
-kb --kb-path /path/to/this/folder status
+kb --kb-path /path/to/literature-folder/knowledgebase init
+kb --source /path/to/literature-folder --kb-path /path/to/literature-folder/knowledgebase ingest --copy --recursive
+kb --kb-path /path/to/literature-folder/knowledgebase extract-metadata
+kb --kb-path /path/to/literature-folder/knowledgebase build-wiki
+kb --kb-path /path/to/literature-folder/knowledgebase status
 ```
 
 ## Safety Notes

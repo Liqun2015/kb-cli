@@ -23,10 +23,10 @@ source_files:
 ## Usage
 
 ```bash
-kb --kb-path /path/to/kb sync-wiki --dry-run
-kb --kb-path /path/to/kb sync-wiki --preview
-kb --kb-path /path/to/kb sync-wiki
-kb --kb-path /path/to/kb sync-wiki --json
+kb --kb-path /path/to/literature-folder/knowledgebase sync-wiki --dry-run
+kb --kb-path /path/to/literature-folder/knowledgebase sync-wiki --preview
+kb --kb-path /path/to/literature-folder/knowledgebase sync-wiki
+kb --kb-path /path/to/literature-folder/knowledgebase sync-wiki --json
 ```
 
 ## Safety

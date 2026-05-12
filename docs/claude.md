@@ -2,7 +2,7 @@
 
 ## Current version
 
-`kb-cli v0.7.6`
+`kb-cli v0.7.7`
 
 ## Core goal
 
@@ -117,6 +117,7 @@ cloud sync
 - `init --force` may overwrite generated rule files, but it must not rewrite user source materials.
 - `ingest` must not default to destructive behavior.
 - `setup` must be safe by default. `bootstrap` is only a compatibility alias.
+- For existing literature folders, prefer `kb --source <folder> setup --recursive`; this creates `<folder>/knowledgebase/` and keeps the original folder outside the managed workspace.
 - `--copy` is the safe path.
 - `--move` is allowed only when explicitly provided.
 - `--dry-run` should remain available for inspection.
@@ -133,6 +134,7 @@ logs
 .git
 .obsidian
 target
+knowledgebase
 node_modules
 ```
 

@@ -15,22 +15,22 @@ In `v0.5.10`, it remains intentionally conservative:
 ## Typical usage
 
 ```bash
-kb --kb-path /path/to/kb status
-kb --kb-path /path/to/kb prepare --new --dry-run
-kb --kb-path /path/to/kb prepare --new --preview
-kb --kb-path /path/to/kb prepare --new
+kb --kb-path /path/to/literature-folder/knowledgebase status
+kb --kb-path /path/to/literature-folder/knowledgebase prepare --new --dry-run
+kb --kb-path /path/to/literature-folder/knowledgebase prepare --new --preview
+kb --kb-path /path/to/literature-folder/knowledgebase prepare --new
 ```
 
 For one source file:
 
 ```bash
-kb --kb-path /path/to/kb prepare --file raw/papers/example.pdf
+kb --kb-path /path/to/literature-folder/knowledgebase prepare --file raw/papers/example.pdf
 ```
 
 Limit selected files:
 
 ```bash
-kb --kb-path /path/to/kb prepare --new --limit 5
+kb --kb-path /path/to/literature-folder/knowledgebase prepare --new --limit 5
 ```
 
 ## Generated files
@@ -69,7 +69,7 @@ This keeps `raw/` immutable and keeps AI-generated Markdown changes auditable.
 After the generated agent prompt has been used to create or update Markdown pages under `wiki/`, run:
 
 ```bash
-kb --kb-path /path/to/kb sync-wiki
+kb --kb-path /path/to/literature-folder/knowledgebase sync-wiki
 ```
 
 The sync step reads `source_ids` and `source_files` from wiki page front matter and writes the corresponding `wiki_pages` links back into `processing/manifest.json`.

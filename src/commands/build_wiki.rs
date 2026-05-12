@@ -385,17 +385,17 @@ rules/LLM_WIKI_SCHEMA.md
 ### Cross-platform setup
 
 ```bash
-kb --kb-path /path/to/this/folder setup
+kb --source /path/to/literature-folder setup --recursive
 ```
 
 ### Manual workflow
 
 ```bash
-kb --kb-path /path/to/this/folder init
-kb --kb-path /path/to/this/folder ingest --copy
-kb --kb-path /path/to/this/folder extract-metadata
-kb --kb-path /path/to/this/folder build-wiki
-kb --kb-path /path/to/this/folder status
+kb --kb-path /path/to/literature-folder/knowledgebase init
+kb --source /path/to/literature-folder --kb-path /path/to/literature-folder/knowledgebase ingest --copy --recursive
+kb --kb-path /path/to/literature-folder/knowledgebase extract-metadata
+kb --kb-path /path/to/literature-folder/knowledgebase build-wiki
+kb --kb-path /path/to/literature-folder/knowledgebase status
 ```
 
 ## Indexes
@@ -424,7 +424,7 @@ kb --kb-path /path/to/this/folder status
 ## Directory Structure
 
 ```text
-KnowledgeBase/
+knowledgebase/
 ├── raw/                  # Original source materials
 │   ├── papers/
 │   ├── notes/

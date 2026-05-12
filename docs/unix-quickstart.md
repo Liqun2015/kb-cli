@@ -2,7 +2,7 @@
 
 This guide is for macOS, Linux, and other Unix-like shells such as `bash` and `zsh`.
 
-Current version: `v0.7.6`
+Current version: `v0.7.7`
 
 ## 1. Install Rust once
 
@@ -47,7 +47,7 @@ which kb
 Recommended safe command:
 
 ```bash
-kb --kb-path "$HOME/github/LLM-wiki/quantum" setup
+kb --source "$HOME/github/LLM-wiki/quantum" setup --recursive
 ```
 
 This runs the deterministic local workflow:
@@ -56,16 +56,16 @@ This runs the deterministic local workflow:
 init -> ingest -> extract-metadata -> build-wiki
 ```
 
-It will create or ensure:
+It will create or ensure these folders under `knowledgebase/`:
 
 ```text
-raw/
-wiki/
-rules/
-processing/
-outputs/
-references/
-logs/
+knowledgebase/raw/
+knowledgebase/wiki/
+knowledgebase/rules/
+knowledgebase/processing/
+knowledgebase/outputs/
+knowledgebase/references/
+knowledgebase/logs/
 ```
 
 ## 4. Preview before writing
@@ -73,14 +73,14 @@ logs/
 Use `--dry-run` or its alias `--preview`:
 
 ```bash
-kb --kb-path "$HOME/github/LLM-wiki/quantum" ingest --copy --dry-run
-kb --kb-path "$HOME/github/LLM-wiki/quantum" ingest --copy --preview
+kb --source "$HOME/github/LLM-wiki/quantum" --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" ingest --copy --recursive --dry-run
+kb --source "$HOME/github/LLM-wiki/quantum" --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" ingest --copy --recursive --preview
 ```
 
 For linting without writing a report, use:
 
 ```bash
-kb --kb-path "$HOME/github/LLM-wiki/quantum" lint-static --no-report
+kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" lint-static --no-report
 ```
 
 ## 5. Prepare AI/human handoff artifacts
@@ -88,9 +88,9 @@ kb --kb-path "$HOME/github/LLM-wiki/quantum" lint-static --no-report
 `prepare` creates reviewable planning artifacts. It does not call an LLM and does not edit `wiki/`.
 
 ```bash
-kb --kb-path "$HOME/github/LLM-wiki/quantum" status
-kb --kb-path "$HOME/github/LLM-wiki/quantum" prepare --new --dry-run
-kb --kb-path "$HOME/github/LLM-wiki/quantum" prepare --new
+kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" status
+kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" prepare --new --dry-run
+kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" prepare --new
 ```
 
 Generated files:
@@ -132,11 +132,11 @@ For knowledge-base workflows, prefer explicit `kb ...` commands instead of broad
 After setup or after a human/AI edits `wiki/`, run:
 
 ```bash
-kb --kb-path "$HOME/github/LLM-wiki/quantum" status
-kb --kb-path "$HOME/github/LLM-wiki/quantum" sync-wiki --dry-run
-kb --kb-path "$HOME/github/LLM-wiki/quantum" sync-wiki
-kb --kb-path "$HOME/github/LLM-wiki/quantum" lint-static
-kb --kb-path "$HOME/github/LLM-wiki/quantum" query thermal cloak
+kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" status
+kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" sync-wiki --dry-run
+kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" sync-wiki
+kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" lint-static
+kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" query thermal cloak
 ```
 
 Open the generated lint report under:
@@ -187,7 +187,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 Quote it:
 
 ```bash
-kb --kb-path "$HOME/My Knowledge Bases/quantum" setup
+kb --source "$HOME/My Knowledge Bases/quantum" setup --recursive
 ```
 
 ### Permission denied when running a script
