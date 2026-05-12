@@ -261,8 +261,8 @@ rules/LINT_POLICY.md
 ## Commands
 
 ```bash
-# One-command cross-platform bootstrap
-kb --kb-path /path/to/this/folder bootstrap --copy
+# One-command cross-platform setup
+kb --kb-path /path/to/this/folder setup
 
 # Manual workflow
 kb --kb-path /path/to/this/folder init

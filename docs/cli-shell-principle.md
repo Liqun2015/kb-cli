@@ -1,6 +1,6 @@
 # CLI / Shell Principle
 
-Current version: `v0.6.4.1`
+Current version: `v0.7.6`
 
 This document records the boundary between batch mode, interactive shell mode, and future LLM-assisted modes.
 
@@ -84,7 +84,7 @@ filesystem changes / reports / output
 
 This keeps behavior consistent and testable.
 
-## Current v0.6.0.1 status
+## Current shell status
 
 `kb shell` is the deterministic shell entry point.
 

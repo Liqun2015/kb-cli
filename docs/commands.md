@@ -10,7 +10,7 @@ The guiding rule is simple:
 
 | Category | Commands | Default LLM behavior | Purpose |
 |---|---|---:|---|
-| Deterministic core | `init`, `ingest`, `bootstrap`, `status`, `sync-wiki`, `lint-static`, `build-wiki` | No LLM | Maintain the file structure, manifest, wiki skeleton, and static checks. |
+| Deterministic core | `init`, `ingest`, `setup`, `status`, `sync-wiki`, `lint-static`, `build-wiki` | No LLM | Maintain the file structure, manifest, wiki skeleton, and static checks. |
 | Search / inspection | `query`, `grep`, `links` | No LLM | Locate pages, lines, and WikiLink relations for later review. |
 | Text / reference processing | `extract-text`, `extract-sections`, `refs`, `refs-index`, `refs-graph`, `keywords`, `extract-metadata` | No LLM | Convert source traces into searchable text, section-level evidence, bibliographic relation candidates, and keyword/topic relation evidence. |
 | Handoff / memory | `prepare`, `tasks`, `memory` | No LLM | Prepare reviewable work items and record completed work. |
@@ -37,6 +37,15 @@ The guiding rule is simple:
 - **Primary output:** `raw/papers/`, `raw/notes/`, `raw/images/`, `raw/datasets/`, `processing/manifest.json`.
 - **Allows LLM:** no.
 - **Deferred work:** ambiguous file meaning, paper interpretation, and semantic classification should be deferred to later tasks.
+
+### `kb setup`
+
+- **Ability:** run the safe one-command setup path: `init -> ingest -> extract-metadata -> build-wiki`.
+- **Primary input:** knowledge-base path and source files under the KB root or selected search scope.
+- **Primary output:** initialized folders, organized `raw/` materials, refreshed metadata, and wiki skeleton pages.
+- **Allows LLM:** no.
+- **Deferred work:** semantic synthesis, citation reconciliation, OCR/layout repair, and relationship judgment remain explicit LLM/human review tasks.
+- **Compatibility:** `kb bootstrap` remains available as an older alias, but documentation should prefer `kb setup`.
 
 ### `kb status`
 

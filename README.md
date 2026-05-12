@@ -6,7 +6,29 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.5`
+Current version: `v0.7.6`
+
+### v0.7.6
+
+Command Naming Cleanup.
+
+This version makes `kb setup` the preferred one-command entry point for creating a usable local LLM Wiki from source materials:
+
+```bash
+kb setup
+kb setup --dry-run
+kb setup --move
+```
+
+`kb setup` runs:
+
+```text
+init -> ingest -> extract-metadata -> build-wiki
+```
+
+Safe copy mode remains the default unless `--move` is explicitly provided. The older `kb bootstrap` command remains available as a compatibility alias, but new documentation should prefer `kb setup`.
+
+This version also updates stale version markers and shell display text so `kb shell` reports the package version from Cargo.
 
 ### v0.7.5
 
@@ -191,28 +213,28 @@ kb
 Turn an existing literature folder into a local LLM Wiki:
 
 ```bash
-kb --kb-path /path/to/your/literature-folder bootstrap --copy
+kb --kb-path /path/to/your/literature-folder setup
 ```
 
 Windows example:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum" bootstrap --copy
+kb --kb-path "D:\github\LLM-wiki\quantum" setup
 ```
 
 macOS/Linux example:
 
 ```bash
-kb --kb-path "$HOME/github/LLM-wiki/quantum" bootstrap --copy
+kb --kb-path "$HOME/github/LLM-wiki/quantum" setup
 ```
 
-The bootstrap command runs:
+The setup command runs:
 
 ```text
 init -> ingest -> extract-metadata -> build-wiki
 ```
 
-By default, `bootstrap` uses safe copy mode unless `--move` is explicitly provided.
+By default, `setup` uses safe copy mode unless `--move` is explicitly provided. `bootstrap` is kept as a compatibility alias.
 
 ## Core Workflow
 
@@ -237,7 +259,7 @@ This workflow is not meant to replace human judgment. It is meant to make AI-ass
 |---|---|
 | `kb init` | Create the local LLM Wiki structure and generated rules layer. |
 | `kb ingest --copy` | Organize source files into `raw/` subfolders. |
-| `kb bootstrap --copy` | Run `init + ingest + extract-metadata + build-wiki`. |
+| `kb setup` | Run `init + ingest + extract-metadata + build-wiki`. |
 | `kb status` | Refresh and inspect `processing/manifest.json`. |
 | `kb prepare --new` | Generate reviewable task materials without calling an LLM. |
 | `kb sync-wiki` | Link accepted wiki pages back to the manifest. |

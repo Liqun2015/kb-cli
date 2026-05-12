@@ -2,7 +2,7 @@
 
 ## Current version
 
-`kb-cli v0.6.0.1`
+`kb-cli v0.7.6`
 
 ## Core goal
 
@@ -50,6 +50,7 @@ Current implemented commands include:
 ```text
 init
 ingest
+setup
 bootstrap
 extract-metadata
 extract-text
@@ -109,13 +110,13 @@ cloud sync
 
 `prepare` is implemented only as a review-first planning command. It generates `processing/prepare_queue.json` and `processing/proposals/prepare_plan_*.md`; it does not call an LLM or edit `wiki/`. `query` is implemented as deterministic local keyword search only; `lint-static` is implemented as a deterministic local health check.
 
-## Safety rules for init/ingest/bootstrap
+## Safety rules for init/ingest/setup
 
 - `init` must not move files.
 - `init` may create missing generated rule files.
 - `init --force` may overwrite generated rule files, but it must not rewrite user source materials.
 - `ingest` must not default to destructive behavior.
-- `bootstrap` must be safe by default.
+- `setup` must be safe by default. `bootstrap` is only a compatibility alias.
 - `--copy` is the safe path.
 - `--move` is allowed only when explicitly provided.
 - `--dry-run` should remain available for inspection.

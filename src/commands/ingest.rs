@@ -42,7 +42,7 @@ impl IngestArgs {
 }
 
 #[derive(Debug, Clone, Args)]
-pub struct BootstrapArgs {
+pub struct SetupArgs {
     #[command(flatten)]
     pub ingest: IngestArgs,
 
@@ -248,10 +248,10 @@ pub fn execute(custom_kb: Option<&Path>, args: &IngestArgs) -> Result<()> {
     Ok(())
 }
 
-pub fn execute_bootstrap(custom_kb: Option<&Path>, args: &BootstrapArgs) -> Result<()> {
+pub fn execute_setup(custom_kb: Option<&Path>, args: &SetupArgs) -> Result<()> {
     validate_mode(&args.ingest)?;
 
-    println!("Bootstrap started.");
+    println!("Setup started.");
 
     crate::commands::init::execute(custom_kb, args.force_init)?;
 
@@ -282,7 +282,7 @@ pub fn execute_bootstrap(custom_kb: Option<&Path>, args: &BootstrapArgs) -> Resu
     }
 
     let kb_path = crate::commands::init::get_kb_path(custom_kb);
-    println!("\nBootstrap complete.");
+    println!("\nSetup complete.");
     println!("Wiki home: {}", kb_path.join("wiki/Home.md").display());
     println!("\nNext steps:");
     println!("  1. Review rules/LLM_WIKI_SCHEMA.md");

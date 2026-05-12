@@ -13,7 +13,7 @@ use anyhow::{anyhow, Result};
 pub fn execute(custom_kb: Option<&Path>) -> Result<()> {
     let mut state = ShellState::new(custom_kb);
 
-    println!("kb shell v0.6.0.1");
+    println!("kb shell v{}", env!("CARGO_PKG_VERSION"));
     println!("Deterministic interactive command shell. Type `help` or `exit`.");
     println!("Current KB: {}", state.kb_path.display());
 
@@ -131,6 +131,7 @@ fn is_known_batch_command(command: &str) -> bool {
         command,
         "init"
             | "ingest"
+            | "setup"
             | "bootstrap"
             | "build-wiki"
             | "prepare"
@@ -177,6 +178,7 @@ fn print_help() {
     println!("  kb> query thermal cloak");
     println!();
     println!("Common deterministic commands:");
+    println!("  setup --dry-run");
     println!("  status --unprocessed");
     println!("  query <terms...>");
     println!("  grep <pattern> --path processing/text");

@@ -28,14 +28,18 @@ enum Commands {
     Init {
         #[arg(
             long,
-            help = "Re-create missing directories and generated bootstrap files when safe"
+            help = "Re-create missing directories and generated files when safe"
         )]
         force: bool,
     },
     #[command(about = "Organize source files into raw/ subfolders")]
     Ingest(commands::ingest::IngestArgs),
-    #[command(about = "Initialize, ingest, extract metadata, and build wiki")]
-    Bootstrap(commands::ingest::BootstrapArgs),
+    #[command(
+        name = "setup",
+        visible_alias = "bootstrap",
+        about = "Set up a knowledge base: init, ingest, extract metadata, and build wiki"
+    )]
+    Setup(commands::ingest::SetupArgs),
     #[command(about = "Build Wiki from raw materials")]
     BuildWiki,
     #[command(
@@ -121,8 +125,8 @@ fn main() -> anyhow::Result<()> {
     match &cli.command {
         Some(Commands::Init { force }) => commands::init::execute(cli.kb_path.as_deref(), *force),
         Some(Commands::Ingest(args)) => commands::ingest::execute(cli.kb_path.as_deref(), args),
-        Some(Commands::Bootstrap(args)) => {
-            commands::ingest::execute_bootstrap(cli.kb_path.as_deref(), args)
+        Some(Commands::Setup(args)) => {
+            commands::ingest::execute_setup(cli.kb_path.as_deref(), args)
         }
         Some(Commands::BuildWiki) => commands::build_wiki::execute(cli.kb_path.as_deref()),
         Some(Commands::Prepare(args)) => commands::prepare::execute(cli.kb_path.as_deref(), args),
@@ -175,8 +179,9 @@ fn main() -> anyhow::Result<()> {
             println!("  init [--force]              Initialize/ensure knowledge base");
             println!("  ingest [--copy|--move]      Organize files into raw/ subfolders");
             println!(
-                "  bootstrap [--copy|--move]   Initialize, ingest, extract metadata, build wiki"
+                "  setup [--copy|--move]       Set up KB: init, ingest, extract metadata, build wiki"
             );
+            println!("  bootstrap                   Compatibility alias for setup");
             println!("  extract-metadata [--force]  Extract PDF metadata");
             println!("  extract-text [--dry-run|--preview] [--force] [--json]  Extract text into processing/text");
             println!("  extract-sections [--dry-run|--preview] [--force] [--json]  Slice Introduction/References into processing/sections");

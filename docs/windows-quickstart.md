@@ -2,7 +2,7 @@
 
 This guide is written for PowerShell on Windows. The safest workflow is still the cross-platform Rust CLI; the batch file is only a convenience wrapper. For macOS/Linux, use `docs/unix-quickstart.md`.
 
-Current version: `v0.6.4.1`
+Current version: `v0.7.6`
 
 ## 1. Install Rust once
 
@@ -40,12 +40,12 @@ If `kb` is not recognized, close and reopen PowerShell. If it is still not found
 $env:USERPROFILE\.cargo\bin
 ```
 
-## 3. Bootstrap a knowledge folder
+## 3. Set up a knowledge folder
 
 Recommended safe command:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum" bootstrap --copy
+kb --kb-path "D:\github\LLM-wiki\quantum" setup
 ```
 
 This runs:
@@ -90,7 +90,7 @@ kb --kb-path "D:\github\LLM-wiki\quantum" lint-static --preview
 
 ## 5. Recommended v0.5.10 verification flow
 
-After bootstrapping or after an AI/human edits `wiki\`, run:
+After setup or after an AI/human edits `wiki\`, run:
 
 ```powershell
 kb --kb-path "D:\github\LLM-wiki\quantum" status
@@ -176,7 +176,7 @@ kb --kb-path "D:\github\LLM-wiki\quantum" status
 Quote it:
 
 ```powershell
-kb --kb-path "D:\My Knowledge Bases\quantum" bootstrap --copy
+kb --kb-path "D:\My Knowledge Bases\quantum" setup
 ```
 
 ### Lint reports too many orphan pages

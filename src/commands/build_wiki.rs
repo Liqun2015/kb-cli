@@ -382,10 +382,10 @@ rules/LLM_WIKI_SCHEMA.md
 
 ## Running the CLI
 
-### Cross-platform bootstrap
+### Cross-platform setup
 
 ```bash
-kb --kb-path /path/to/this/folder bootstrap --copy
+kb --kb-path /path/to/this/folder setup
 ```
 
 ### Manual workflow

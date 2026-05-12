@@ -6,7 +6,7 @@ This guide gives the shared workflow. For platform-specific details, see:
 - `docs/unix-quickstart.md`
 - `docs/platform-notes.md`
 
-Current version: `v0.6.4.1`
+Current version: `v0.7.6`
 
 ## 1. Install `kb`
 
@@ -22,24 +22,24 @@ Check that the command is available:
 kb --help
 ```
 
-## 2. Bootstrap an existing literature folder
+## 2. Set up an existing literature folder
 
 Use safe copy mode first:
 
 ```bash
-kb --kb-path /path/to/literature-folder bootstrap --copy
+kb --kb-path /path/to/literature-folder setup
 ```
 
 Windows example:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum" bootstrap --copy
+kb --kb-path "D:\github\LLM-wiki\quantum" setup
 ```
 
 macOS/Linux example:
 
 ```bash
-kb --kb-path "$HOME/github/LLM-wiki/quantum" bootstrap --copy
+kb --kb-path "$HOME/github/LLM-wiki/quantum" setup
 ```
 
 This runs:
@@ -67,13 +67,13 @@ rules/LINT_POLICY.md
 ## 3. Preview before changing files
 
 ```bash
-kb --kb-path /path/to/literature-folder bootstrap --copy --dry-run
+kb --kb-path /path/to/literature-folder setup --dry-run
 ```
 
 `--preview` is an equivalent alias where dry-run behavior is supported:
 
 ```bash
-kb --kb-path /path/to/literature-folder bootstrap --copy --preview
+kb --kb-path /path/to/literature-folder setup --preview
 ```
 
 ## 4. Move instead of copy
@@ -81,13 +81,13 @@ kb --kb-path /path/to/literature-folder bootstrap --copy --preview
 Only use this when you intentionally want to reorganize the folder:
 
 ```bash
-kb --kb-path /path/to/literature-folder bootstrap --move
+kb --kb-path /path/to/literature-folder setup --move
 ```
 
 ## 5. Include subfolders
 
 ```bash
-kb --kb-path /path/to/literature-folder bootstrap --copy --recursive
+kb --kb-path /path/to/literature-folder setup --recursive
 ```
 
 Recursive mode skips managed/generated folders including `raw`, `wiki`, `processing`, `references`, `topics`, `outputs`, `logs`, `.git`, `.obsidian`, `target`, and `node_modules`.

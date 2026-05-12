@@ -1,6 +1,6 @@
 # `kb keywords`
 
-Current version: `v0.6.4.1`
+Current version: `v0.7.6`
 
 `kb keywords` detects deterministic keyword / topic co-occurrence candidates among extracted text files.
 

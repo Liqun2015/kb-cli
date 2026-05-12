@@ -1,6 +1,6 @@
 # Literature Relationship Core Principle
 
-Current version: `v0.6.4.1`
+Current version: `v0.7.6`
 
 LLM Wiki is not merely a local document archive.
 

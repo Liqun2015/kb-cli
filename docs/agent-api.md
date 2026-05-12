@@ -1,6 +1,6 @@
 # Agent/API Boundary Notes
 
-This document records what `kb-cli v0.6.0.1` actually supports. It is intentionally conservative.
+This document records what `kb-cli v0.7.6` actually supports. It is intentionally conservative.
 
 ## Implemented CLI commands
 
@@ -8,7 +8,7 @@ This document records what `kb-cli v0.6.0.1` actually supports. It is intentiona
 |---|---|
 | `kb init [--force]` | Create the local LLM Wiki directory structure and generated `rules/` layer. |
 | `kb ingest [--copy\|--move] [--recursive] [--dry-run\|--preview]` | Organize source files into `raw/` subfolders. |
-| `kb bootstrap [--copy\|--move] [--dry-run\|--preview]` | Run `init + ingest + extract-metadata + build-wiki`. |
+| `kb setup [--copy\|--move] [--dry-run\|--preview]` | Run `init + ingest + extract-metadata + build-wiki`. `kb bootstrap` is a compatibility alias. |
 | `kb extract-metadata [--force]` | Extract PDF metadata from `raw/papers/`. |
 | `kb build-wiki` | Generate Markdown wiki pages and indexes. |
 | `kb status [--dry-run\|--preview] [--json] [--unprocessed]` | Refresh `processing/manifest.json`, print JSON summary, or list unprocessed raw files. |
@@ -47,7 +47,7 @@ Do not ask an LLM to infer file lists, keyword matches, reference hints, missing
 
 `kb>` is not an LLM chat interface. It must not silently interpret free-form natural language as an LLM request. Future LLM behavior must be introduced only through a deliberately designed explicit interface. Do not reserve or advertise placeholder LLM command names inside the deterministic shell before that design exists.
 
-In `v0.6.0.1`, `kb shell` is the deterministic shell entry point. It delegates only known structured `kb` commands to batch-mode `kb` semantics and remains outside LLM chat behavior. Unknown input is a safe no-op. See `docs/cli-shell-principle.md` and `docs/shell.md`.
+In the current version, `kb shell` is the deterministic shell entry point. It delegates only known structured `kb` commands to batch-mode `kb` semantics and remains outside LLM chat behavior. Unknown input is a safe no-op. See `docs/cli-shell-principle.md` and `docs/shell.md`.
 
 ## Three-layer LLM Wiki model
 
@@ -71,12 +71,12 @@ rules/LINT_POLICY.md
 
 Agents should read `rules/LLM_WIKI_SCHEMA.md` before making broad Wiki changes.
 
-## Cross-platform bootstrap
+## Cross-platform setup
 
 The recommended machine-facing one-command workflow is:
 
 ```bash
-kb --kb-path /path/to/kb bootstrap --copy
+kb --kb-path /path/to/kb setup
 ```
 
 This is cross-platform because the workflow is implemented inside the Rust CLI, not inside a Windows-only batch file.
@@ -199,7 +199,7 @@ long-running background daemon
 
 ## Safety behavior
 
-`ingest` and `bootstrap` default to copy mode unless `--move` is explicitly provided. Recursive mode skips generated/project folders such as:
+`ingest` and `setup` default to copy mode unless `--move` is explicitly provided. Recursive mode skips generated/project folders such as:
 
 ```text
 raw, wiki, processing, references, topics, outputs, logs, .git, .obsidian, target, node_modules
@@ -208,13 +208,13 @@ raw, wiki, processing, references, topics, outputs, logs, .git, .obsidian, targe
 For automation, prefer running a dry run first:
 
 ```bash
-kb --kb-path /path/to/kb bootstrap --dry-run
+kb --kb-path /path/to/kb setup --dry-run
 ```
 
 Then run the real command:
 
 ```bash
-kb --kb-path /path/to/kb bootstrap --copy
+kb --kb-path /path/to/kb setup
 ```
 
 ## Output style

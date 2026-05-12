@@ -2,7 +2,7 @@
 
 This guide is for macOS, Linux, and other Unix-like shells such as `bash` and `zsh`.
 
-Current version: `v0.6.4.1`
+Current version: `v0.7.6`
 
 ## 1. Install Rust once
 
@@ -42,12 +42,12 @@ kb --help
 which kb
 ```
 
-## 3. Bootstrap a knowledge folder
+## 3. Set up a knowledge folder
 
 Recommended safe command:
 
 ```bash
-kb --kb-path "$HOME/github/LLM-wiki/quantum" bootstrap --copy
+kb --kb-path "$HOME/github/LLM-wiki/quantum" setup
 ```
 
 This runs the deterministic local workflow:
@@ -129,7 +129,7 @@ For knowledge-base workflows, prefer explicit `kb ...` commands instead of broad
 
 ## 7. Recommended verification flow
 
-After bootstrapping or after a human/AI edits `wiki/`, run:
+After setup or after a human/AI edits `wiki/`, run:
 
 ```bash
 kb --kb-path "$HOME/github/LLM-wiki/quantum" status
@@ -187,7 +187,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 Quote it:
 
 ```bash
-kb --kb-path "$HOME/My Knowledge Bases/quantum" bootstrap --copy
+kb --kb-path "$HOME/My Knowledge Bases/quantum" setup
 ```
 
 ### Permission denied when running a script
