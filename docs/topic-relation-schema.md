@@ -1,6 +1,6 @@
 # Topic Relation Schema
 
-Current version: `v0.7.9`
+Current version: `v0.7.10`
 
 This document defines a conservative schema for topic-specific literature relations under `topics/<topic>/`.
 

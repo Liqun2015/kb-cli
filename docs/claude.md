@@ -2,7 +2,7 @@
 
 ## Current version
 
-`kb-cli v0.7.9`
+`kb-cli v0.7.10`
 
 ## Core goal
 
@@ -17,7 +17,7 @@ rules/  schema/contract layer that constrains AI maintenance behavior
 ```
 
 
-## v0.7.9 root marker rule
+## Root marker rule
 
 Every initialized knowledge-base root must contain:
 
@@ -375,10 +375,16 @@ kb topic rank <topic>
 kb topic relations <topic>
 ```
 
-Treat `kb topic relations <topic>` as a compiler of existing directed relation rows under `topics/<topic>/relations/*.md`, not as an automatic scientific-relation inference engine. After running it, inspect with:
+Treat `kb topic relations <topic>` as a compiler of existing directed relation rows under `topics/<topic>/relations/*.md`, not as an automatic scientific-relation inference engine. After running it, inspect the topic list with:
+
+```bash
+kb view --relations
+```
+
+and inspect one concrete topic graph with:
 
 ```bash
 kb view --relations --topic <topic>
 ```
 
-Do not mark generated candidate or `needs_human_review` edges as confirmed without explicit review evidence.
+`kb view --relations --topic <topic>` must be treated as a strict single-topic view. Do not mix unrelated topic graphs into the same review task. Do not mark generated candidate or `needs_human_review` edges as confirmed without explicit review evidence.

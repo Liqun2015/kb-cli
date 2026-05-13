@@ -222,6 +222,8 @@ kb topic prepare thermal-metamaterials
 kb view --relations --topic thermal-metamaterials
 ```
 
+Use `kb view --relations` without `--topic` when you want the topic overview page that lists all topic workspaces. Use `kb view --relations --topic <topic>` when you want the concrete directed graph for one topic only.
+
 Options:
 
 ```bash

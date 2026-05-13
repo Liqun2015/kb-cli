@@ -2,7 +2,7 @@
 
 This guide is for macOS, Linux, and other Unix-like shells such as `bash` and `zsh`.
 
-Current version: `v0.7.9`
+Current version: `v0.7.10`
 
 ## 1. Install Rust once
 

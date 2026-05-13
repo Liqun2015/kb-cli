@@ -6,7 +6,23 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.9`
+Current version: `v0.7.10`
+
+### v0.7.10
+
+Topic Relation View Fix. `kb view --relations` and `kb view --relations --topic <topic>` now have distinct meanings:
+
+```bash
+kb view --relations
+```
+
+opens the topic relation overview and lists all topic workspaces under `topics/`.
+
+```bash
+kb view --relations --topic thermal-metamaterials
+```
+
+opens the concrete directed relation graph for only that topic. The generated `relationship_data.json` is filtered at the data layer, not merely hidden in the browser.
 
 ### v0.7.9
 
@@ -99,7 +115,7 @@ outputs/html/relationship_viewer.html
 outputs/html/relationship_data.json
 ```
 
-The page visualizes paper-level bibliographic index relations and topic-local academic viewpoint / importance candidates before LLM execution. Confirmed or accepted edges are rendered as solid lines, candidate or LLM-review-needed edges as dashed lines, and missing or unresolved references as dotted lines.
+As of v0.7.10, `kb view --relations` is the topic overview, while `kb view --relations --topic <topic>` is the strict single-topic relation graph. Confirmed or accepted edges are rendered as solid lines, candidate or LLM-review-needed edges as dashed lines, and missing or unresolved references as dotted lines.
 
 No new `kb view-relations` command is added. The relationship graph remains part of the unified `kb view` HTML viewing system.
 
@@ -309,7 +325,7 @@ The expected workflow is:
 5. Build or update Markdown knowledge pages under `wiki/`
 6. Use topic commands to inspect topic-specific relationship workspaces
 7. Use `kb topic prepare <topic>` to run topic-local importance ranking and relation graph compilation
-8. Use `kb view --relations --topic <topic>` to inspect the topic graph
+8. Use `kb view --relations` to inspect all topic workspaces, then `kb view --relations --topic <topic>` to inspect one topic graph
 9. Use `kb topic review <topic>` to build a review queue from candidates when needed
 10. Let human reviewers or explicit AI agents revise the outputs under Git review
 11. Record accepted decisions under `topics/<topic>/reviewed/` and `LLM/memory/`
@@ -347,8 +363,8 @@ This workflow is not meant to replace human judgment. It is meant to make AI-ass
 | `kb topic prepare <topic>` | Run topic ranking and relation graph compilation together. |
 | `kb topic review <topic>` | Build a deterministic review queue from topic-local candidates. |
 | `kb view` | Generate and open the static HTML review dashboard. |
-| `kb view --relations` | Generate the relationship graph review page and `relationship_data.json`. |
-| `kb view --relations --topic <topic>` | Generate the relationship graph review page focused on a topic. |
+| `kb view --relations` | Generate the topic relation overview page and `relationship_data.json`. |
+| `kb view --relations --topic <topic>` | Generate the strict single-topic directed relation graph. |
 | `kb view --relations --data-only` | Generate only `outputs/html/relationship_data.json`. |
 | `kb shell` | Start a deterministic interactive command shell. |
 

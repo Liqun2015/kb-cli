@@ -894,7 +894,7 @@ fn execute_prepare(custom_kb: Option<&Path>, args: &TopicPrepareArgs) -> Result<
 
     if dry_run {
         let report = TopicPrepareReport {
-            schema_version: "topic-prepare.v0.7.9".to_string(),
+            schema_version: "topic-prepare.v0.7.10".to_string(),
             generated_by: "kb-cli topic prepare".to_string(),
             generated_at: chrono::Utc::now().to_rfc3339(),
             topic_slug: slug.clone(),
@@ -939,7 +939,7 @@ fn execute_prepare(custom_kb: Option<&Path>, args: &TopicPrepareArgs) -> Result<
     warnings.extend(relations_report.warnings.clone());
 
     let report = TopicPrepareReport {
-        schema_version: "topic-prepare.v0.7.9".to_string(),
+        schema_version: "topic-prepare.v0.7.10".to_string(),
         generated_by: "kb-cli topic prepare".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         topic_slug: slug.clone(),
@@ -1060,7 +1060,7 @@ fn build_topic_relations_report(
     ];
 
     Ok(TopicRelationsReport {
-        schema_version: "topic-relations.v0.7.9".to_string(),
+        schema_version: "topic-relations.v0.7.10".to_string(),
         generated_by: "kb-cli topic relations".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         topic_slug: slug.to_string(),

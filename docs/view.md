@@ -1,6 +1,6 @@
 # kb view
 
-Current version: `v0.7.9`
+Current version: `v0.7.10`
 
 `kb view` generates static local HTML viewers for the current LLM Wiki.
 
@@ -23,9 +23,9 @@ outputs/html/index.html
 
 `kb view` opens the generated file with the system default browser by default. Use `kb view --no-open` when you only want to refresh the HTML file without opening a browser. Neither mode starts a server or grants the page permission to execute local commands.
 
-## Relationship graph review mode
+## Topic relationship review mode
 
-Starting in `v0.7.5`, relationship graph review is part of the existing `kb view` command:
+Starting in `v0.7.5`, topic relationship review is part of the existing `kb view` command:
 
 ```bash
 kb view --relations
@@ -43,23 +43,42 @@ outputs/html/relationship_viewer.html
 outputs/html/relationship_data.json
 ```
 
-`relationship_viewer.html` is a static review page for inspecting paper-level bibliographic index relations and topic-local academic viewpoint / importance candidates before LLM execution.
+`relationship_viewer.html` is a static review page for topic-level relationship work. It supports two distinct modes.
 
-`relationship_data.json` is the machine-readable data source for the page and for future third-party graph tools.
+### Topic overview mode
 
-### `--topic <topic>`
+```bash
+kb view --relations
+```
+
+Without `--topic`, the page is a topic relation overview. It lists all topic workspaces under:
+
+```text
+topics/
+```
+
+and reports per-topic counts such as Markdown file count, relation file count, and importance file count. It does **not** load every topic-local paper edge into one mixed graph.
+
+### Single-topic graph mode
 
 ```bash
 kb view --relations --topic thermal-metamaterials
 ```
 
-The generated page keeps global relationship data but marks the requested topic as the default focus when that topic workspace exists under:
+With `--topic`, the generated page is filtered to that one topic. `relationship_data.json` includes only:
 
 ```text
 topics/thermal-metamaterials/
+topics/thermal-metamaterials/literature.md
+topics/thermal-metamaterials/importance/*.md
+topics/thermal-metamaterials/relations/*.md
 ```
 
-If the topic does not exist, the command still generates global relationship data and records a warning in the JSON/page.
+The resulting graph contains the selected topic node, its topic-local paper nodes, and its topic-local directed edges. Other topics are not included.
+
+If the topic does not exist, the command records a warning in the JSON/page and does not fall back to a global mixed graph.
+
+`relationship_data.json` is the machine-readable data source for the page and for future third-party graph tools.
 
 ### `--data-only`
 
@@ -119,7 +138,7 @@ The regular dashboard sidebar includes a link to:
 relationship_viewer.html
 ```
 
-The relationship graph page includes a return link to:
+The topic relationship page includes a return link to:
 
 ```text
 index.html

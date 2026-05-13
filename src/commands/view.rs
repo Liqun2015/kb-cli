@@ -34,14 +34,14 @@ pub struct ViewArgs {
 
     #[arg(
         long,
-        help = "Generate the relationship graph review page instead of the regular dashboard"
+        help = "Generate the topic relationship overview or a single-topic graph instead of the regular dashboard"
     )]
     pub relations: bool,
 
     #[arg(
         long,
         value_name = "TOPIC",
-        help = "Default topic focus for --relations mode"
+        help = "Filter --relations mode to one concrete topic graph"
     )]
     pub topic: Option<String>,
 
@@ -289,27 +289,8 @@ fn build_relationship_data(kb_path: &Path, args: &ViewArgs) -> Result<Relationsh
     let mut warnings = Vec::new();
     let mut nodes_by_id: BTreeMap<String, RelationshipNode> = BTreeMap::new();
     let mut edges: Vec<RelationshipEdge> = Vec::new();
-    let mut source_refs_graph = None;
+    let source_refs_graph = None;
 
-    if let Some(refs_graph_path) =
-        latest_matching_path(kb_path, "processing/refs", "refs_graph_", "json")?
-    {
-        source_refs_graph = Some(relative_path_string(kb_path, &refs_graph_path));
-        match fs::read_to_string(&refs_graph_path)
-            .ok()
-            .and_then(|content| serde_json::from_str::<Value>(&content).ok())
-        {
-            Some(value) => import_refs_graph_json(kb_path, &value, &mut nodes_by_id, &mut edges),
-            None => warnings.push(format!(
-                "Could not parse latest refs graph JSON: {}",
-                relative_path_string(kb_path, &refs_graph_path)
-            )),
-        }
-    } else {
-        warnings.push("No processing/refs/refs_graph_*.json file found; run `kb refs-graph --json` for richer bibliographic edges.".to_string());
-    }
-
-    add_raw_paper_nodes(kb_path, &mut nodes_by_id)?;
     let topics = add_topic_relationships(
         kb_path,
         args.topic.as_deref(),
@@ -338,7 +319,7 @@ fn build_relationship_data(kb_path: &Path, args: &ViewArgs) -> Result<Relationsh
 
     Ok(RelationshipData {
         meta: RelationshipMeta {
-            version: "v0.7.9".to_string(),
+            version: "v0.7.10".to_string(),
             generated_by: "kb view --relations".to_string(),
             generated_at: Utc::now().to_rfc3339(),
             knowledge_base: kb_path.display().to_string(),
@@ -479,7 +460,12 @@ fn add_topic_relationships(
     let topics_dir = kb_path.join("topics");
     if !topics_dir.exists() {
         if default_topic.is_some() {
-            warnings.push("No topics/ directory found; --topic cannot be focused yet.".to_string());
+            warnings.push(
+                "No topics/ directory found; the requested topic graph cannot be generated yet."
+                    .to_string(),
+            );
+        } else {
+            warnings.push("No topics/ directory found; run `kb topic init <topic>` or `kb topic prepare <topic>` first.".to_string());
         }
         return Ok(Vec::new());
     }
@@ -495,10 +481,17 @@ fn add_topic_relationships(
     if let Some(slug) = &requested_slug {
         if !topics_dir.join(slug).exists() {
             warnings.push(format!(
-                "Requested topic `{}` was not found under topics/. The viewer will still show global relations.",
-                slug
+                "Requested topic `{}` was not found under topics/. Run `kb topic prepare {}` first.",
+                slug, slug
             ));
+            return Ok(Vec::new());
         }
+        topic_paths.retain(|path| {
+            path.file_name()
+                .and_then(|s| s.to_str())
+                .map(|name| name == slug)
+                .unwrap_or(false)
+        });
     }
 
     let mut topics = Vec::new();
@@ -531,7 +524,7 @@ fn add_topic_relationships(
                 kind: "topic".to_string(),
                 path: Some(topic_rel_path.clone()),
                 topic: Some(slug.clone()),
-                status: if Some(&slug) == requested_slug.as_ref() {
+                status: if requested_slug.is_some() {
                     "focused"
                 } else {
                     "indexed"
@@ -541,6 +534,14 @@ fn add_topic_relationships(
                 needs_llm_review: false,
             },
         );
+
+        // `kb view --relations` without `--topic` is now a topic index page.
+        // It intentionally stops at topic-level summary data and does not load
+        // paper nodes or topic-local edges. Use `--topic <topic>` for the
+        // concrete directed graph of one topic.
+        if requested_slug.is_none() {
+            continue;
+        }
 
         add_topic_literature_edges(kb_path, &topic_root, &slug, &topic_id, nodes_by_id, edges)?;
         add_topic_importance_edges(kb_path, &topic_root, &slug, &topic_id, nodes_by_id, edges)?;
@@ -857,20 +858,35 @@ fn build_relationship_manager_tasks(
     }
     if let Some(topic) = topic {
         files.push(format!("topics/{}/", slugify(topic)));
+        vec![RelationshipTask {
+            id: "manager:relationship-review-plan".to_string(),
+            role: "Manager LLM".to_string(),
+            title:
+                "Plan single-topic relation review batches without making final scholarly claims"
+                    .to_string(),
+            status: "open".to_string(),
+            files,
+            evidence: vec![format!(
+                "{} edges need review; {} missing/unresolved edges; {} ambiguous edges.",
+                overview.llm_review_edge_count,
+                overview.missing_edge_count,
+                overview.ambiguous_edge_count
+            )],
+        }]
+    } else {
+        files.push("topics/".to_string());
+        vec![RelationshipTask {
+            id: "manager:choose-topic-relation-review".to_string(),
+            role: "Manager LLM".to_string(),
+            title: "Choose a topic workspace before assigning relation review work".to_string(),
+            status: "open".to_string(),
+            files,
+            evidence: vec![format!(
+                "{} topic workspaces indexed. Use `kb view --relations --topic <topic>` for a concrete topic graph.",
+                overview.topic_count
+            )],
+        }]
     }
-    vec![RelationshipTask {
-        id: "manager:relationship-review-plan".to_string(),
-        role: "Manager LLM".to_string(),
-        title: "Plan relation review batches without making final scholarly claims".to_string(),
-        status: "open".to_string(),
-        files,
-        evidence: vec![format!(
-            "{} edges need review; {} missing/unresolved edges; {} ambiguous edges.",
-            overview.llm_review_edge_count,
-            overview.missing_edge_count,
-            overview.ambiguous_edge_count
-        )],
-    }]
 }
 
 fn build_relationship_worker_tasks(
@@ -885,21 +901,34 @@ fn build_relationship_worker_tasks(
     if let Some(topic) = topic {
         files.push(format!("topics/{}/importance/", slugify(topic)));
         files.push(format!("topics/{}/relations/", slugify(topic)));
+        vec![RelationshipTask {
+            id: "worker:verify-candidate-edges".to_string(),
+            role: "Worker LLM".to_string(),
+            title: "Verify candidate, ambiguous, and missing relation evidence".to_string(),
+            status: "open".to_string(),
+            files,
+            evidence: vec![format!(
+                "candidate={}, ambiguous={}, missing={}, review_needed={}",
+                overview.candidate_edge_count,
+                overview.ambiguous_edge_count,
+                overview.missing_edge_count,
+                overview.llm_review_edge_count
+            )],
+        }]
+    } else {
+        files.push("topics/".to_string());
+        vec![RelationshipTask {
+            id: "worker:wait-for-topic-selection".to_string(),
+            role: "Worker LLM".to_string(),
+            title: "Wait for a concrete topic graph before verifying edges".to_string(),
+            status: "blocked".to_string(),
+            files,
+            evidence: vec![
+                "Overview mode lists topics only; it does not expose edge-level review work."
+                    .to_string(),
+            ],
+        }]
     }
-    vec![RelationshipTask {
-        id: "worker:verify-candidate-edges".to_string(),
-        role: "Worker LLM".to_string(),
-        title: "Verify candidate, ambiguous, and missing relation evidence".to_string(),
-        status: "open".to_string(),
-        files,
-        evidence: vec![format!(
-            "candidate={}, ambiguous={}, missing={}, review_needed={}",
-            overview.candidate_edge_count,
-            overview.ambiguous_edge_count,
-            overview.missing_edge_count,
-            overview.llm_review_edge_count
-        )],
-    }]
 }
 
 fn render_relationship_viewer(kb_path: &Path, data: &RelationshipData) -> Result<String> {
@@ -915,14 +944,11 @@ fn render_relationship_viewer(kb_path: &Path, data: &RelationshipData) -> Result
 
     let mut html = String::new();
     html.push_str("<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\" />\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n");
-    html.push_str(&format!(
-        "<title>{} - Relationship Graph</title>\n",
-        kb_name
-    ));
+    html.push_str(&format!("<title>{} - Topic Relations</title>\n", kb_name));
     html.push_str("<style>\n");
     html.push_str(RELATIONSHIP_VIEWER_CSS);
     html.push_str("\n</style>\n</head>\n<body>\n<div class=\"relation-shell\">\n");
-    html.push_str("<aside class=\"relation-sidebar\">\n<div class=\"sidebar-head\">🕸️ Relationship Graph</div>\n");
+    html.push_str("<aside class=\"relation-sidebar\">\n<div class=\"sidebar-head\">🕸️ Topic Relations</div>\n");
     html.push_str("<div class=\"meta-card\"><strong>Knowledge base</strong><br><span>");
     html.push_str(&kb_display);
     html.push_str("</span><br><strong>Focus</strong><br><span>");
@@ -946,7 +972,7 @@ fn render_relationship_viewer(kb_path: &Path, data: &RelationshipData) -> Result
     html.push_str("<div class=\"legend\"><div><span class=\"line solid\"></span> confirmed/accepted</div><div><span class=\"line dashed\"></span> candidate/needs review</div><div><span class=\"line dotted\"></span> missing/unresolved</div></div>\n");
     html.push_str("</aside>\n<main class=\"relation-main\">\n<header><h1>");
     html.push_str(&kb_name);
-    html.push_str("</h1><p>Static relationship graph review page for paper-level index relations and topic-local academic viewpoint candidates.</p></header>\n");
+    html.push_str("</h1><p>Static topic relationship review page. Without --topic it lists topic workspaces; with --topic it shows one topic-local directed graph.</p></header>\n");
     html.push_str("<section class=\"panel active\" id=\"overview\"><h2>Overview</h2><div id=\"overviewGrid\" class=\"metric-grid\"></div><div id=\"warnings\"></div></section>\n");
     html.push_str("<section class=\"panel\" id=\"graph\"><h2>Graph</h2><p class=\"hint\">Solid edges are confirmed/accepted. Dashed edges are candidates or need LLM review. Dotted edges are missing or unresolved references.</p><div class=\"graph-wrap\"><svg id=\"graphSvg\" viewBox=\"0 0 1100 680\" role=\"img\" aria-label=\"Relationship graph\"></svg></div></section>\n");
     html.push_str("<section class=\"panel\" id=\"topics\"><h2>Topics</h2><div id=\"topicsTable\"></div></section>\n");
@@ -1431,7 +1457,7 @@ fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
     html.push_str("</span></div>\n");
     html.push_str("<div class=\"sidebar-links\">\n");
     html.push_str(&sidebar_links);
-    html.push_str("<a class=\"sidebar-link sidebar-anchor\" href=\"relationship_viewer.html\">Relationship Graph</a>\n");
+    html.push_str("<a class=\"sidebar-link sidebar-anchor\" href=\"relationship_viewer.html\">Topic Relations</a>\n");
     html.push_str("</div>\n</div>\n");
     html.push_str("<div class=\"terminal\">\n<div class=\"terminal-head\">kb-view&gt; display commands only</div>\n<div class=\"terminal-log\" id=\"commandLog\"><div class=\"terminal-msg\">Type <code>help</code>. This box cannot execute local kb commands.</div></div>\n<div class=\"terminal-input\"><input id=\"viewCommand\" type=\"text\" placeholder=\"help / open health / find DOI\"/><button id=\"runViewCommand\">Run</button></div>\n</div>\n");
     html.push_str(

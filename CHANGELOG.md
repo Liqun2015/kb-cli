@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.7.10
+
+`v0.7.10` fixes the topic relation viewer semantics.
+
+- `kb view --relations` now acts as the topic relation overview page. It lists topic workspaces and summary counts without loading every topic-local paper edge.
+- `kb view --relations --topic <topic>` now generates a strict single-topic relation graph. Its `relationship_data.json` includes only the requested topic, its topic node, its topic-local paper nodes, and its topic-local directed edges.
+- Missing topics no longer fall back to a global mixed graph; the generated data records a warning and stays empty.
+- The viewer remains static, read-only, and review-only. No LLM call or automatic scholarly judgment is added.
+
 ## v0.7.9
 
 `v0.7.9` adds a topic preparation wrapper for the topic-level relation workflow.

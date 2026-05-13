@@ -223,13 +223,13 @@ The guiding rule is simple:
 
 - **Ability:** generate static local HTML viewers for generated LLM Wiki artifacts.
 - **Regular dashboard:** `kb view` writes `outputs/html/index.html`.
-- **Relationship review mode:** `kb view --relations` writes `outputs/html/relationship_viewer.html` and `outputs/html/relationship_data.json`.
-- **Topic focus:** `kb view --relations --topic <topic>` keeps global data but sets the requested topic as the default focus when available.
+- **Topic overview mode:** `kb view --relations` writes `outputs/html/relationship_viewer.html` and `outputs/html/relationship_data.json` as a topic index for all workspaces under `topics/`.
+- **Single-topic graph mode:** `kb view --relations --topic <topic>` writes a filtered relation graph for only the requested topic. It does not keep unrelated global/topic data in the JSON.
 - **Data-only export:** `kb view --relations --data-only` writes only `relationship_data.json`.
-- **Primary input:** `wiki/`, `processing/refs/`, `processing/keywords/`, `outputs/reports/`, `LLM/tasks/`, `LLM/memory/`, and `topics/`.
+- **Primary input:** regular dashboard reads `wiki/`, `processing/refs/`, `processing/keywords/`, `outputs/reports/`, `LLM/tasks/`, and `LLM/memory/`; relation mode reads `topics/` and, when `--topic` is provided, the selected topic workspace.
 - **Allows LLM:** no.
 - **Deferred work:** relationship edges marked candidate, ambiguous, missing, or `needs_llm_review` are review inputs for Manager/Worker LLM workflows. The viewer itself is display-only and must not execute local commands or interpret natural language.
-- **Boundary:** do not add a separate `kb view-relations` command; relationship graph viewing belongs under `kb view --relations`.
+- **Boundary:** do not add a separate `kb view-relations` command; topic relationship viewing belongs under `kb view --relations`.
 
 ### `kb shell`
 
