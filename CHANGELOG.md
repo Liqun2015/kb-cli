@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.7.8
+
+`v0.7.8` adds an explicit LLM Wiki root marker.
+
+- `kb init` creates `llm-wiki.toml` in the knowledge-base root.
+- `kb setup` records the external source directory in `llm-wiki.toml`, normally as `source_dir = ".."` for `<source>/knowledgebase`.
+- The marker documents managed layout paths and LLM edit-scope policy so future agents can identify the workspace boundary.
+- Documentation now describes `llm-wiki.toml` as the programmatic root identifier for local LLM Wiki workspaces.
+
 All notable changes to `kb-cli` are recorded here.
 
 This project uses small, review-first releases. Many releases are documentation, workflow, or boundary-stabilization releases rather than feature-heavy releases.

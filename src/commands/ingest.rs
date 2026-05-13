@@ -291,7 +291,11 @@ pub fn execute_setup(
         ));
     }
 
-    crate::commands::init::execute(Some(&kb_path), args.force_init)?;
+    crate::commands::init::execute_with_source(
+        Some(&kb_path),
+        Some(&source_path),
+        args.force_init,
+    )?;
 
     if args.no_ingest {
         println!("\nSkipping ingest because --no-ingest was provided.");
@@ -487,6 +491,7 @@ fn should_skip_file(source_path: &Path, kb_path: &Path, file: &Path) -> bool {
             | "license.md"
             | "cargo.toml"
             | "cargo.lock"
+            | "llm-wiki.toml"
             | ".gitignore"
             | ".model_config.json"
             | ".model_config.example.json"

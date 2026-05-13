@@ -22,11 +22,19 @@ The guiding rule is simple:
 
 ## Core commands
 
+### `llm-wiki.toml`
+
+- **Role:** root marker file for an initialized local LLM Wiki workspace.
+- **Created by:** `kb init` and `kb setup`.
+- **Typical location:** `<source>/knowledgebase/llm-wiki.toml`.
+- **Purpose:** records `type = "llm-wiki"`, layout directories, source boundary, and the default policy that LLM agents should edit inside the workspace only.
+
+
 ### `kb init`
 
 - **Ability:** create or ensure the local knowledge-base directory structure.
 - **Primary input:** knowledge-base path.
-- **Primary output:** `raw/`, `wiki/`, `processing/`, `rules/`, `LLM/tasks/`, `LLM/memory/`, and related directories.
+- **Primary output:** `llm-wiki.toml`, `raw/`, `wiki/`, `processing/`, `rules/`, `LLM/tasks/`, `LLM/memory/`, and related directories.
 - **Allows LLM:** no.
 - **Deferred work:** none. Directory creation is deterministic.
 
@@ -42,7 +50,7 @@ The guiding rule is simple:
 
 - **Ability:** run the safe one-command setup path: `init -> ingest -> extract-metadata -> build-wiki`.
 - **Primary input:** a source-material directory; by default `kb --source <folder> setup` creates `<folder>/knowledgebase` as the workspace.
-- **Primary output:** a `knowledgebase/` workspace containing initialized folders, organized `raw/` materials, refreshed metadata, and wiki skeleton pages.
+- **Primary output:** a `knowledgebase/` workspace containing `llm-wiki.toml`, initialized folders, organized `raw/` materials, refreshed metadata, and wiki skeleton pages.
 - **Allows LLM:** no.
 - **Deferred work:** semantic synthesis, citation reconciliation, OCR/layout repair, and relationship judgment remain explicit LLM/human review tasks.
 - **Compatibility:** `kb bootstrap` remains available as an older alias, but documentation should prefer `kb setup`.

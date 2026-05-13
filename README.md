@@ -6,7 +6,11 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.7`
+Current version: `v0.7.8`
+
+### v0.7.8
+
+Root marker release. `kb init` and `kb setup` now create `llm-wiki.toml` in the knowledge-base root. This file identifies the folder as an LLM Wiki workspace, records the managed layout, and documents the source-material boundary for future human/LLM agents.
 
 ### v0.7.7
 
@@ -22,6 +26,7 @@ It creates a clean child workspace:
 
 ```text
 /path/to/literature-folder/knowledgebase/
+├── llm-wiki.toml
 ├── raw/
 ├── wiki/
 ├── rules/
@@ -38,6 +43,17 @@ init -> ingest -> extract-metadata -> build-wiki
 ```
 
 Safe copy mode remains the default unless `--move` is explicitly provided. `kb bootstrap` remains available as a compatibility alias for `kb setup`. Advanced users can still use `--kb-path` to initialize or operate on a specific knowledge base directory.
+
+## LLM Wiki Root Marker
+
+Every initialized workspace contains:
+
+```text
+llm-wiki.toml
+```
+
+This is the root marker for the local LLM Wiki. It records the workspace layout, the source-material boundary, and the default LLM edit policy. For the recommended layout, `kb --source /path/to/literature-folder setup --recursive` writes `source_dir = ".."`, meaning the original literature folder is outside the managed `knowledgebase/` workspace.
+
 
 ### v0.7.5
 

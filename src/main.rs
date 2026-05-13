@@ -190,7 +190,7 @@ fn main() -> anyhow::Result<()> {
             println!("  init [--force]              Initialize/ensure knowledge base");
             println!("  ingest [--copy|--move]      Organize files into raw/ subfolders");
             println!(
-                "  setup [--copy|--move]       Set up KB: init, ingest, extract metadata, build wiki"
+                "  setup [--copy|--move]       Set up KB: init, marker, ingest, metadata, wiki"
             );
             println!(
                 "       use --source PATH to create PATH/knowledgebase as the default workspace"

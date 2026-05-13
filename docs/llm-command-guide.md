@@ -1,6 +1,6 @@
 # LLM Command Guide
 
-Current version: `v0.7.7`
+Current version: `v0.7.8`
 
 This document is the operating guide for the top-level Manager LLM, Claude Code sessions, and human operators who use `kb-cli` as a structured command layer.
 

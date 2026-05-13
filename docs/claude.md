@@ -2,7 +2,7 @@
 
 ## Current version
 
-`kb-cli v0.7.7`
+`kb-cli v0.7.8`
 
 ## Core goal
 
@@ -15,6 +15,17 @@ raw/    original source materials; AI reads but does not rewrite
 wiki/   AI-maintained Markdown encyclopedia
 rules/  schema/contract layer that constrains AI maintenance behavior
 ```
+
+
+## v0.7.8 root marker rule
+
+Every initialized knowledge-base root must contain:
+
+```text
+llm-wiki.toml
+```
+
+This file identifies the folder as an LLM Wiki workspace, records the layout and source-material boundary, and states the default LLM edit policy. Future agents should treat the directory containing `llm-wiki.toml` as the editable workspace root. When `source.mode = "external"`, do not modify files outside that workspace unless the human explicitly asks.
 
 ## v0.4.0 design decision
 
