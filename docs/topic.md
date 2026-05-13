@@ -265,3 +265,36 @@ topics/<topic>/review/review_summary.md
 By default, existing queue and summary files are not overwritten. Use `--force` only when intentionally rebuilding the queue.
 
 Boundary: `kb topic review` does not accept, reject, defer, rank, or reinterpret candidates. It creates review rows with `candidate` status so humans, Manager LLMs, or Worker LLMs can inspect bounded items later.
+
+
+## `kb topic tasks <topic>`
+
+Generates topic-local Manager/Worker LLM handoff files for one topic workspace.
+
+```bash
+kb topic tasks thermal-metamaterials
+kb topic task thermal-metamaterials
+kb topic tasks thermal-metamaterials --dry-run
+kb topic tasks thermal-metamaterials --json
+kb topic tasks thermal-metamaterials --limit 3
+```
+
+The command writes, unless `--dry-run` / `--preview` is used:
+
+```text
+topics/<topic>/tasks/index.md
+topics/<topic>/tasks/items/<task_id>.md
+```
+
+It scans for deterministic signs that topic-level LLM/human work is needed:
+
+- `scope.md` is missing, empty, or still contains TODO markers;
+- `literature.md` has no usable topic literature rows;
+- topic literature exists but no generated importance candidate report exists;
+- importance candidates exist but no review queue exists;
+- `relations/*.md` has no real paper-to-paper records;
+- relation rows are candidate/ambiguous/needs_human or have weak evidence;
+- `graph/topic_graph.json` or `graph/topic_graph.md` is missing;
+- confirmed relations exist and a synthesis outline may be useful.
+
+Boundary: `kb topic tasks` does not call an LLM, does not write accepted decisions, and does not infer true scientific relations. It only creates routing documents for a Manager LLM or human maintainer to assign bounded work.

@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.7.11
+
+`v0.7.11` adds a topic-local LLM task handoff command.
+
+- Added `kb topic tasks <topic>` with visible alias `kb topic task <topic>`.
+- The command writes a topic Manager LLM dashboard to `topics/<topic>/tasks/index.md`.
+- The command writes bounded Worker LLM / human task files to `topics/<topic>/tasks/items/<task_id>.md`.
+- The scanner detects missing scope, incomplete literature curation, missing importance generation, missing importance review queues, missing relation authoring, uncertain or weak-evidence relation rows, missing graph exports, and topic synthesis opportunities.
+- No LLM call, automatic relation inference, or final scholarly judgment is added.
+
 ## v0.7.10
 
 `v0.7.10` fixes the topic relation viewer semantics.

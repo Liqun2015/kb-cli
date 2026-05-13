@@ -6,7 +6,25 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.10`
+Current version: `v0.7.11`
+
+### v0.7.11
+
+Topic Task Handoff release. This version adds a topic-local task command:
+
+```bash
+kb topic tasks <topic>
+kb topic task <topic>   # alias
+```
+
+It scans one topic workspace and writes a topic Manager LLM dashboard plus bounded Worker task files under:
+
+```text
+topics/<topic>/tasks/index.md
+topics/<topic>/tasks/items/<task_id>.md
+```
+
+The command detects missing topic scope, incomplete literature curation, missing importance generation, missing review queues, missing/weak relation records, missing graph exports, and synthesis opportunities. It does not call an LLM and does not accept scholarly claims.
 
 ### v0.7.10
 
@@ -327,8 +345,9 @@ The expected workflow is:
 7. Use `kb topic prepare <topic>` to run topic-local importance ranking and relation graph compilation
 8. Use `kb view --relations` to inspect all topic workspaces, then `kb view --relations --topic <topic>` to inspect one topic graph
 9. Use `kb topic review <topic>` to build a review queue from candidates when needed
-10. Let human reviewers or explicit AI agents revise the outputs under Git review
-11. Record accepted decisions under `topics/<topic>/reviewed/` and `LLM/memory/`
+10. Use `kb topic tasks <topic>` to generate topic-local Worker handoff files
+11. Let human reviewers or explicit AI agents revise the outputs under Git review
+12. Record accepted decisions under `topics/<topic>/reviewed/` and `LLM/memory/`
 
 This workflow is not meant to replace human judgment. It is meant to make AI-assisted knowledge maintenance more structured, inspectable, and reproducible.
 
@@ -362,6 +381,7 @@ This workflow is not meant to replace human judgment. It is meant to make AI-ass
 | `kb topic relations <topic>` | Compile topic-local directed relation records into graph artifacts. |
 | `kb topic prepare <topic>` | Run topic ranking and relation graph compilation together. |
 | `kb topic review <topic>` | Build a deterministic review queue from topic-local candidates. |
+| `kb topic tasks <topic>` | Generate topic-local Manager/Worker LLM handoff tasks. |
 | `kb view` | Generate and open the static HTML review dashboard. |
 | `kb view --relations` | Generate the topic relation overview page and `relationship_data.json`. |
 | `kb view --relations --topic <topic>` | Generate the strict single-topic directed relation graph. |

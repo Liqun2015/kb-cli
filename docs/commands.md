@@ -284,11 +284,11 @@ Future commands such as `kb topic`, `kb relation-review`, or topic graph exporte
 ## `kb topic`
 
 - **Category:** topic-specific relationship workspace command.
-- **Current subcommands:** `kb topic init <topic>`, `kb topic list`, `kb topic status <topic>`, `kb topic rank <topic>`, `kb topic relations <topic>`, `kb topic prepare <topic>`, and `kb topic review <topic>`.
+- **Current subcommands:** `kb topic init <topic>`, `kb topic list`, `kb topic status <topic>`, `kb topic rank <topic>`, `kb topic relations <topic>`, `kb topic prepare <topic>`, `kb topic review <topic>`, and `kb topic tasks <topic>`.
 - **Primary input:** topic name or slug.
-- **Primary output:** `topics/<topic>/` workspace files, topic-local reports under `topics/<topic>/importance/`, topic graph artifacts under `topics/<topic>/graph/`, and review queues under `topics/<topic>/review/`.
+- **Primary output:** `topics/<topic>/` workspace files, topic-local reports under `topics/<topic>/importance/`, topic graph artifacts under `topics/<topic>/graph/`, review queues under `topics/<topic>/review/`, and topic handoff files under `topics/<topic>/tasks/`.
 - **LLM allowed:** no. This command only creates deterministic scaffolding.
-- **Deferred work:** Manager LLM / Worker LLM / human reviewers fill and review topic-local importance and relation records later. `kb topic rank` produces importance candidates, `kb topic relations` compiles directed relation records into graph artifacts, `kb topic prepare` runs both, and `kb topic review` turns candidates into a queue. None of these commands decides final scholarly claims.
+- **Deferred work:** Manager LLM / Worker LLM / human reviewers fill and review topic-local importance and relation records later. `kb topic rank` produces importance candidates, `kb topic relations` compiles directed relation records into graph artifacts, `kb topic prepare` runs both, `kb topic review` turns candidates into a queue, and `kb topic tasks` writes bounded topic-local handoff files. None of these commands decides final scholarly claims.
 
 Example:
 
@@ -301,6 +301,7 @@ kb topic rank thermal-metamaterials --dry-run
 kb topic relations thermal-metamaterials --dry-run
 kb topic prepare thermal-metamaterials --dry-run
 kb topic review thermal-metamaterials --dry-run
+kb topic tasks thermal-metamaterials --dry-run
 ```
 
 ### `kb topic rank <topic>`
@@ -367,3 +368,24 @@ kb topic review thermal-metamaterials --force
 ```
 
 `kb topic review` does not perform scientific judgment. Every generated row remains in `candidate` status.
+
+
+### `kb topic tasks <topic>`
+
+- **Ability:** generate topic-local Manager/Worker LLM handoff tasks.
+- **Visible alias:** `kb topic task <topic>`.
+- **Primary input:** one topic workspace under `topics/<topic>/`.
+- **Primary output:** `topics/<topic>/tasks/index.md` and `topics/<topic>/tasks/items/<task_id>.md`.
+- **Allows LLM:** no. It prepares bounded task files for later explicit LLM/human execution.
+- **Detected work:** missing scope definition, incomplete literature curation, missing importance generation, missing importance review queue, missing relation authoring, uncertain or weak-evidence relation rows, missing graph exports, and synthesis opportunities.
+- **Boundary:** generated tasks are routing artifacts. They do not execute agents, infer relations, accept importance labels, or rewrite wiki pages.
+
+Example:
+
+```bash
+kb topic tasks thermal-metamaterials
+kb topic task thermal-metamaterials
+kb topic tasks thermal-metamaterials --dry-run
+kb topic tasks thermal-metamaterials --json
+kb topic tasks thermal-metamaterials --limit 3
+```

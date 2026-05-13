@@ -1,6 +1,6 @@
 # LLM Command Guide
 
-Current version: `v0.7.10`
+Current version: `v0.7.11`
 
 This document is the operating guide for the top-level Manager LLM, Claude Code sessions, and human operators who use `kb-cli` as a structured command layer.
 
@@ -52,6 +52,7 @@ Use `kb-cli` commands to collect that evidence, then hand bounded evidence to th
 | `kb refs-graph` | Export bibliographic relation candidates as graph data | `processing/refs/refs_index_*.md` | `processing/refs/refs_graph_*.json` / `.mmd` / `.dot` | visualize relation certainty | human review of uncertain edges |
 | `kb keywords` | Detect keyword/topic co-occurrence candidates | `processing/text/` | `processing/keywords/keywords_*.md` / JSON | find topic-level evidence | semantic meaning / idea relations |
 | `kb tasks` | Generate deferred work lists and task index | project state | `LLM/tasks/index.md`, `LLM/tasks/items/` | assign bounded work to Manager/Worker LLMs | execution of tasks |
+| `kb topic tasks <topic>` | Generate topic-local handoff tasks | `topics/<topic>/` | `topics/<topic>/tasks/index.md`, `topics/<topic>/tasks/items/` | assign bounded topic-local Worker LLM tasks | execution of tasks / scholarly judgment |
 | `kb memory` | Record completed task outcomes | operator input | `LLM/memory/` | inspect project history | validation of quality |
 
 ## Standard Manager-led maintenance loop
@@ -272,7 +273,7 @@ Use this order:
 2. Inspect topics/<topic>/ if it exists.
 3. Read scope.md, literature.md, importance.md, relations/, tasks/, and memory/ if present.
 4. Use global commands such as kb query, kb grep, kb refs-index, kb refs-graph, kb keywords, and kb health for supporting evidence.
-5. Generate bounded tasks when Worker LLM or human review is required.
+5. Generate bounded tasks when Worker LLM or human review is required. Use `kb topic tasks <topic>` for topic-local handoffs and `kb tasks` for global handoffs.
 ```
 
 `processing/refs/` remains the global bibliographic layer. `topics/<topic>/` is the topic-local interpretation layer.
@@ -326,6 +327,14 @@ kb topic status <topic>
 ```
 
 before assigning topic-local Worker LLM tasks. These commands only inspect the topic workspace structure. They do not validate the truth of topic-local relations.
+
+When scope, literature, importance, relations, or graph artifacts are ready for delegation, run:
+
+```bash
+kb topic tasks <topic>
+```
+
+This writes `topics/<topic>/tasks/index.md` and bounded task files under `topics/<topic>/tasks/items/`. The command is a handoff generator only; it does not execute the tasks.
 
 
 ## Topic importance workflow

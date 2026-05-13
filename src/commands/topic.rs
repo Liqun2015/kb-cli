@@ -26,6 +26,12 @@ pub enum TopicCommand {
     Prepare(TopicPrepareArgs),
     #[command(about = "Build a deterministic review queue from topic-local importance candidates")]
     Review(TopicReviewArgs),
+    #[command(
+        name = "tasks",
+        visible_alias = "task",
+        about = "Generate topic-specific Manager/Worker LLM handoff tasks"
+    )]
+    Tasks(TopicTasksArgs),
 }
 
 #[derive(Debug, Clone, Args)]
@@ -185,6 +191,31 @@ pub struct TopicReviewArgs {
     pub force: bool,
 }
 
+#[derive(Debug, Clone, Args)]
+pub struct TopicTasksArgs {
+    #[arg(
+        value_name = "TOPIC",
+        help = "Topic name or slug to generate tasks for"
+    )]
+    pub topic: String,
+
+    #[arg(long, help = "Preview topic task generation without writing files")]
+    pub dry_run: bool,
+
+    #[arg(long, help = "Alias for --dry-run")]
+    pub preview: bool,
+
+    #[arg(
+        long,
+        default_value_t = 0,
+        help = "Maximum number of topic task items to return. Use 0 for no limit."
+    )]
+    pub limit: usize,
+
+    #[arg(long, help = "Print a machine-readable JSON topic task report")]
+    pub json: bool,
+}
+
 #[derive(Debug, Default)]
 struct InitSummary {
     topic_slug: String,
@@ -206,6 +237,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &TopicArgs) -> Result<()> {
         TopicCommand::Relations(relations_args) => execute_relations(custom_kb, relations_args),
         TopicCommand::Prepare(prepare_args) => execute_prepare(custom_kb, prepare_args),
         TopicCommand::Review(review_args) => execute_review(custom_kb, review_args),
+        TopicCommand::Tasks(tasks_args) => execute_tasks(custom_kb, tasks_args),
     }
 }
 
@@ -344,6 +376,40 @@ struct TopicReviewItem {
     status: String,
     reviewer: String,
     evidence: String,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct TopicTasksReport {
+    schema_version: String,
+    generated_by: String,
+    generated_at: String,
+    topic_slug: String,
+    topic_path: String,
+    dry_run: bool,
+    task_count: usize,
+    returned_count: usize,
+    limit: usize,
+    index_path: String,
+    task_item_dir: String,
+    task_item_count: usize,
+    warnings: Vec<String>,
+    tasks: Vec<TopicTaskItem>,
+    next_steps: Vec<String>,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+struct TopicTaskItem {
+    id: String,
+    priority: String,
+    category: String,
+    target_agent: String,
+    goal: String,
+    requirements: Vec<String>,
+    files: Vec<String>,
+    evidence: Vec<String>,
+    source_command: String,
+    expected_output: Vec<String>,
+    review_rule: String,
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -1498,6 +1564,793 @@ fn print_prepare_report(report: &TopicPrepareReport) {
             println!("  - {step}");
         }
     }
+}
+
+fn execute_tasks(custom_kb: Option<&Path>, args: &TopicTasksArgs) -> Result<()> {
+    let kb_path = crate::commands::init::get_kb_path(custom_kb);
+    let slug = topic_slug(&args.topic);
+    if slug.is_empty() {
+        return Err(anyhow!(
+            "topic name must contain at least one letter or digit"
+        ));
+    }
+
+    let topic_root = kb_path.join("topics").join(&slug);
+    if !topic_root.exists() {
+        return Err(anyhow!(
+            "topic workspace does not exist: {}. Run `kb topic init {}` first.",
+            topic_root.display(),
+            slug
+        ));
+    }
+
+    let mut report = build_topic_tasks_report(&kb_path, &slug, &topic_root, args)?;
+    let dry_run = args.dry_run || args.preview;
+    if !dry_run {
+        let item_dir = write_topic_task_item_files(&kb_path, &slug, &report)?;
+        let index_path = write_topic_task_index(&kb_path, &slug, &report)?;
+        report.index_path = relative_path_string(&kb_path, &index_path);
+        report.task_item_dir = relative_path_string(&kb_path, &item_dir);
+        report.task_item_count = report.tasks.len();
+    }
+
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&report)?);
+    } else {
+        print_topic_tasks_report(&report);
+    }
+    Ok(())
+}
+
+fn build_topic_tasks_report(
+    kb_path: &Path,
+    slug: &str,
+    topic_root: &Path,
+    args: &TopicTasksArgs,
+) -> Result<TopicTasksReport> {
+    let dry_run = args.dry_run || args.preview;
+    let mut tasks = Vec::new();
+    let mut warnings = Vec::new();
+
+    let status_report = build_topic_status(kb_path, slug, topic_root);
+    if status_report.status != "ok" {
+        tasks.push(TopicTaskItem {
+            id: format!("topic-{slug}-workspace-repair"),
+            priority: "high".to_string(),
+            category: "topic_workspace".to_string(),
+            target_agent: "Manager LLM / human maintainer".to_string(),
+            goal: "Repair the topic workspace structure before assigning semantic Worker LLM tasks.".to_string(),
+            requirements: vec![
+                format!("Run `kb topic status {slug}` and inspect missing files/directories."),
+                format!("Run `kb topic init {slug}` to create missing templates without overwriting existing files."),
+                "Do not edit scholarly relation files until the workspace structure is complete.".to_string(),
+            ],
+            files: status_report
+                .missing_dirs
+                .iter()
+                .chain(status_report.missing_files.iter())
+                .cloned()
+                .collect(),
+            evidence: vec![format!(
+                "missing dirs: {}; missing files: {}",
+                status_report.required_dirs_missing, status_report.required_files_missing
+            )],
+            source_command: format!("kb topic status {slug}"),
+            expected_output: vec![
+                "Complete topic directory skeleton under topics/<topic>/.".to_string(),
+                "No semantic claims accepted or rejected during structure repair.".to_string(),
+            ],
+            review_rule: "Human or Manager LLM checks `kb topic status <topic>` before further topic work.".to_string(),
+        });
+    }
+
+    let scope_path = topic_root.join("scope.md");
+    if file_missing_empty_or_todo(&scope_path) {
+        tasks.push(TopicTaskItem {
+            id: format!("topic-{slug}-scope-definition"),
+            priority: "high".to_string(),
+            category: "topic_scope".to_string(),
+            target_agent: "Manager LLM / human researcher".to_string(),
+            goal: "Turn the topic scope into a usable research boundary before relation extraction.".to_string(),
+            requirements: vec![
+                "Define the central research question in concrete terms.".to_string(),
+                "Write inclusion criteria and exclusion criteria for the topic.".to_string(),
+                "Keep nearby-but-outside topics separate to avoid graph drift.".to_string(),
+                "Do not summarize papers here; this file defines the topic boundary only.".to_string(),
+            ],
+            files: vec![relative_path_string(kb_path, &scope_path)],
+            evidence: vec![scope_evidence(kb_path, &scope_path)],
+            source_command: format!("kb topic tasks {slug}"),
+            expected_output: vec![
+                format!("A revised `topics/{slug}/scope.md` with research question, inclusion criteria, and exclusion criteria."),
+                "Any unresolved boundary questions listed explicitly.".to_string(),
+            ],
+            review_rule: "High-level topic scope should be checked by a human researcher before Worker LLM relation tasks proceed.".to_string(),
+        });
+    }
+
+    let literature_path = topic_root.join("literature.md");
+    let literature_text = fs::read_to_string(&literature_path).unwrap_or_default();
+    let literature_candidates = parse_topic_literature(&literature_text);
+    if literature_candidates.is_empty() || file_missing_empty_or_todo(&literature_path) {
+        tasks.push(TopicTaskItem {
+            id: format!("topic-{slug}-literature-curation"),
+            priority: "high".to_string(),
+            category: "topic_literature".to_string(),
+            target_agent: "Manager LLM / literature curator".to_string(),
+            goal: "Curate the initial paper list for this topic so ranking and relation work has a bounded input set.".to_string(),
+            requirements: vec![
+                "Add topic-relevant papers as rows in literature.md.".to_string(),
+                "Use stable paths such as `wiki/papers/...` or `raw/papers/...` when available.".to_string(),
+                "Describe each paper's role in the topic without claiming final importance.".to_string(),
+                "Mark uncertain inclusions as `candidate`, not confirmed.".to_string(),
+            ],
+            files: vec![relative_path_string(kb_path, &literature_path)],
+            evidence: vec![format!(
+                "topic literature rows parsed: {}; file status: {}",
+                literature_candidates.len(),
+                if literature_path.exists() { "present" } else { "missing" }
+            )],
+            source_command: format!("kb topic rank {slug}"),
+            expected_output: vec![
+                format!("A usable `topics/{slug}/literature.md` table with paper, role, status, and notes."),
+                format!("Then run `kb topic prepare {slug}`."),
+            ],
+            review_rule: "A human or Manager LLM should reject papers that do not match scope.md before running importance review.".to_string(),
+        });
+    }
+
+    let importance_review_items = collect_importance_review_items(kb_path, topic_root)?;
+    let generated_importance_files = collect_generated_importance_files(kb_path, topic_root)?;
+    let review_queue = topic_root.join("review/review_queue.md");
+    if !literature_candidates.is_empty()
+        && generated_importance_files.is_empty()
+        && importance_review_items.is_empty()
+    {
+        tasks.push(TopicTaskItem {
+            id: format!("topic-{slug}-importance-generation"),
+            priority: "medium".to_string(),
+            category: "topic_importance".to_string(),
+            target_agent: "Manager LLM / deterministic CLI operator".to_string(),
+            goal: "Generate topic-local importance candidates from the curated literature table."
+                .to_string(),
+            requirements: vec![
+                format!("Run `kb topic rank {slug}` or `kb topic prepare {slug}`."),
+                "Treat generated scores as candidates only.".to_string(),
+                "Do not use ranking output as final scholarly authority.".to_string(),
+            ],
+            files: vec![relative_path_string(kb_path, &literature_path)],
+            evidence: vec![format!(
+                "literature rows parsed: {}; generated importance reports found: {}",
+                literature_candidates.len(),
+                generated_importance_files.len()
+            )],
+            source_command: format!("kb topic rank {slug}"),
+            expected_output: vec![format!(
+                "A timestamped importance candidate report under `topics/{slug}/importance/`."
+            )],
+            review_rule:
+                "Core/important labels require later review before affecting topic conclusions."
+                    .to_string(),
+        });
+    }
+
+    if !importance_review_items.is_empty() && !review_queue.exists() {
+        tasks.push(TopicTaskItem {
+            id: format!("topic-{slug}-importance-review-queue"),
+            priority: "high".to_string(),
+            category: "topic_importance_review".to_string(),
+            target_agent: "Manager LLM / human topic reviewer".to_string(),
+            goal: "Build a review queue for topic-local importance candidates before using them as graph semantics.".to_string(),
+            requirements: vec![
+                format!("Run `kb topic review {slug}` to create review/review_queue.md."),
+                "Review one candidate row at a time.".to_string(),
+                "Confirm only when there is topic-specific evidence.".to_string(),
+                "Record accepted/rejected/deferred outcomes under reviewed/.".to_string(),
+            ],
+            files: generated_importance_files.clone(),
+            evidence: importance_review_items
+                .iter()
+                .take(10)
+                .map(|item| format!("{} -> {}", item.candidate_id, item.proposed_decision))
+                .collect(),
+            source_command: format!("kb topic review {slug}"),
+            expected_output: vec![
+                format!("`topics/{slug}/review/review_queue.md`."),
+                format!("`topics/{slug}/review/review_summary.md`."),
+            ],
+            review_rule: "The queue only creates candidate review rows; it does not accept claims automatically.".to_string(),
+        });
+    }
+
+    let relation_scan = scan_topic_relation_tables(kb_path, slug, topic_root)?;
+    if relation_scan.real_records == 0 {
+        tasks.push(TopicTaskItem {
+            id: format!("topic-{slug}-relation-authoring"),
+            priority: "high".to_string(),
+            category: "topic_relations".to_string(),
+            target_agent: "Worker LLM / human literature relation reviewer".to_string(),
+            goal: "Author the first evidence-backed directed relation records for this topic.".to_string(),
+            requirements: vec![
+                "Use scope.md and literature.md as the topic boundary.".to_string(),
+                "Inspect Introduction and References sections before proposing relations.".to_string(),
+                "Write only evidence-backed directed records under relations/*.md.".to_string(),
+                "Keep uncertain relations as `candidate` or `needs_human`; do not mark them confirmed.".to_string(),
+                "Do not use global citation identity as a substitute for topic-local idea relation.".to_string(),
+            ],
+            files: relation_scan.relation_files.clone(),
+            evidence: vec![format!(
+                "real topic relation records parsed: {}; template/TODO rows ignored: {}",
+                relation_scan.real_records, relation_scan.todo_rows
+            )],
+            source_command: format!("kb topic relations {slug}"),
+            expected_output: vec![
+                format!("Evidence-backed rows in `topics/{slug}/relations/*.md`."),
+                format!("Then run `kb topic prepare {slug}` and inspect `kb view --relations --topic {slug}`."),
+            ],
+            review_rule: "Worker output remains candidate-level until reviewed; confirmed relations require explicit acceptance.".to_string(),
+        });
+    } else if relation_scan.needs_review_records > 0 || relation_scan.weak_evidence_records > 0 {
+        tasks.push(TopicTaskItem {
+            id: format!("topic-{slug}-relation-review"),
+            priority: "high".to_string(),
+            category: "topic_relation_review".to_string(),
+            target_agent: "Manager LLM / human relation reviewer".to_string(),
+            goal: "Review uncertain topic-local relation records and strengthen weak evidence before graph conclusions are used.".to_string(),
+            requirements: vec![
+                "Review candidate, ambiguous, needs_human, or weak-evidence relation rows one at a time.".to_string(),
+                "Promote a relation to confirmed only when source, target, relation type, and evidence are all clear.".to_string(),
+                "Move rejected/deferred decisions into reviewed/ when appropriate.".to_string(),
+                "Preserve uncertainty when evidence is only suggestive.".to_string(),
+            ],
+            files: relation_scan.relation_files.clone(),
+            evidence: relation_scan.evidence.iter().take(20).cloned().collect(),
+            source_command: format!("kb topic relations {slug}"),
+            expected_output: vec![
+                format!("Reviewed relation decisions under `topics/{slug}/reviewed/`."),
+                format!("Updated relation rows under `topics/{slug}/relations/*.md` where evidence supports the edit."),
+            ],
+            review_rule: "Do not let a Worker LLM be the final guarantee for high-impact `improves`, `contradicts`, or `causal_or_motivates` claims.".to_string(),
+        });
+    }
+
+    let graph_json = topic_root.join("graph/topic_graph.json");
+    let graph_md = topic_root.join("graph/topic_graph.md");
+    if !graph_json.exists() || !graph_md.exists() {
+        tasks.push(TopicTaskItem {
+            id: format!("topic-{slug}-graph-export"),
+            priority: "medium".to_string(),
+            category: "topic_graph".to_string(),
+            target_agent: "Manager LLM / deterministic CLI operator".to_string(),
+            goal: "Compile the topic graph artifacts so the Manager LLM and human reviewer can inspect the relation structure visually.".to_string(),
+            requirements: vec![
+                format!("Run `kb topic relations {slug}` or `kb topic prepare {slug}`."),
+                format!("Inspect the result with `kb view --relations --topic {slug}`."),
+                "Treat dashed/candidate edges as unresolved review items.".to_string(),
+            ],
+            files: vec![
+                relative_path_string(kb_path, &graph_json),
+                relative_path_string(kb_path, &graph_md),
+            ],
+            evidence: vec![format!(
+                "graph json exists: {}; graph markdown exists: {}",
+                graph_json.exists(),
+                graph_md.exists()
+            )],
+            source_command: format!("kb topic prepare {slug}"),
+            expected_output: vec![
+                format!("`topics/{slug}/graph/topic_graph.json`."),
+                format!("`topics/{slug}/graph/topic_graph.md`."),
+            ],
+            review_rule: "Graph export is a review surface, not a source of final claims.".to_string(),
+        });
+    }
+
+    if relation_scan.confirmed_records > 0 && importance_review_items.is_empty() {
+        warnings.push("confirmed relations exist but no parsed importance review items were found; check whether node importance is intentionally absent".to_string());
+    }
+
+    if relation_scan.confirmed_records > 0 {
+        tasks.push(TopicTaskItem {
+            id: format!("topic-{slug}-synthesis-outline"),
+            priority: "low".to_string(),
+            category: "topic_synthesis".to_string(),
+            target_agent: "Manager LLM / synthesis Worker LLM".to_string(),
+            goal: "Draft a topic synthesis outline from confirmed or explicitly reviewed relation evidence.".to_string(),
+            requirements: vec![
+                "Use only confirmed or explicitly reviewed relations as the backbone.".to_string(),
+                "Separate evidence-backed statements from hypotheses and open questions.".to_string(),
+                "Point to source relation files and review decisions for every major claim.".to_string(),
+                "Do not overwrite wiki concept pages without human/Git review.".to_string(),
+            ],
+            files: vec![
+                relative_path_string(kb_path, &topic_root.join("relations")),
+                relative_path_string(kb_path, &topic_root.join("reviewed")),
+                relative_path_string(kb_path, &topic_root.join("graph/topic_graph.md")),
+            ],
+            evidence: vec![format!(
+                "confirmed relation records parsed: {}",
+                relation_scan.confirmed_records
+            )],
+            source_command: format!("kb topic tasks {slug}"),
+            expected_output: vec![
+                format!("A proposed synthesis outline under `topics/{slug}/tasks/` or a reviewed wiki draft proposal."),
+                "A list of unresolved claims that need further evidence.".to_string(),
+            ],
+            review_rule: "Synthesis is allowed only as a proposal until accepted by human/Git review.".to_string(),
+        });
+    }
+
+    let task_count = tasks.len();
+    let returned_tasks = if args.limit > 0 {
+        tasks.into_iter().take(args.limit).collect::<Vec<_>>()
+    } else {
+        tasks
+    };
+
+    let next_steps = if returned_tasks.is_empty() {
+        vec![
+            format!("No topic-specific handoff tasks detected for `{slug}`."),
+            format!("Run `kb topic prepare {slug}` and `kb view --relations --topic {slug}` when topic materials change."),
+        ]
+    } else {
+        vec![
+            format!("Open `topics/{slug}/tasks/index.md` as the topic Manager LLM dashboard."),
+            "Assign exactly one bounded task item to a Worker LLM or human reviewer at a time.".to_string(),
+            format!("After accepted work, record topic-local completion in `topics/{slug}/memory/completed_tasks.md` or global `kb memory`."),
+        ]
+    };
+
+    Ok(TopicTasksReport {
+        schema_version: "topic-tasks.v0.7.11".to_string(),
+        generated_by: "kb-cli topic tasks".to_string(),
+        generated_at: chrono::Utc::now().to_rfc3339(),
+        topic_slug: slug.to_string(),
+        topic_path: relative_path_string(kb_path, topic_root),
+        dry_run,
+        task_count,
+        returned_count: returned_tasks.len(),
+        limit: args.limit,
+        index_path: format!("topics/{slug}/tasks/index.md"),
+        task_item_dir: format!("topics/{slug}/tasks/items"),
+        task_item_count: 0,
+        warnings,
+        tasks: returned_tasks,
+        next_steps,
+    })
+}
+
+#[derive(Debug, Default)]
+struct TopicRelationScan {
+    relation_files: Vec<String>,
+    real_records: usize,
+    confirmed_records: usize,
+    needs_review_records: usize,
+    weak_evidence_records: usize,
+    todo_rows: usize,
+    evidence: Vec<String>,
+}
+
+fn file_missing_empty_or_todo(path: &Path) -> bool {
+    let Ok(content) = fs::read_to_string(path) else {
+        return true;
+    };
+    let trimmed = content.trim();
+    trimmed.is_empty() || trimmed.contains("TODO") || trimmed.contains("todo")
+}
+
+fn scope_evidence(kb_path: &Path, scope_path: &Path) -> String {
+    if !scope_path.exists() {
+        return format!("{} is missing", relative_path_string(kb_path, scope_path));
+    }
+    let content = fs::read_to_string(scope_path).unwrap_or_default();
+    if content.trim().is_empty() {
+        format!("{} is empty", relative_path_string(kb_path, scope_path))
+    } else if content.contains("TODO") || content.contains("todo") {
+        format!(
+            "{} still contains TODO markers",
+            relative_path_string(kb_path, scope_path)
+        )
+    } else {
+        format!(
+            "{} may need human boundary review",
+            relative_path_string(kb_path, scope_path)
+        )
+    }
+}
+
+fn collect_generated_importance_files(kb_path: &Path, topic_root: &Path) -> Result<Vec<String>> {
+    let importance_dir = topic_root.join("importance");
+    let mut files = Vec::new();
+    if !importance_dir.exists() {
+        return Ok(files);
+    }
+    for entry in walkdir::WalkDir::new(&importance_dir)
+        .min_depth(1)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+    {
+        if !entry.file_type().is_file() {
+            continue;
+        }
+        let path = entry.path();
+        let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+            continue;
+        };
+        if name.starts_with("importance_candidates_") && name.ends_with(".md") {
+            files.push(relative_path_string(kb_path, path));
+        }
+    }
+    files.sort();
+    Ok(files)
+}
+
+fn collect_importance_review_items(
+    kb_path: &Path,
+    topic_root: &Path,
+) -> Result<Vec<TopicReviewItem>> {
+    let importance_dir = topic_root.join("importance");
+    let candidate_files = discover_topic_review_candidate_files(&importance_dir)?;
+    let mut items = Vec::new();
+    for file in &candidate_files {
+        let Ok(text) = fs::read_to_string(file) else {
+            continue;
+        };
+        if looks_like_empty_topic_template(file, &text) {
+            continue;
+        }
+        let relative_file = relative_path_string(kb_path, file);
+        let parsed = parse_review_items_from_candidate_text(kb_path, file, &relative_file, &text);
+        if parsed.is_empty() {
+            continue;
+        }
+        items.extend(parsed);
+    }
+    Ok(items)
+}
+
+fn scan_topic_relation_tables(
+    kb_path: &Path,
+    _slug: &str,
+    topic_root: &Path,
+) -> Result<TopicRelationScan> {
+    let relation_dir = topic_root.join("relations");
+    let mut scan = TopicRelationScan::default();
+    if !relation_dir.exists() {
+        return Ok(scan);
+    }
+
+    let mut files = collect_markdown_files(&relation_dir);
+    files.sort();
+    for path in files {
+        let rel_path = relative_path_string(kb_path, &path);
+        scan.relation_files.push(rel_path.clone());
+        let Ok(content) = fs::read_to_string(&path) else {
+            continue;
+        };
+        let mut header: Option<Vec<String>> = None;
+        for (line_idx, line) in content.lines().enumerate() {
+            let trimmed = line.trim();
+            if !trimmed.starts_with('|') || !trimmed.ends_with('|') {
+                continue;
+            }
+            let cells = split_markdown_table_row(trimmed);
+            if cells.is_empty()
+                || cells
+                    .iter()
+                    .all(|cell| cell.chars().all(|ch| matches!(ch, '-' | ':' | ' ')))
+            {
+                continue;
+            }
+            if header.is_none()
+                && cells.iter().any(|cell| {
+                    matches!(
+                        normalize_header(cell).as_str(),
+                        "source" | "relation_type" | "target"
+                    )
+                })
+            {
+                header = Some(cells.iter().map(|cell| normalize_header(cell)).collect());
+                continue;
+            }
+            let Some(header_cells) = &header else {
+                continue;
+            };
+            let source = value_for_header(&cells, header_cells, &["source", "paper", "from"])
+                .unwrap_or_default();
+            let target =
+                value_for_header(&cells, header_cells, &["target", "to"]).unwrap_or_default();
+            let status = value_for_header(&cells, header_cells, &["status"])
+                .unwrap_or_else(|| "candidate".to_string());
+            let evidence = value_for_header(&cells, header_cells, &["evidence", "source_evidence"])
+                .unwrap_or_default();
+            let needs_human =
+                value_for_header(&cells, header_cells, &["needs_human_review", "needs_human"])
+                    .map(|value| parse_topic_bool(&value))
+                    .unwrap_or(false);
+
+            if !is_real_candidate_value(&source) || !is_real_candidate_value(&target) {
+                scan.todo_rows += 1;
+                continue;
+            }
+
+            scan.real_records += 1;
+            let normalized_status = normalize_topic_relation_status(&status);
+            if normalized_status == "confirmed" {
+                scan.confirmed_records += 1;
+            }
+            if normalized_status != "confirmed" || needs_human {
+                scan.needs_review_records += 1;
+            }
+            if !is_real_candidate_value(&evidence) || evidence.to_ascii_lowercase().contains("todo")
+            {
+                scan.weak_evidence_records += 1;
+            }
+            if scan.evidence.len() < 40 {
+                scan.evidence.push(format!(
+                    "{}:{} | {} -> {} | status={} | evidence={}",
+                    rel_path,
+                    line_idx + 1,
+                    source,
+                    target,
+                    normalized_status,
+                    if evidence.is_empty() {
+                        "<missing>"
+                    } else {
+                        evidence.as_str()
+                    }
+                ));
+            }
+        }
+    }
+    Ok(scan)
+}
+
+fn write_topic_task_item_files(
+    kb_path: &Path,
+    slug: &str,
+    report: &TopicTasksReport,
+) -> Result<PathBuf> {
+    let item_dir = kb_path.join("topics").join(slug).join("tasks/items");
+    fs::create_dir_all(&item_dir)?;
+    for task in &report.tasks {
+        let path = item_dir.join(format!("{}.md", sanitize_topic_task_id(&task.id)));
+        fs::write(path, render_topic_task_item(report, task))?;
+    }
+    Ok(item_dir)
+}
+
+fn write_topic_task_index(
+    kb_path: &Path,
+    slug: &str,
+    report: &TopicTasksReport,
+) -> Result<PathBuf> {
+    let tasks_dir = kb_path.join("topics").join(slug).join("tasks");
+    fs::create_dir_all(&tasks_dir)?;
+    let path = tasks_dir.join("index.md");
+    fs::write(&path, render_topic_task_index(report))?;
+    Ok(path)
+}
+
+fn render_topic_task_index(report: &TopicTasksReport) -> String {
+    let mut out = String::new();
+    out.push_str(&format!("# Topic Task Index: {}\n\n", report.topic_slug));
+    out.push_str("This is the topic-local Manager LLM dashboard. It routes bounded Worker LLM / human tasks for one topic only.\n\n");
+    out.push_str("## Metadata\n\n");
+    out.push_str(&format!("- Generated by: `{}`\n", report.generated_by));
+    out.push_str(&format!("- Generated at: `{}`\n", report.generated_at));
+    out.push_str(&format!("- Schema version: `{}`\n", report.schema_version));
+    out.push_str(&format!("- Topic: `{}`\n", report.topic_slug));
+    out.push_str(&format!("- Topic path: `{}`\n", report.topic_path));
+    out.push_str("- Intended reader: `Manager LLM / human maintainer`\n");
+    out.push_str("- Worker task directory: `tasks/items/`\n\n");
+
+    out.push_str("## Operating Rules\n\n");
+    out.push_str("1. Stay inside this topic unless a human expands the scope.\n");
+    out.push_str("2. Assign one task item at a time.\n");
+    out.push_str("3. Worker LLMs must cite the listed files and preserve uncertainty.\n");
+    out.push_str("4. Candidate relations remain candidate-level until reviewed.\n");
+    out.push_str("5. Do not modify `raw/` source materials.\n\n");
+
+    out.push_str("## Pending Topic Tasks\n\n");
+    if report.tasks.is_empty() {
+        out.push_str("No pending topic-specific tasks were detected.\n\n");
+    } else {
+        out.push_str(
+            "| priority | task_id | category | target_agent | source_command | task_file |\n",
+        );
+        out.push_str("|---|---|---|---|---|---|\n");
+        for task in &report.tasks {
+            let task_file = format!(
+                "topics/{}/tasks/items/{}.md",
+                report.topic_slug,
+                sanitize_topic_task_id(&task.id)
+            );
+            out.push_str(&format!(
+                "| `{}` | `{}` | `{}` | {} | `{}` | `{}` |\n",
+                escape_table_cell(&task.priority),
+                escape_table_cell(&task.id),
+                escape_table_cell(&task.category),
+                escape_table_cell(&task.target_agent),
+                escape_table_cell(&task.source_command),
+                escape_table_cell(&task_file)
+            ));
+        }
+        out.push('\n');
+    }
+
+    if !report.warnings.is_empty() {
+        out.push_str("## Warnings\n\n");
+        for warning in &report.warnings {
+            out.push_str(&format!("- {}\n", warning));
+        }
+        out.push('\n');
+    }
+
+    out.push_str("## Recommended Topic Loop\n\n");
+    out.push_str("```text\n");
+    out.push_str("scope.md + literature.md\n");
+    out.push_str("        ↓\n");
+    out.push_str("kb topic prepare <topic>\n");
+    out.push_str("        ↓\n");
+    out.push_str("kb topic tasks <topic>\n");
+    out.push_str("        ↓\n");
+    out.push_str("assign one bounded task\n");
+    out.push_str("        ↓\n");
+    out.push_str("review changed files with Git diff\n");
+    out.push_str("        ↓\n");
+    out.push_str("record accepted work in memory/\n");
+    out.push_str("```\n\n");
+
+    out.push_str("## Next Steps\n\n");
+    for step in &report.next_steps {
+        out.push_str(&format!("- {step}\n"));
+    }
+
+    out
+}
+
+fn render_topic_task_item(report: &TopicTasksReport, task: &TopicTaskItem) -> String {
+    let mut out = String::new();
+    out.push_str(&format!("# Topic Worker Task: {}\n\n", task.id));
+    out.push_str(
+        "This is a bounded topic-local Worker LLM / human task generated by `kb topic tasks`.\n\n",
+    );
+    out.push_str("## Task Metadata\n\n");
+    out.push_str(&format!("- Topic: `{}`\n", report.topic_slug));
+    out.push_str(&format!("- Task ID: `{}`\n", task.id));
+    out.push_str("- Status: `pending`\n");
+    out.push_str(&format!("- Priority: `{}`\n", task.priority));
+    out.push_str(&format!("- Category: `{}`\n", task.category));
+    out.push_str(&format!("- Target agent: `{}`\n", task.target_agent));
+    out.push_str(&format!("- Source command: `{}`\n\n", task.source_command));
+
+    out.push_str("## Goal\n\n");
+    out.push_str(&task.goal);
+    out.push_str("\n\n");
+
+    out.push_str("## Requirements\n\n");
+    for requirement in &task.requirements {
+        out.push_str(&format!("- {}\n", requirement));
+    }
+    out.push('\n');
+
+    out.push_str("## Input Files\n\n");
+    if task.files.is_empty() {
+        out.push_str("No specific files were detected. Inspect the topic workspace manually before editing.\n");
+    } else {
+        for file in &task.files {
+            out.push_str(&format!("- `{}`\n", file));
+        }
+    }
+    out.push('\n');
+
+    out.push_str("## Evidence\n\n");
+    if task.evidence.is_empty() {
+        out.push_str(
+            "No evidence lines were collected. Treat this task as a planning hint, not as proof.\n",
+        );
+    } else {
+        for item in &task.evidence {
+            out.push_str(&format!("- {}\n", item));
+        }
+    }
+    out.push('\n');
+
+    out.push_str("## Expected Output\n\n");
+    for item in &task.expected_output {
+        out.push_str(&format!("- {}\n", item));
+    }
+    out.push('\n');
+
+    out.push_str("## Review Rule\n\n");
+    out.push_str(&task.review_rule);
+    out.push_str("\n\n");
+
+    out.push_str("## Worker Output Rules\n\n");
+    out.push_str("- Work only on the files listed above unless the Manager LLM or human maintainer expands the scope.\n");
+    out.push_str("- Preserve uncertainty; do not turn candidate evidence into final knowledge without review.\n");
+    out.push_str("- List every changed or created file.\n");
+    out.push_str("- Return unresolved issues and follow-up recommendations.\n");
+    out.push_str("- Do not modify `raw/` source materials.\n");
+    out.push_str("- Do not commit changes directly; leave the result for Git diff review.\n\n");
+
+    out.push_str("## Completion\n\n");
+    out.push_str("After the work is reviewed and accepted, record the result in topic memory or global memory.\n");
+    out
+}
+
+fn print_topic_tasks_report(report: &TopicTasksReport) {
+    println!("Topic tasks:");
+    println!("  topic       : {}", report.topic_slug);
+    println!("  path        : {}", report.topic_path);
+    println!(
+        "  tasks       : {} total, {} returned",
+        report.task_count, report.returned_count
+    );
+    println!("  dry run     : {}", report.dry_run);
+    println!(
+        "  index       : {}",
+        if report.dry_run {
+            "<not written>"
+        } else {
+            report.index_path.as_str()
+        }
+    );
+    println!(
+        "  task items  : {}",
+        if report.dry_run {
+            "<not written>"
+        } else {
+            report.task_item_dir.as_str()
+        }
+    );
+
+    if report.tasks.is_empty() {
+        println!();
+        println!("No pending topic-specific tasks detected.");
+    } else {
+        println!();
+        println!("Pending topic tasks:");
+        for task in &report.tasks {
+            println!(
+                "- {} | {} | {} | {}",
+                task.priority, task.id, task.category, task.target_agent
+            );
+            println!("  goal: {}", task.goal);
+        }
+    }
+
+    if !report.warnings.is_empty() {
+        println!();
+        println!("Warnings:");
+        for warning in &report.warnings {
+            println!("  - {warning}");
+        }
+    }
+
+    if !report.next_steps.is_empty() {
+        println!();
+        println!("Next steps:");
+        for step in &report.next_steps {
+            println!("  - {step}");
+        }
+    }
+}
+
+fn sanitize_topic_task_id(value: &str) -> String {
+    value
+        .chars()
+        .map(|ch| {
+            if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' {
+                ch
+            } else {
+                '-'
+            }
+        })
+        .collect::<String>()
+        .trim_matches('-')
+        .to_string()
 }
 
 fn is_topic_table_header_or_rule(cells: &[String]) -> bool {

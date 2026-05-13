@@ -163,3 +163,27 @@ processing/sections/<source-key>/references.txt
 
 If these files are missing or suspiciously short, `kb tasks` adds a `paper-section-extraction-001` task for a `Paper Section OCR/LLM Worker`. The Worker should recover the two sections from text, OCR, or multimodal LLM reading, but the work must remain explicit and reviewable.
 
+
+## Topic-local task handoff
+
+Starting in `v0.7.11`, global `kb tasks` is complemented by a topic-local task command:
+
+```bash
+kb topic tasks <topic>
+kb topic task <topic>   # alias
+```
+
+Global tasks stay under:
+
+```text
+LLM/tasks/
+```
+
+Topic-local tasks stay under:
+
+```text
+topics/<topic>/tasks/index.md
+topics/<topic>/tasks/items/<task_id>.md
+```
+
+Use `kb topic tasks <topic>` when the remaining work depends on the topic boundary, topic literature list, topic-local importance candidates, directed relation rows, or the topic graph. It does not call an LLM, infer relations, or accept scholarly claims. It only creates bounded handoff files for a Manager LLM or human maintainer.
