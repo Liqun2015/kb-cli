@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.7.9
+
+`v0.7.9` adds a topic preparation wrapper for the topic-level relation workflow.
+
+- Added `kb topic relations <topic>` to compile topic-local directed relation records into graph artifacts.
+- Added `kb topic prepare <topic>` as the high-level wrapper for `kb topic rank` + `kb topic relations`.
+- `kb topic prepare` safely initializes a missing topic workspace by default, without overwriting existing topic files. Use `--no-init` to require a pre-existing workspace.
+- `kb topic relations` writes stable graph artifacts under `topics/<topic>/graph/`:
+  - `topic_graph.json`
+  - `topic_graph.md`
+- `kb view --relations` now reads directed relation rows from `topics/<topic>/relations/*.md`, so the review page can show topic-local paper-to-paper edges.
+
+No LLM call or automatic scholarly judgment is added. Topic relations remain evidence-bearing candidates until reviewed.
+
 ## v0.7.8
 
 `v0.7.8` adds an explicit LLM Wiki root marker.

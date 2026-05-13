@@ -218,6 +218,8 @@ fn main() -> anyhow::Result<()> {
                 "  topic status <topic> [--json|--strict]  Check topic workspace completeness"
             );
             println!("  topic rank <topic> [--json] [--dry-run]  Generate topic-local importance candidates");
+            println!("  topic relations <topic> [--json] [--dry-run]  Compile directed topic relations into graph artifacts");
+            println!("  topic prepare <topic> [--limit N] [--json] [--dry-run]  Run rank + relations for a topic");
             println!(
                 "  topic review <topic> [--json] [--dry-run] [--force]  Build a topic review queue"
             );

@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Result};
 use clap::{Args, Subcommand};
+use std::collections::BTreeMap;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -19,6 +20,10 @@ pub enum TopicCommand {
     Status(TopicStatusArgs),
     #[command(about = "Generate topic-local literature importance candidates")]
     Rank(TopicRankArgs),
+    #[command(about = "Compile topic-local directed relation records into graph artifacts")]
+    Relations(TopicRelationsArgs),
+    #[command(about = "Prepare a topic graph by running topic rank and topic relations")]
+    Prepare(TopicPrepareArgs),
     #[command(about = "Build a deterministic review queue from topic-local importance candidates")]
     Review(TopicReviewArgs),
 }
@@ -101,6 +106,65 @@ pub struct TopicRankArgs {
 }
 
 #[derive(Debug, Clone, Args)]
+pub struct TopicRelationsArgs {
+    #[arg(
+        value_name = "TOPIC",
+        help = "Topic name or slug to compile relations for"
+    )]
+    pub topic: String,
+
+    #[arg(
+        long,
+        help = "Preview relation graph generation without writing graph artifacts"
+    )]
+    pub dry_run: bool,
+
+    #[arg(long, help = "Alias for --dry-run")]
+    pub preview: bool,
+
+    #[arg(
+        long,
+        help = "Print a machine-readable JSON topic relation graph report"
+    )]
+    pub json: bool,
+}
+
+#[derive(Debug, Clone, Args)]
+pub struct TopicPrepareArgs {
+    #[arg(value_name = "TOPIC", help = "Topic name or slug to prepare")]
+    pub topic: String,
+
+    #[arg(
+        long,
+        value_name = "TITLE",
+        help = "Human-readable topic title when a missing workspace is initialized"
+    )]
+    pub title: Option<String>,
+
+    #[arg(
+        long,
+        default_value_t = 50,
+        help = "Maximum number of topic-local importance candidates to include. Use 0 for no limit."
+    )]
+    pub limit: usize,
+
+    #[arg(
+        long,
+        help = "Do not initialize a missing topic workspace before running rank and relations"
+    )]
+    pub no_init: bool,
+
+    #[arg(long, help = "Preview topic preparation without writing files")]
+    pub dry_run: bool,
+
+    #[arg(long, help = "Alias for --dry-run")]
+    pub preview: bool,
+
+    #[arg(long, help = "Print a machine-readable JSON topic preparation report")]
+    pub json: bool,
+}
+
+#[derive(Debug, Clone, Args)]
 pub struct TopicReviewArgs {
     #[arg(value_name = "TOPIC", help = "Topic name or slug to review")]
     pub topic: String,
@@ -139,6 +203,8 @@ pub fn execute(custom_kb: Option<&Path>, args: &TopicArgs) -> Result<()> {
         TopicCommand::List(list_args) => execute_list(custom_kb, list_args),
         TopicCommand::Status(status_args) => execute_status(custom_kb, status_args),
         TopicCommand::Rank(rank_args) => execute_rank(custom_kb, rank_args),
+        TopicCommand::Relations(relations_args) => execute_relations(custom_kb, relations_args),
+        TopicCommand::Prepare(prepare_args) => execute_prepare(custom_kb, prepare_args),
         TopicCommand::Review(review_args) => execute_review(custom_kb, review_args),
     }
 }
@@ -157,6 +223,73 @@ struct TopicRankReport {
     limit: usize,
     candidates: Vec<TopicImportanceCandidate>,
     deferred_review: Vec<TopicRankReviewHint>,
+    next_steps: Vec<String>,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct TopicRelationsReport {
+    schema_version: String,
+    generated_by: String,
+    generated_at: String,
+    topic_slug: String,
+    topic_path: String,
+    relation_dir: String,
+    graph_dir: String,
+    dry_run: bool,
+    written: bool,
+    graph_json_path: String,
+    graph_markdown_path: String,
+    relation_files: usize,
+    relation_records: usize,
+    node_count: usize,
+    edge_count: usize,
+    nodes: Vec<TopicGraphNode>,
+    edges: Vec<TopicGraphEdge>,
+    warnings: Vec<String>,
+    next_steps: Vec<String>,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+struct TopicGraphNode {
+    id: String,
+    label: String,
+    kind: String,
+    path: Option<String>,
+    importance_level: Option<String>,
+    status: String,
+    evidence: Vec<String>,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
+struct TopicGraphEdge {
+    id: String,
+    source: String,
+    target: String,
+    relation_type: String,
+    status: String,
+    evidence: Vec<String>,
+    needs_human_review: bool,
+    source_file: String,
+    topic: String,
+}
+
+#[derive(Debug, serde::Serialize)]
+struct TopicPrepareReport {
+    schema_version: String,
+    generated_by: String,
+    generated_at: String,
+    topic_slug: String,
+    topic_path: String,
+    dry_run: bool,
+    initialized_missing_workspace: bool,
+    rank_report_path: Option<String>,
+    relations_graph_json_path: String,
+    relations_graph_markdown_path: String,
+    importance_candidates: usize,
+    relation_records: usize,
+    graph_nodes: usize,
+    graph_edges: usize,
+    warnings: Vec<String>,
     next_steps: Vec<String>,
 }
 
@@ -691,6 +824,738 @@ fn print_rank_report(report: &TopicRankReport) {
             println!("  - {step}");
         }
     }
+}
+
+fn execute_relations(custom_kb: Option<&Path>, args: &TopicRelationsArgs) -> Result<()> {
+    let kb_path = crate::commands::init::get_kb_path(custom_kb);
+    let slug = topic_slug(&args.topic);
+    if slug.is_empty() {
+        return Err(anyhow!(
+            "topic name must contain at least one letter or digit"
+        ));
+    }
+    let topic_root = kb_path.join("topics").join(&slug);
+    if !topic_root.exists() {
+        return Err(anyhow!(
+            "topic workspace does not exist: {}. Run `kb topic init {}` first.",
+            topic_root.display(),
+            slug
+        ));
+    }
+
+    let dry_run = args.dry_run || args.preview;
+    let mut report = build_topic_relations_report(&kb_path, &slug, &topic_root, dry_run)?;
+    if !dry_run {
+        write_topic_relations_report(&kb_path, &slug, &mut report)?;
+    }
+
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&report)?);
+    } else {
+        print_relations_report(&report);
+    }
+    Ok(())
+}
+
+fn execute_prepare(custom_kb: Option<&Path>, args: &TopicPrepareArgs) -> Result<()> {
+    let kb_path = crate::commands::init::get_kb_path(custom_kb);
+    let slug = topic_slug(&args.topic);
+    if slug.is_empty() {
+        return Err(anyhow!(
+            "topic name must contain at least one letter or digit"
+        ));
+    }
+    let topic_root = kb_path.join("topics").join(&slug);
+    let dry_run = args.dry_run || args.preview;
+    let mut initialized_missing_workspace = false;
+    let mut warnings = Vec::new();
+
+    if !topic_root.exists() {
+        if args.no_init {
+            return Err(anyhow!(
+                "topic workspace does not exist: {}. Run `kb topic init {}` first, or omit --no-init.",
+                topic_root.display(),
+                slug
+            ));
+        }
+        initialized_missing_workspace = true;
+        if dry_run {
+            warnings.push(format!(
+                "topic workspace would be initialized before preparation: topics/{slug}/"
+            ));
+        } else {
+            let title = args
+                .title
+                .clone()
+                .unwrap_or_else(|| topic_title(&args.topic));
+            ensure_topic_workspace_templates(&kb_path, &slug, &title)?;
+        }
+    }
+
+    if dry_run {
+        let report = TopicPrepareReport {
+            schema_version: "topic-prepare.v0.7.9".to_string(),
+            generated_by: "kb-cli topic prepare".to_string(),
+            generated_at: chrono::Utc::now().to_rfc3339(),
+            topic_slug: slug.clone(),
+            topic_path: relative_path_string(&kb_path, &topic_root),
+            dry_run,
+            initialized_missing_workspace,
+            rank_report_path: None,
+            relations_graph_json_path: format!("topics/{slug}/graph/topic_graph.json"),
+            relations_graph_markdown_path: format!("topics/{slug}/graph/topic_graph.md"),
+            importance_candidates: 0,
+            relation_records: 0,
+            graph_nodes: 0,
+            graph_edges: 0,
+            warnings,
+            next_steps: vec![
+                format!("Would run `kb topic rank {slug} --limit {}`.", args.limit),
+                format!("Would run `kb topic relations {slug}`."),
+                format!("Then inspect the result with `kb view --relations --topic {slug}`."),
+            ],
+        };
+        if args.json {
+            println!("{}", serde_json::to_string_pretty(&report)?);
+        } else {
+            print_prepare_report(&report);
+        }
+        return Ok(());
+    }
+
+    let rank_args = TopicRankArgs {
+        topic: slug.clone(),
+        limit: args.limit,
+        dry_run: false,
+        preview: false,
+        json: false,
+    };
+    let mut rank_report = build_topic_rank_report(&kb_path, &slug, &topic_root, &rank_args)?;
+    let rank_report_path = write_topic_rank_report(&kb_path, &slug, &rank_report)?;
+    rank_report.report_path = Some(relative_path_string(&kb_path, &rank_report_path));
+
+    let mut relations_report = build_topic_relations_report(&kb_path, &slug, &topic_root, false)?;
+    write_topic_relations_report(&kb_path, &slug, &mut relations_report)?;
+    warnings.extend(relations_report.warnings.clone());
+
+    let report = TopicPrepareReport {
+        schema_version: "topic-prepare.v0.7.9".to_string(),
+        generated_by: "kb-cli topic prepare".to_string(),
+        generated_at: chrono::Utc::now().to_rfc3339(),
+        topic_slug: slug.clone(),
+        topic_path: relative_path_string(&kb_path, &topic_root),
+        dry_run,
+        initialized_missing_workspace,
+        rank_report_path: rank_report.report_path.clone(),
+        relations_graph_json_path: relations_report.graph_json_path.clone(),
+        relations_graph_markdown_path: relations_report.graph_markdown_path.clone(),
+        importance_candidates: rank_report.returned_count,
+        relation_records: relations_report.relation_records,
+        graph_nodes: relations_report.node_count,
+        graph_edges: relations_report.edge_count,
+        warnings,
+        next_steps: vec![
+            format!("Review topic-local importance under topics/{slug}/importance/."),
+            format!("Review directed topic relations under topics/{slug}/relations/."),
+            format!("Inspect the graph with `kb view --relations --topic {slug}`."),
+        ],
+    };
+
+    if args.json {
+        println!("{}", serde_json::to_string_pretty(&report)?);
+    } else {
+        print_prepare_report(&report);
+    }
+    Ok(())
+}
+
+fn ensure_topic_workspace_templates(kb_path: &Path, slug: &str, title: &str) -> Result<()> {
+    let topic_root = kb_path.join("topics").join(slug);
+    fs::create_dir_all(&topic_root)?;
+    for dir in required_topic_dirs() {
+        fs::create_dir_all(topic_root.join(dir))?;
+    }
+    for template in topic_templates(slug, title) {
+        let path = topic_root.join(&template.path);
+        if path.exists() {
+            continue;
+        }
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(path, template.content)?;
+    }
+    Ok(())
+}
+
+fn build_topic_relations_report(
+    kb_path: &Path,
+    slug: &str,
+    topic_root: &Path,
+    dry_run: bool,
+) -> Result<TopicRelationsReport> {
+    let relation_dir = topic_root.join("relations");
+    let graph_dir = topic_root.join("graph");
+    let graph_json_path = graph_dir.join("topic_graph.json");
+    let graph_markdown_path = graph_dir.join("topic_graph.md");
+    let mut nodes_by_id: BTreeMap<String, TopicGraphNode> = BTreeMap::new();
+    let mut edges = Vec::new();
+    let mut warnings = Vec::new();
+
+    let topic_title = read_topic_title(topic_root).unwrap_or_else(|| slug.to_string());
+    insert_topic_graph_node(
+        &mut nodes_by_id,
+        TopicGraphNode {
+            id: format!("topic:{slug}"),
+            label: topic_title,
+            kind: "topic".to_string(),
+            path: Some(relative_path_string(kb_path, topic_root)),
+            importance_level: None,
+            status: "indexed".to_string(),
+            evidence: vec![relative_path_string(kb_path, topic_root)],
+        },
+    );
+
+    add_topic_graph_literature(kb_path, slug, topic_root, &mut nodes_by_id, &mut edges)?;
+    add_topic_graph_importance(kb_path, slug, topic_root, &mut nodes_by_id, &mut edges)?;
+    let relation_files = add_topic_graph_relation_records(
+        kb_path,
+        slug,
+        topic_root,
+        &mut nodes_by_id,
+        &mut edges,
+        &mut warnings,
+    )?;
+
+    dedupe_topic_graph_edges(&mut edges);
+    let mut nodes = nodes_by_id.into_values().collect::<Vec<_>>();
+    nodes.sort_by(|a, b| a.id.cmp(&b.id));
+    edges.sort_by(|a, b| {
+        a.status
+            .cmp(&b.status)
+            .then_with(|| a.source.cmp(&b.source))
+            .then_with(|| a.target.cmp(&b.target))
+            .then_with(|| a.relation_type.cmp(&b.relation_type))
+    });
+
+    let relation_records = edges
+        .iter()
+        .filter(|edge| edge.source_file.contains("/relations/"))
+        .count();
+    if relation_records == 0 {
+        warnings.push(format!(
+            "no paper-to-paper topic relation records found under topics/{slug}/relations/; the graph will show membership and importance only"
+        ));
+    }
+    if !relation_dir.exists() {
+        warnings.push(format!(
+            "relation directory missing: topics/{slug}/relations/"
+        ));
+    }
+
+    let next_steps = vec![
+        format!("Edit topics/{slug}/relations/*.md to add evidence-backed directed paper-to-paper relations."),
+        format!("Run `kb topic prepare {slug}` after changing literature, importance, or relation files."),
+        format!("Inspect with `kb view --relations --topic {slug}`."),
+    ];
+
+    Ok(TopicRelationsReport {
+        schema_version: "topic-relations.v0.7.9".to_string(),
+        generated_by: "kb-cli topic relations".to_string(),
+        generated_at: chrono::Utc::now().to_rfc3339(),
+        topic_slug: slug.to_string(),
+        topic_path: relative_path_string(kb_path, topic_root),
+        relation_dir: relative_path_string(kb_path, &relation_dir),
+        graph_dir: relative_path_string(kb_path, &graph_dir),
+        dry_run,
+        written: false,
+        graph_json_path: relative_path_string(kb_path, &graph_json_path),
+        graph_markdown_path: relative_path_string(kb_path, &graph_markdown_path),
+        relation_files,
+        relation_records,
+        node_count: nodes.len(),
+        edge_count: edges.len(),
+        nodes,
+        edges,
+        warnings,
+        next_steps,
+    })
+}
+
+fn write_topic_relations_report(
+    kb_path: &Path,
+    slug: &str,
+    report: &mut TopicRelationsReport,
+) -> Result<()> {
+    let graph_dir = kb_path.join("topics").join(slug).join("graph");
+    fs::create_dir_all(&graph_dir)?;
+    let json_path = graph_dir.join("topic_graph.json");
+    let md_path = graph_dir.join("topic_graph.md");
+    report.written = true;
+    report.graph_json_path = relative_path_string(kb_path, &json_path);
+    report.graph_markdown_path = relative_path_string(kb_path, &md_path);
+    fs::write(&json_path, serde_json::to_string_pretty(&report)?)?;
+    fs::write(&md_path, render_topic_relations_markdown(report))?;
+    Ok(())
+}
+
+fn add_topic_graph_literature(
+    kb_path: &Path,
+    slug: &str,
+    topic_root: &Path,
+    nodes_by_id: &mut BTreeMap<String, TopicGraphNode>,
+    edges: &mut Vec<TopicGraphEdge>,
+) -> Result<()> {
+    let path = topic_root.join("literature.md");
+    if !path.exists() {
+        return Ok(());
+    }
+    let rel_path = relative_path_string(kb_path, &path);
+    let content = fs::read_to_string(&path).unwrap_or_default();
+    let topic_id = format!("topic:{slug}");
+    for (idx, line) in content.lines().enumerate() {
+        let cells = split_markdown_table_row(line);
+        if cells.len() < 2 || is_topic_table_header_or_rule(&cells) {
+            continue;
+        }
+        let paper = cells[0].trim();
+        if !is_real_candidate_value(paper) {
+            continue;
+        }
+        let role = cells
+            .get(1)
+            .cloned()
+            .unwrap_or_else(|| "topic member".to_string());
+        let status = normalize_topic_relation_status(
+            cells.get(2).map(String::as_str).unwrap_or("candidate"),
+        );
+        let paper_id = topic_graph_node_id("paper", paper);
+        insert_topic_graph_node(
+            nodes_by_id,
+            TopicGraphNode {
+                id: paper_id.clone(),
+                label: topic_graph_label(paper),
+                kind: "paper".to_string(),
+                path: Some(paper.to_string()),
+                importance_level: None,
+                status: status.clone(),
+                evidence: vec![format!("{}:{}", rel_path, idx + 1)],
+            },
+        );
+        edges.push(TopicGraphEdge {
+            id: format!("edge:{topic_id}->{paper_id}:topic_membership:{}", idx + 1),
+            source: topic_id.clone(),
+            target: paper_id,
+            relation_type: "topic_membership".to_string(),
+            status: status.clone(),
+            evidence: vec![format!("{}:{} | role={}", rel_path, idx + 1, role)],
+            needs_human_review: !matches!(status.as_str(), "confirmed" | "accepted"),
+            source_file: rel_path.clone(),
+            topic: slug.to_string(),
+        });
+    }
+    Ok(())
+}
+
+fn add_topic_graph_importance(
+    kb_path: &Path,
+    slug: &str,
+    topic_root: &Path,
+    nodes_by_id: &mut BTreeMap<String, TopicGraphNode>,
+    edges: &mut Vec<TopicGraphEdge>,
+) -> Result<()> {
+    let importance_dir = topic_root.join("importance");
+    if !importance_dir.exists() {
+        return Ok(());
+    }
+    let mut files = collect_markdown_files(&importance_dir);
+    files.sort();
+    let topic_id = format!("topic:{slug}");
+    for file in files {
+        let name = file
+            .file_name()
+            .and_then(|name| name.to_str())
+            .unwrap_or_default();
+        if name == "importance_review.md" {
+            continue;
+        }
+        let rel_path = relative_path_string(kb_path, &file);
+        let base_status = if name.contains("confirmed") {
+            "confirmed"
+        } else {
+            "candidate"
+        };
+        let content = fs::read_to_string(&file).unwrap_or_default();
+        for (idx, line) in content.lines().enumerate() {
+            let cells = split_markdown_table_row(line);
+            if cells.len() < 2 || is_topic_table_header_or_rule(&cells) {
+                continue;
+            }
+            let paper = cells[0].trim();
+            if !is_real_candidate_value(paper) {
+                continue;
+            }
+            let importance = cells
+                .get(1)
+                .cloned()
+                .unwrap_or_else(|| "unknown".to_string());
+            let status = if cells.iter().any(|cell| {
+                let lower = cell.to_ascii_lowercase();
+                lower.contains("confirm") || lower.contains("accept")
+            }) {
+                "confirmed".to_string()
+            } else {
+                base_status.to_string()
+            };
+            let paper_id = topic_graph_node_id("paper", paper);
+            insert_topic_graph_node(
+                nodes_by_id,
+                TopicGraphNode {
+                    id: paper_id.clone(),
+                    label: topic_graph_label(paper),
+                    kind: "paper".to_string(),
+                    path: Some(paper.to_string()),
+                    importance_level: Some(importance.clone()),
+                    status: status.clone(),
+                    evidence: vec![format!("{}:{}", rel_path, idx + 1)],
+                },
+            );
+            edges.push(TopicGraphEdge {
+                id: format!(
+                    "edge:{topic_id}->{paper_id}:topic_importance:{}:{}",
+                    topic_slug(&rel_path),
+                    idx + 1
+                ),
+                source: topic_id.clone(),
+                target: paper_id,
+                relation_type: format!("topic_importance:{importance}"),
+                status: status.clone(),
+                evidence: vec![format!(
+                    "{}:{} | importance={}",
+                    rel_path,
+                    idx + 1,
+                    importance
+                )],
+                needs_human_review: status != "confirmed",
+                source_file: rel_path.clone(),
+                topic: slug.to_string(),
+            });
+        }
+    }
+    Ok(())
+}
+
+fn add_topic_graph_relation_records(
+    kb_path: &Path,
+    slug: &str,
+    topic_root: &Path,
+    nodes_by_id: &mut BTreeMap<String, TopicGraphNode>,
+    edges: &mut Vec<TopicGraphEdge>,
+    warnings: &mut Vec<String>,
+) -> Result<usize> {
+    let relation_dir = topic_root.join("relations");
+    if !relation_dir.exists() {
+        return Ok(0);
+    }
+    let mut files = collect_markdown_files(&relation_dir);
+    files.sort();
+    let mut files_seen = 0usize;
+    for file in files {
+        files_seen += 1;
+        let rel_path = relative_path_string(kb_path, &file);
+        let content = match fs::read_to_string(&file) {
+            Ok(content) => content,
+            Err(err) => {
+                warnings.push(format!("could not read {rel_path}: {err}"));
+                continue;
+            }
+        };
+        for (idx, line) in content.lines().enumerate() {
+            let cells = split_markdown_table_row(line);
+            if cells.len() < 3 || is_topic_table_header_or_rule(&cells) {
+                continue;
+            }
+            let source = cells[0].trim();
+            let relation_type = cells.get(1).map(|cell| cell.trim()).unwrap_or("related_to");
+            let target = cells.get(2).map(|cell| cell.trim()).unwrap_or_default();
+            if !is_real_candidate_value(source)
+                || !is_real_candidate_value(target)
+                || !is_real_candidate_value(relation_type)
+            {
+                continue;
+            }
+            let status = normalize_topic_relation_status(
+                cells.get(3).map(String::as_str).unwrap_or("candidate"),
+            );
+            let evidence = cells
+                .get(4)
+                .filter(|value| is_real_candidate_value(value))
+                .cloned()
+                .unwrap_or_else(|| "TODO evidence required".to_string());
+            let needs_human_review = cells
+                .get(5)
+                .map(|value| parse_topic_bool(value))
+                .unwrap_or(!matches!(status.as_str(), "confirmed" | "accepted"));
+            let source_id = topic_graph_node_id("paper", source);
+            let target_id = topic_graph_node_id("paper", target);
+            insert_topic_graph_node(
+                nodes_by_id,
+                TopicGraphNode {
+                    id: source_id.clone(),
+                    label: topic_graph_label(source),
+                    kind: "paper".to_string(),
+                    path: Some(source.to_string()),
+                    importance_level: None,
+                    status: "indexed".to_string(),
+                    evidence: vec![format!("{}:{}", rel_path, idx + 1)],
+                },
+            );
+            insert_topic_graph_node(
+                nodes_by_id,
+                TopicGraphNode {
+                    id: target_id.clone(),
+                    label: topic_graph_label(target),
+                    kind: "paper".to_string(),
+                    path: Some(target.to_string()),
+                    importance_level: None,
+                    status: "indexed".to_string(),
+                    evidence: vec![format!("{}:{}", rel_path, idx + 1)],
+                },
+            );
+            edges.push(TopicGraphEdge {
+                id: format!(
+                    "edge:{source_id}->{target_id}:{}:{}",
+                    topic_slug(relation_type),
+                    idx + 1
+                ),
+                source: source_id,
+                target: target_id,
+                relation_type: relation_type.to_string(),
+                status: status.clone(),
+                evidence: vec![format!("{}:{} | {}", rel_path, idx + 1, evidence)],
+                needs_human_review,
+                source_file: rel_path.clone(),
+                topic: slug.to_string(),
+            });
+        }
+    }
+    Ok(files_seen)
+}
+
+fn insert_topic_graph_node(nodes: &mut BTreeMap<String, TopicGraphNode>, node: TopicGraphNode) {
+    nodes
+        .entry(node.id.clone())
+        .and_modify(|existing| {
+            if existing.importance_level.is_none() && node.importance_level.is_some() {
+                existing.importance_level = node.importance_level.clone();
+            }
+            if existing.path.is_none() && node.path.is_some() {
+                existing.path = node.path.clone();
+            }
+            for evidence in &node.evidence {
+                if !existing.evidence.contains(evidence) {
+                    existing.evidence.push(evidence.clone());
+                }
+            }
+        })
+        .or_insert(node);
+}
+
+fn dedupe_topic_graph_edges(edges: &mut Vec<TopicGraphEdge>) {
+    let mut seen = BTreeMap::new();
+    edges.retain(|edge| {
+        let key = format!(
+            "{}|{}|{}|{}|{}",
+            edge.source, edge.target, edge.relation_type, edge.status, edge.source_file
+        );
+        if seen.contains_key(&key) {
+            false
+        } else {
+            seen.insert(key, true);
+            true
+        }
+    });
+}
+
+fn render_topic_relations_markdown(report: &TopicRelationsReport) -> String {
+    let mut md = String::new();
+    md.push_str(&format!(
+        "# Topic Relation Graph: {}\n\n",
+        report.topic_slug
+    ));
+    md.push_str(&format!("Generated by: `{}`\n\n", report.generated_by));
+    md.push_str(&format!("Generated at: `{}`\n\n", report.generated_at));
+    md.push_str("This is a deterministic graph export. It compiles topic membership, topic-local importance, and manually/LLM-proposed directed relation records. It does not make final scholarly claims.\n\n");
+    md.push_str("## Summary\n\n");
+    md.push_str(&format!("- Nodes: `{}`\n", report.node_count));
+    md.push_str(&format!("- Edges: `{}`\n", report.edge_count));
+    md.push_str(&format!("- Relation files: `{}`\n", report.relation_files));
+    md.push_str(&format!(
+        "- Paper-to-paper relation records: `{}`\n",
+        report.relation_records
+    ));
+    md.push_str(&format!("- JSON: `{}`\n", report.graph_json_path));
+
+    if !report.warnings.is_empty() {
+        md.push_str("\n## Warnings\n\n");
+        for warning in &report.warnings {
+            md.push_str(&format!("- {}\n", warning));
+        }
+    }
+
+    md.push_str("\n## Edges\n\n");
+    md.push_str("| source | relation_type | target | status | needs_human_review | evidence |\n");
+    md.push_str("|---|---|---|---|---|---|\n");
+    if report.edges.is_empty() {
+        md.push_str(
+            "| _none_ | related_to | _none_ | candidate | true | Add rows under relations/*.md |\n",
+        );
+    } else {
+        for edge in &report.edges {
+            md.push_str(&format!(
+                "| {} | {} | {} | {} | {} | {} |\n",
+                escape_table_cell(&edge.source),
+                escape_table_cell(&edge.relation_type),
+                escape_table_cell(&edge.target),
+                edge.status,
+                edge.needs_human_review,
+                escape_table_cell(&edge.evidence.join("; "))
+            ));
+        }
+    }
+
+    md.push_str("\n## Next steps\n\n");
+    for step in &report.next_steps {
+        md.push_str(&format!("- {step}\n"));
+    }
+    md
+}
+
+fn print_relations_report(report: &TopicRelationsReport) {
+    println!("Topic relation graph:");
+    println!("  topic           : {}", report.topic_slug);
+    println!("  path            : {}", report.topic_path);
+    println!("  relation files  : {}", report.relation_files);
+    println!("  relation records: {}", report.relation_records);
+    println!("  nodes           : {}", report.node_count);
+    println!("  edges           : {}", report.edge_count);
+    println!("  dry run         : {}", report.dry_run);
+    println!("  written         : {}", report.written);
+    println!("  graph json      : {}", report.graph_json_path);
+    println!("  graph markdown  : {}", report.graph_markdown_path);
+    if !report.warnings.is_empty() {
+        println!();
+        println!("Warnings:");
+        for warning in &report.warnings {
+            println!("  - {warning}");
+        }
+    }
+    if !report.next_steps.is_empty() {
+        println!();
+        println!("Next steps:");
+        for step in &report.next_steps {
+            println!("  - {step}");
+        }
+    }
+}
+
+fn print_prepare_report(report: &TopicPrepareReport) {
+    println!("Topic prepare:");
+    println!("  topic             : {}", report.topic_slug);
+    println!("  path              : {}", report.topic_path);
+    println!(
+        "  initialized       : {}",
+        report.initialized_missing_workspace
+    );
+    println!("  dry run           : {}", report.dry_run);
+    println!(
+        "  rank report       : {}",
+        report
+            .rank_report_path
+            .as_deref()
+            .unwrap_or("<not written>")
+    );
+    println!("  graph json        : {}", report.relations_graph_json_path);
+    println!(
+        "  graph markdown    : {}",
+        report.relations_graph_markdown_path
+    );
+    println!("  importance rows   : {}", report.importance_candidates);
+    println!("  relation records  : {}", report.relation_records);
+    println!("  graph nodes       : {}", report.graph_nodes);
+    println!("  graph edges       : {}", report.graph_edges);
+    if !report.warnings.is_empty() {
+        println!();
+        println!("Warnings:");
+        for warning in &report.warnings {
+            println!("  - {warning}");
+        }
+    }
+    if !report.next_steps.is_empty() {
+        println!();
+        println!("Next steps:");
+        for step in &report.next_steps {
+            println!("  - {step}");
+        }
+    }
+}
+
+fn is_topic_table_header_or_rule(cells: &[String]) -> bool {
+    if cells.is_empty() {
+        return true;
+    }
+    if cells
+        .iter()
+        .all(|cell| cell.chars().all(|ch| matches!(ch, '-' | ':' | ' ')))
+    {
+        return true;
+    }
+    let first = normalize_header(&cells[0]);
+    matches!(
+        first.as_str(),
+        "paper" | "source" | "item" | "todo" | "_none_" | "source_item"
+    )
+}
+
+fn normalize_topic_relation_status(raw: &str) -> String {
+    let lower = raw.trim().to_ascii_lowercase();
+    if lower.contains("confirm") || lower.contains("accept") || lower == "done" {
+        "confirmed".to_string()
+    } else if lower.contains("ambiguous") || lower.contains("uncertain") {
+        "ambiguous".to_string()
+    } else if lower.contains("missing") || lower.contains("unresolved") {
+        "missing".to_string()
+    } else if lower.contains("reject") {
+        "rejected".to_string()
+    } else {
+        "candidate".to_string()
+    }
+}
+
+fn parse_topic_bool(raw: &str) -> bool {
+    let lower = raw.trim().to_ascii_lowercase();
+    matches!(
+        lower.as_str(),
+        "true" | "yes" | "y" | "1" | "needs_human" | "needs_human_review"
+    )
+}
+
+fn topic_graph_node_id(kind: &str, value: &str) -> String {
+    let slug = topic_slug(value);
+    if slug.is_empty() {
+        format!("{kind}:unknown")
+    } else {
+        format!("{kind}:{slug}")
+    }
+}
+
+fn topic_graph_label(value: &str) -> String {
+    Path::new(value)
+        .file_stem()
+        .and_then(|stem| stem.to_str())
+        .filter(|stem| !stem.is_empty())
+        .unwrap_or(value)
+        .to_string()
 }
 
 fn execute_review(custom_kb: Option<&Path>, args: &TopicReviewArgs) -> Result<()> {
@@ -1367,6 +2232,27 @@ fn importance_level(score: i32) -> &'static str {
 
 fn escape_table_cell(input: &str) -> String {
     input.replace('|', "\\|").replace('\n', " ")
+}
+
+fn collect_markdown_files(root: &Path) -> Vec<PathBuf> {
+    if !root.exists() {
+        return Vec::new();
+    }
+    walkdir::WalkDir::new(root)
+        .min_depth(1)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| entry.file_type().is_file())
+        .map(|entry| entry.into_path())
+        .filter(|path| {
+            matches!(
+                path.extension()
+                    .and_then(|ext| ext.to_str())
+                    .map(|ext| ext.to_ascii_lowercase()),
+                Some(ext) if matches!(ext.as_str(), "md" | "markdown")
+            )
+        })
+        .collect()
 }
 
 fn collect_topics(kb_path: &Path, topics_dir: &Path) -> Result<Vec<TopicListItem>> {

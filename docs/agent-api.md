@@ -1,6 +1,6 @@
 # Agent/API Boundary Notes
 
-This document records what `kb-cli v0.7.8` actually supports. It is intentionally conservative.
+This document records what `kb-cli v0.7.9` actually supports. It is intentionally conservative.
 
 ## Implemented CLI commands
 

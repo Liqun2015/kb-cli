@@ -284,11 +284,11 @@ Future commands such as `kb topic`, `kb relation-review`, or topic graph exporte
 ## `kb topic`
 
 - **Category:** topic-specific relationship workspace command.
-- **Current subcommands:** `kb topic init <topic>`, `kb topic list`, `kb topic status <topic>`, `kb topic rank <topic>`, and `kb topic review <topic>`.
+- **Current subcommands:** `kb topic init <topic>`, `kb topic list`, `kb topic status <topic>`, `kb topic rank <topic>`, `kb topic relations <topic>`, `kb topic prepare <topic>`, and `kb topic review <topic>`.
 - **Primary input:** topic name or slug.
-- **Primary output:** `topics/<topic>/` workspace files, topic-local reports under `topics/<topic>/importance/`, and review queues under `topics/<topic>/review/`.
+- **Primary output:** `topics/<topic>/` workspace files, topic-local reports under `topics/<topic>/importance/`, topic graph artifacts under `topics/<topic>/graph/`, and review queues under `topics/<topic>/review/`.
 - **LLM allowed:** no. This command only creates deterministic scaffolding.
-- **Deferred work:** Manager LLM / Worker LLM / human reviewers fill and review topic-local importance and relation records later. `kb topic rank` produces candidates only; `kb topic review` turns those candidates into a queue only. Neither command decides final importance.
+- **Deferred work:** Manager LLM / Worker LLM / human reviewers fill and review topic-local importance and relation records later. `kb topic rank` produces importance candidates, `kb topic relations` compiles directed relation records into graph artifacts, `kb topic prepare` runs both, and `kb topic review` turns candidates into a queue. None of these commands decides final scholarly claims.
 
 Example:
 
@@ -298,6 +298,8 @@ kb topic init thermal-metamaterials --title "Thermal Metamaterials"
 kb topic list
 kb topic status thermal-metamaterials
 kb topic rank thermal-metamaterials --dry-run
+kb topic relations thermal-metamaterials --dry-run
+kb topic prepare thermal-metamaterials --dry-run
 kb topic review thermal-metamaterials --dry-run
 ```
 
@@ -309,6 +311,41 @@ kb topic review thermal-metamaterials --dry-run
 - **Allows LLM:** no.
 - **Deferred work:** core/important labels require human review before they influence graph node size or research conclusions.
 - **Layer rule:** importance is topic-specific, so rank/review outputs belong under `topics/<topic>/`, not under global `processing/` folders.
+
+### `kb topic relations <topic>`
+
+- **Ability:** compile topic-local directed relation records into graph artifacts.
+- **Primary input:** `topics/<topic>/literature.md`, `topics/<topic>/importance/*.md`, and `topics/<topic>/relations/*.md`.
+- **Primary output:** `topics/<topic>/graph/topic_graph.json` and `topics/<topic>/graph/topic_graph.md`.
+- **Allows LLM:** no.
+- **Layer rule:** topic-local paper-to-paper relation rows stay under `topics/<topic>/relations/`; the generated graph stays under `topics/<topic>/graph/`.
+
+Example:
+
+```bash
+kb topic relations thermal-metamaterials
+kb topic relations thermal-metamaterials --dry-run
+kb topic relations thermal-metamaterials --json
+```
+
+### `kb topic prepare <topic>`
+
+- **Ability:** run `kb topic rank <topic>` and `kb topic relations <topic>` as one topic-preparation command.
+- **Primary input:** the topic workspace under `topics/<topic>/`.
+- **Primary output:** importance candidate reports plus topic graph artifacts.
+- **Allows LLM:** no.
+- **Default behavior:** safely initializes a missing topic workspace without overwriting existing files. Use `--no-init` to require a pre-existing workspace.
+
+Example:
+
+```bash
+kb topic prepare thermal-metamaterials
+kb topic prepare thermal-metamaterials --limit 25
+kb topic prepare thermal-metamaterials --dry-run
+kb topic prepare thermal-metamaterials --json
+kb view --relations --topic thermal-metamaterials
+```
+
 
 
 ### `kb topic review <topic>`

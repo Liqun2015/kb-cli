@@ -2,7 +2,7 @@
 
 ## Current version
 
-`kb-cli v0.7.8`
+`kb-cli v0.7.9`
 
 ## Core goal
 
@@ -17,7 +17,7 @@ rules/  schema/contract layer that constrains AI maintenance behavior
 ```
 
 
-## v0.7.8 root marker rule
+## v0.7.9 root marker rule
 
 Every initialized knowledge-base root must contain:
 
@@ -364,3 +364,21 @@ Use `kb topic init <topic>` only to create topic-specific workspace scaffolding.
 ## Topic importance rule
 
 When using `kb topic rank <topic>`, treat the output as a deterministic candidate list only. Do not promote a paper to `core` or `important` in final prose unless the topic review files or human instructions support that decision.
+
+
+## Topic preparation wrapper rule
+
+Use `kb topic prepare <topic>` when you need to refresh the topic-level graph preparation layer. It wraps:
+
+```text
+kb topic rank <topic>
+kb topic relations <topic>
+```
+
+Treat `kb topic relations <topic>` as a compiler of existing directed relation rows under `topics/<topic>/relations/*.md`, not as an automatic scientific-relation inference engine. After running it, inspect with:
+
+```bash
+kb view --relations --topic <topic>
+```
+
+Do not mark generated candidate or `needs_human_review` edges as confirmed without explicit review evidence.

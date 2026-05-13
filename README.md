@@ -6,7 +6,25 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.8`
+Current version: `v0.7.9`
+
+### v0.7.9
+
+Topic Prepare release. `kb topic prepare <topic>` is now the user-level wrapper for the topic workflow: it runs topic-local importance ranking and topic relation graph compilation in one step. It pairs:
+
+```bash
+kb topic rank <topic>
+kb topic relations <topic>
+```
+
+into:
+
+```bash
+kb topic prepare <topic>
+kb view --relations --topic <topic>
+```
+
+`kb topic relations <topic>` compiles directed relation rows from `topics/<topic>/relations/*.md` and writes graph artifacts under `topics/<topic>/graph/`. It does not call an LLM or decide final scholarly claims.
 
 ### v0.7.8
 
@@ -290,10 +308,11 @@ The expected workflow is:
 4. Use `LLM/tasks/index.md` as the Manager LLM task dashboard
 5. Build or update Markdown knowledge pages under `wiki/`
 6. Use topic commands to inspect topic-specific relationship workspaces
-7. Use ranking commands to generate topic-local importance candidates
-8. Use `kb topic review <topic>` to build a review queue from candidates
-9. Let human reviewers or explicit AI agents revise the outputs under Git review
-10. Record accepted decisions under `topics/<topic>/reviewed/` and `LLM/memory/`
+7. Use `kb topic prepare <topic>` to run topic-local importance ranking and relation graph compilation
+8. Use `kb view --relations --topic <topic>` to inspect the topic graph
+9. Use `kb topic review <topic>` to build a review queue from candidates when needed
+10. Let human reviewers or explicit AI agents revise the outputs under Git review
+11. Record accepted decisions under `topics/<topic>/reviewed/` and `LLM/memory/`
 
 This workflow is not meant to replace human judgment. It is meant to make AI-assisted knowledge maintenance more structured, inspectable, and reproducible.
 
@@ -324,6 +343,8 @@ This workflow is not meant to replace human judgment. It is meant to make AI-ass
 | `kb topic list` | List topic workspaces. |
 | `kb topic status <topic>` | Inspect a topic workspace. |
 | `kb topic rank <topic>` | Generate deterministic topic-local importance candidates. |
+| `kb topic relations <topic>` | Compile topic-local directed relation records into graph artifacts. |
+| `kb topic prepare <topic>` | Run topic ranking and relation graph compilation together. |
 | `kb topic review <topic>` | Build a deterministic review queue from topic-local candidates. |
 | `kb view` | Generate and open the static HTML review dashboard. |
 | `kb view --relations` | Generate the relationship graph review page and `relationship_data.json`. |

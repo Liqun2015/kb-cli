@@ -338,7 +338,7 @@ fn build_relationship_data(kb_path: &Path, args: &ViewArgs) -> Result<Relationsh
 
     Ok(RelationshipData {
         meta: RelationshipMeta {
-            version: "v0.7.8".to_string(),
+            version: "v0.7.9".to_string(),
             generated_by: "kb view --relations".to_string(),
             generated_at: Utc::now().to_rfc3339(),
             knowledge_base: kb_path.display().to_string(),
@@ -544,6 +544,7 @@ fn add_topic_relationships(
 
         add_topic_literature_edges(kb_path, &topic_root, &slug, &topic_id, nodes_by_id, edges)?;
         add_topic_importance_edges(kb_path, &topic_root, &slug, &topic_id, nodes_by_id, edges)?;
+        add_topic_relation_file_edges(kb_path, &topic_root, &slug, nodes_by_id, edges)?;
     }
 
     Ok(topics)
@@ -692,6 +693,108 @@ fn add_topic_importance_edges(
         }
     }
     Ok(())
+}
+
+fn add_topic_relation_file_edges(
+    kb_path: &Path,
+    topic_root: &Path,
+    slug: &str,
+    nodes_by_id: &mut BTreeMap<String, RelationshipNode>,
+    edges: &mut Vec<RelationshipEdge>,
+) -> Result<()> {
+    let relations_dir = topic_root.join("relations");
+    if !relations_dir.exists() {
+        return Ok(());
+    }
+    let mut files = collect_markdown_files(&relations_dir);
+    files.sort();
+    for file in files {
+        let rel_path = relative_path_string(kb_path, &file);
+        let content = fs::read_to_string(&file).unwrap_or_default();
+        for (idx, line) in content.lines().enumerate() {
+            let cells = markdown_table_cells(line);
+            if cells.len() < 3
+                || is_markdown_header_row(&cells)
+                || cells[0].eq_ignore_ascii_case("source")
+            {
+                continue;
+            }
+            let source = cells[0].trim();
+            let relation_type = cells.get(1).map(|cell| cell.trim()).unwrap_or("related_to");
+            let target = cells.get(2).map(|cell| cell.trim()).unwrap_or_default();
+            if source.is_empty()
+                || target.is_empty()
+                || source.eq_ignore_ascii_case("todo")
+                || target.eq_ignore_ascii_case("todo")
+            {
+                continue;
+            }
+            let status =
+                normalize_relation_status(cells.get(3).map(String::as_str).unwrap_or("candidate"));
+            let evidence = cells
+                .get(4)
+                .cloned()
+                .unwrap_or_else(|| "topic relation file row".to_string());
+            let needs_llm_review = cells
+                .get(5)
+                .map(|cell| parse_boolish(cell))
+                .unwrap_or(!matches!(status.as_str(), "confirmed" | "accepted"));
+            let source_id = node_id_for_path("paper", source);
+            let target_id = node_id_for_path("paper", target);
+            insert_relationship_node(
+                nodes_by_id,
+                RelationshipNode {
+                    id: source_id.clone(),
+                    label: label_from_pathish(source),
+                    kind: "paper".to_string(),
+                    path: Some(source.to_string()),
+                    topic: Some(slug.to_string()),
+                    status: "indexed".to_string(),
+                    evidence: vec![format!("{}:{}", rel_path, idx + 1)],
+                    needs_llm_review: false,
+                },
+            );
+            insert_relationship_node(
+                nodes_by_id,
+                RelationshipNode {
+                    id: target_id.clone(),
+                    label: label_from_pathish(target),
+                    kind: "paper".to_string(),
+                    path: Some(target.to_string()),
+                    topic: Some(slug.to_string()),
+                    status: "indexed".to_string(),
+                    evidence: vec![format!("{}:{}", rel_path, idx + 1)],
+                    needs_llm_review: false,
+                },
+            );
+            edges.push(RelationshipEdge {
+                id: format!(
+                    "edge:{}->{}:{}:{}",
+                    source_id,
+                    target_id,
+                    slugify(relation_type),
+                    idx + 1
+                ),
+                source: source_id,
+                target: target_id,
+                kind: relation_type.to_string(),
+                status: status.clone(),
+                evidence: vec![format!("{}:{} | {}", rel_path, idx + 1, evidence)],
+                needs_llm_review,
+                confidence: None,
+                topic: Some(slug.to_string()),
+            });
+        }
+    }
+    Ok(())
+}
+
+fn parse_boolish(raw: &str) -> bool {
+    let lower = raw.trim().to_ascii_lowercase();
+    matches!(
+        lower.as_str(),
+        "true" | "yes" | "y" | "1" | "needs_human" | "needs_human_review"
+    )
 }
 
 fn insert_relationship_node(
