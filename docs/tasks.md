@@ -166,7 +166,7 @@ If these files are missing or suspiciously short, `kb tasks` adds a `paper-secti
 
 ## Topic-local task handoff
 
-Starting in `v0.7.11`, global `kb tasks` is complemented by a topic-local task command:
+Starting in `v0.7.12`, global `kb tasks` is complemented by a topic-local task command:
 
 ```bash
 kb topic tasks <topic>
@@ -187,3 +187,17 @@ topics/<topic>/tasks/items/<task_id>.md
 ```
 
 Use `kb topic tasks <topic>` when the remaining work depends on the topic boundary, topic literature list, topic-local importance candidates, directed relation rows, or the topic graph. It does not call an LLM, infer relations, or accept scholarly claims. It only creates bounded handoff files for a Manager LLM or human maintainer.
+
+
+## Generic agent handoff
+
+Starting in `v0.7.13`, task files are complemented by generic external-agent handoff files. Use:
+
+```bash
+kb handoff --topic <topic>
+kb topic handoff <topic>
+kb handoff --agent claude-code
+kb handoff --all-agents
+```
+
+The handoff files define Manager/Worker boundaries, forbidden edits, evidence rules, and start prompts. Task files remain the bounded units of work. Claude Code, OpenCode, and OpenClaw are adapters; `AGENTS.md` is the generic contract.

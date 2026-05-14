@@ -1,4 +1,5 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
+use clap::Args;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -6,6 +7,22 @@ pub const DEFAULT_WORKSPACE_DIR: &str = "knowledgebase";
 pub const LEGACY_WORKSPACE_DIR: &str = "KnowledgeBase";
 pub const ROOT_MARKER_FILE: &str = "llm-wiki.toml";
 pub const SCHEMA_VERSION: &str = "0.1";
+
+#[derive(Debug, Clone, Args)]
+pub struct InitArgs {
+    #[arg(
+        long,
+        value_name = "TOPIC",
+        help = "Default topic workspace to create. Defaults to the database directory name."
+    )]
+    pub topic: Option<String>,
+
+    #[arg(
+        long,
+        help = "Re-create missing directories and generated files when safe"
+    )]
+    pub force: bool,
+}
 
 /// Resolve a user-provided path. Relative paths are interpreted from the current directory.
 pub fn resolve_user_path(path: &Path) -> PathBuf {
@@ -50,13 +67,23 @@ pub fn get_kb_path(custom_kb: Option<&Path>) -> PathBuf {
     root.join(DEFAULT_WORKSPACE_DIR)
 }
 
-pub fn execute(custom_kb: Option<&Path>, force: bool) -> Result<()> {
-    execute_with_source(custom_kb, None, force)
+pub fn execute(custom_kb: Option<&Path>, args: &InitArgs) -> Result<()> {
+    let kb_path = match custom_kb {
+        Some(path) => resolve_user_path(path),
+        None => {
+            return Err(anyhow!(
+                "initializing a blank LLM Wiki requires a database name/path. Use `kb --kb-path <database-name> init [--topic <topic>]`, or convert a literature folder with `kb --source <literature-dir> setup`."
+            ));
+        }
+    };
+    let topic = resolve_init_topic(&kb_path, args.topic.as_deref())?;
+    execute_with_source(Some(&kb_path), None, Some(&topic), args.force)
 }
 
 pub fn execute_with_source(
     custom_kb: Option<&Path>,
     source_path: Option<&Path>,
+    topic_name: Option<&str>,
     force: bool,
 ) -> Result<()> {
     let kb_path = get_kb_path(custom_kb);
@@ -100,6 +127,7 @@ pub fn execute_with_source(
         "outputs/html",
         "LLM/tasks",
         "LLM/tasks/items",
+        "LLM/handoff",
         "topics",
         "LLM/memory",
         "topics",
@@ -145,15 +173,52 @@ pub fn execute_with_source(
         println!("[CREATED] README.md");
     }
 
-    create_root_marker(&kb_path, source_path, force)?;
+    create_root_marker(&kb_path, source_path, topic_name, force)?;
 
     create_rule_files(&kb_path, force)?;
+
+    if let Some(topic) = topic_name {
+        let topic_slug =
+            crate::commands::topic::ensure_topic_workspace(&kb_path, topic, None, force)?;
+        println!("[READY] Default topic workspace: topics/{}", topic_slug);
+        let _handoff =
+            crate::commands::handoff::ensure_default_handoffs(&kb_path, Some(&topic_slug), force)?;
+        println!("[READY] Generic agent handoff files generated for project and topic.");
+    } else {
+        let _handoff = crate::commands::handoff::ensure_default_handoffs(&kb_path, None, force)?;
+        println!("[READY] Generic agent project-level handoff files generated.");
+    }
 
     println!(
         "\nDone: {} directories created, {} skipped",
         created, skipped
     );
     Ok(())
+}
+
+fn resolve_init_topic(kb_path: &Path, explicit_topic: Option<&str>) -> Result<String> {
+    if let Some(topic) = explicit_topic {
+        let topic = topic.trim();
+        if !topic.is_empty() {
+            return Ok(topic.to_string());
+        }
+    }
+
+    let Some(name) = kb_path.file_name().and_then(|name| name.to_str()) else {
+        return Err(anyhow!(
+            "could not infer a default topic from database path: {}. Please pass `--topic <topic>`.",
+            kb_path.display()
+        ));
+    };
+
+    let name = name.trim();
+    if name.is_empty() || name == "." || name == ".." {
+        return Err(anyhow!(
+            "could not infer a default topic from database path: {}. Please pass `--topic <topic>`.",
+            kb_path.display()
+        ));
+    }
+    Ok(name.to_string())
 }
 
 fn list_existing_dirs(kb_path: &Path) {
@@ -165,6 +230,7 @@ fn list_existing_dirs(kb_path: &Path) {
         "LLM",
         "LLM/tasks",
         "LLM/tasks/items",
+        "LLM/handoff",
         "topics",
         "processing",
         "processing/proposals",
@@ -187,7 +253,12 @@ fn list_existing_dirs(kb_path: &Path) {
     }
 }
 
-fn create_root_marker(kb_path: &Path, source_path: Option<&Path>, force: bool) -> Result<()> {
+fn create_root_marker(
+    kb_path: &Path,
+    source_path: Option<&Path>,
+    topic_name: Option<&str>,
+    force: bool,
+) -> Result<()> {
     let marker_path = kb_path.join(ROOT_MARKER_FILE);
     let existed = marker_path.exists();
     if existed && !force {
@@ -195,7 +266,7 @@ fn create_root_marker(kb_path: &Path, source_path: Option<&Path>, force: bool) -
         return Ok(());
     }
 
-    let content = root_marker_content(kb_path, source_path);
+    let content = root_marker_content(kb_path, source_path, topic_name);
     fs::write(&marker_path, content)?;
 
     if existed {
@@ -206,7 +277,11 @@ fn create_root_marker(kb_path: &Path, source_path: Option<&Path>, force: bool) -
     Ok(())
 }
 
-fn root_marker_content(kb_path: &Path, source_path: Option<&Path>) -> String {
+fn root_marker_content(
+    kb_path: &Path,
+    source_path: Option<&Path>,
+    topic_name: Option<&str>,
+) -> String {
     let workspace_name = kb_path
         .file_name()
         .and_then(|s| s.to_str())
@@ -235,6 +310,7 @@ name = "{workspace_name}"
 schema_version = "{schema_version}"
 created_by = "kb-cli"
 created_with = "kb-cli v{version}"
+default_topic = "{default_topic}"
 
 [layout]
 raw_dir = "raw"
@@ -263,6 +339,7 @@ allow_edit_outputs = true
         workspace_name = toml_escape(workspace_name),
         schema_version = SCHEMA_VERSION,
         version = env!("CARGO_PKG_VERSION"),
+        default_topic = toml_escape(topic_name.unwrap_or("")),
         source_mode = source_mode,
         source_dir = toml_escape(&source_dir),
     )
@@ -384,7 +461,8 @@ This is your local LLM Wiki managed by `kb-cli`.
 │   └── indexes/      # Navigation indexes
 ├── rules/            # LLM Wiki schema and AI-maintainer contract
 ├── LLM/              # LLM workbench; explicit handoff materials for future agents
-│   └── tasks/        # Deferred task lists generated by kb tasks
+│   ├── tasks/        # Deferred task lists generated by kb tasks
+│   └── handoff/      # Generic agent handoff files and optional adapters
 ├── outputs/          # Generated outputs
 ├── processing/       # Intermediate processing files and manifest
 │   ├── manifest.json # Generated raw-file registry
@@ -431,6 +509,7 @@ kb --kb-path /path/to/literature-folder/knowledgebase status
 - `wiki/` is the editable AI-maintained layer.
 - `rules/` is the contract layer. Review it before allowing AI to modify the Wiki.
 - `LLM/tasks/` contains explicit task handoff lists for future human/LLM/agent work. It is not an automatic execution directory.
+- `LLM/handoff/` and root `AGENTS.md` define how external agents should enter the Wiki; `CLAUDE.md` is generated only when the Claude Code adapter is requested.
 - `LLM/memory/` records completed task outcomes for later inspection. It is an audit memory, not hidden model state.
 - `topics/` stores topic-specific relationship overlays such as causal, method, evidence, idea, and topic-local importance notes.
 - `ingest --copy` copies source files into `raw/` and is safest.

@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.7.13
+
+`v0.7.13` generalizes handoff from a Claude Code-only entry layer into a generic external-agent protocol with optional adapters.
+
+- `kb handoff` now defaults to generic agent handoff files rather than Claude Code-specific files.
+- Added root `AGENTS.md` as the universal external-agent contract.
+- Added global handoff protocol files: `LLM/handoff/protocol.md`, `task_schema.md`, `safety.md`, and machine-readable `handoff.json`.
+- Added `--agent <generic|claude-code|opencode|openclaw>` and `--all-agents` to `kb handoff`.
+- Added the same adapter options to `kb topic handoff <topic>`.
+- Claude Code support is preserved as an adapter that writes `CLAUDE.md` and `adapters/claude-code.md`.
+- Added OpenCode and OpenClaw adapter handoff files without changing the deterministic/no-hidden-LLM boundary.
+
+## v0.7.12
+
+`v0.7.12` makes Claude Code a first-class external LLM Wiki work agent by generating multi-level handoff files.
+
+- Added `kb handoff [--topic TOPIC|--all-topics] [--force] [--dry-run] [--json]` for project/global/topic Claude Code handoff generation.
+- Added `kb topic handoff <topic>` for topic-local Claude Code entry prompts and Manager/Worker handoff templates.
+- `kb init` now requires an explicit database path for blank database initialization; without `--topic`, the database directory name becomes the default topic.
+- `kb setup` now accepts `--topic`; without it, the source literature directory name becomes the default topic.
+- Initial setup now creates the default topic workspace and root/topic handoff files automatically.
+
 ## v0.7.11
 
 `v0.7.11` adds a topic-local LLM task handoff command.

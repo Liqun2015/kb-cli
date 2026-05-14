@@ -4,6 +4,7 @@ pub mod extract_metadata;
 pub mod extract_sections;
 pub mod extract_text;
 pub mod grep;
+pub mod handoff;
 pub mod health;
 pub mod ingest;
 pub mod init;

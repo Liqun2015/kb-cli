@@ -34,13 +34,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     #[command(about = "Initialize or ensure knowledge base directory structure")]
-    Init {
-        #[arg(
-            long,
-            help = "Re-create missing directories and generated files when safe"
-        )]
-        force: bool,
-    },
+    Init(commands::init::InitArgs),
     #[command(about = "Organize source files into raw/ subfolders")]
     Ingest(commands::ingest::IngestArgs),
     #[command(
@@ -79,6 +73,8 @@ enum Commands {
     RefsGraph(commands::refs_graph::RefsGraphArgs),
     #[command(about = "Generate deferred LLM/agent task handoff lists from deterministic checks")]
     Tasks(commands::tasks::TasksArgs),
+    #[command(about = "Generate generic/agent-adapter handoff files for external LLM Wiki agents")]
+    Handoff(commands::handoff::HandoffArgs),
     #[command(about = "Append a completed task memory record under LLM/memory/")]
     Memory(commands::memory::MemoryArgs),
     #[command(about = "Search text files with Rust-native grep-like matching")]
@@ -132,7 +128,7 @@ fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match &cli.command {
-        Some(Commands::Init { force }) => commands::init::execute(cli.kb_path.as_deref(), *force),
+        Some(Commands::Init(args)) => commands::init::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Ingest(args)) => {
             commands::ingest::execute(cli.kb_path.as_deref(), cli.source.as_deref(), args)
         }
@@ -152,6 +148,7 @@ fn main() -> anyhow::Result<()> {
             commands::refs_graph::execute(cli.kb_path.as_deref(), args)
         }
         Some(Commands::Tasks(args)) => commands::tasks::execute(cli.kb_path.as_deref(), args),
+        Some(Commands::Handoff(args)) => commands::handoff::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Memory(args)) => commands::memory::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Grep(args)) => commands::grep::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Health(args)) => commands::health::execute(cli.kb_path.as_deref(), args),
@@ -187,7 +184,7 @@ fn main() -> anyhow::Result<()> {
         }
         None => {
             println!("Available commands:");
-            println!("  init [--force]              Initialize/ensure knowledge base");
+            println!("  init [--topic TOPIC] [--force]  Initialize/ensure a named knowledge base and default topic");
             println!("  ingest [--copy|--move]      Organize files into raw/ subfolders");
             println!(
                 "  setup [--copy|--move]       Set up KB: init, marker, ingest, metadata, wiki"
@@ -208,6 +205,7 @@ fn main() -> anyhow::Result<()> {
             println!("  refs-index [--path PATH] [--dry-run|--preview] [--json]  Build bibliographic index relation candidates");
             println!("  refs-graph [--json|--mermaid|--dot] [--dry-run]  Export refs-index relations as graph data");
             println!("  tasks [--dry-run|--preview] [--json] [--index-only|--no-index]  Generate LLM task handoff lists and LLM/tasks/index.md");
+            println!("  handoff [--topic TOPIC|--all-topics] [--agent AGENT|--all-agents] [--force]  Generate generic/agent-adapter handoff files");
             println!("  memory --task-id ID --summary TEXT [--file PATH]  Record completed task memory under LLM/memory");
             println!("  grep <pattern> [--path PATH] [--regex] [--json]  Search text files with line numbers");
             println!("  health [--dry-run|--preview] [--json] [--strict]  Summarize LLM Wiki relationship health");
@@ -225,6 +223,9 @@ fn main() -> anyhow::Result<()> {
             );
             println!(
                 "  topic tasks <topic> [--json] [--dry-run] [--limit N]  Generate topic-local LLM handoff tasks"
+            );
+            println!(
+                "  topic handoff <topic> [--agent AGENT|--all-agents] [--json] [--dry-run] [--force]  Generate topic-local generic/agent-adapter handoff files"
             );
             println!("  view [--relations] [--topic TOPIC] [--data-only] [--no-open]  Generate static HTML viewers");
             println!(

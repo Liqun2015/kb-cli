@@ -1,8 +1,8 @@
 # LLM Command Guide
 
-Current version: `v0.7.11`
+Current version: `v0.7.13`
 
-This document is the operating guide for the top-level Manager LLM, Claude Code sessions, and human operators who use `kb-cli` as a structured command layer.
+This document is the operating guide for the top-level Manager LLM, external agent sessions, Claude Code sessions, and human operators who use `kb-cli` as a structured command layer.
 
 The LLM that uses these commands is the highest-level coordinator. It is not the same role as a lower-level Worker LLM that receives a bounded task from `LLM/tasks/`. See `docs/llm-hierarchy.md`.
 
@@ -340,3 +340,35 @@ This writes `topics/<topic>/tasks/index.md` and bounded task files under `topics
 ## Topic importance workflow
 
 Manager LLM may run `kb topic rank <topic> --dry-run` or inspect its generated report to decide which papers need human review. Worker LLMs must treat rank output as candidate evidence only, not as final authority.
+
+
+## External agents and handoff files
+
+Use external agents outside `kb-cli`, not as hidden automatic API calls. Recommended generic entry:
+
+```bash
+kb handoff --topic <topic>
+kb topic tasks <topic>
+```
+
+For a specific adapter, request it explicitly:
+
+```bash
+kb handoff --topic <topic> --agent claude-code
+kb handoff --topic <topic> --agent opencode
+kb handoff --topic <topic> --agent openclaw
+```
+
+Then start the agent in the knowledge-base root and ask it to read:
+
+```text
+AGENTS.md
+llm-wiki.toml
+rules/
+LLM/handoff/index.md
+LLM/handoff/protocol.md
+topics/<topic>/handoff/AGENTS.md
+topics/<topic>/tasks/index.md
+```
+
+Claude Code should additionally read `CLAUDE.md` and the `claude-code` adapter when those files have been generated. Every external agent should process one bounded task at a time and leave changes for human diff review.

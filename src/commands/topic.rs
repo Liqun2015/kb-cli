@@ -32,6 +32,11 @@ pub enum TopicCommand {
         about = "Generate topic-specific Manager/Worker LLM handoff tasks"
     )]
     Tasks(TopicTasksArgs),
+    #[command(
+        name = "handoff",
+        about = "Generate topic-specific generic/agent-adapter handoff files"
+    )]
+    Handoff(TopicHandoffArgs),
 }
 
 #[derive(Debug, Clone, Args)]
@@ -192,6 +197,41 @@ pub struct TopicReviewArgs {
 }
 
 #[derive(Debug, Clone, Args)]
+pub struct TopicHandoffArgs {
+    #[arg(
+        value_name = "TOPIC",
+        help = "Topic name or slug to generate agent handoff for"
+    )]
+    pub topic: String,
+
+    #[arg(
+        long,
+        value_enum,
+        default_value_t = crate::commands::handoff::AgentTarget::Generic,
+        help = "Agent adapter to generate: generic, claude-code, opencode, or openclaw"
+    )]
+    pub agent: crate::commands::handoff::AgentTarget,
+
+    #[arg(
+        long = "all-agents",
+        help = "Generate the generic topic handoff plus all supported agent adapters"
+    )]
+    pub all_agents: bool,
+
+    #[arg(long, help = "Preview topic handoff generation without writing files")]
+    pub dry_run: bool,
+
+    #[arg(long, help = "Alias for --dry-run")]
+    pub preview: bool,
+
+    #[arg(long, help = "Overwrite existing generated topic handoff files")]
+    pub force: bool,
+
+    #[arg(long, help = "Print a machine-readable JSON topic handoff report")]
+    pub json: bool,
+}
+
+#[derive(Debug, Clone, Args)]
 pub struct TopicTasksArgs {
     #[arg(
         value_name = "TOPIC",
@@ -238,6 +278,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &TopicArgs) -> Result<()> {
         TopicCommand::Prepare(prepare_args) => execute_prepare(custom_kb, prepare_args),
         TopicCommand::Review(review_args) => execute_review(custom_kb, review_args),
         TopicCommand::Tasks(tasks_args) => execute_tasks(custom_kb, tasks_args),
+        TopicCommand::Handoff(handoff_args) => execute_handoff(custom_kb, handoff_args),
     }
 }
 
@@ -1564,6 +1605,18 @@ fn print_prepare_report(report: &TopicPrepareReport) {
             println!("  - {step}");
         }
     }
+}
+
+fn execute_handoff(custom_kb: Option<&Path>, args: &TopicHandoffArgs) -> Result<()> {
+    crate::commands::handoff::execute_topic_handoff(
+        custom_kb,
+        &args.topic,
+        args.force,
+        args.dry_run || args.preview,
+        args.json,
+        args.agent,
+        args.all_agents,
+    )
 }
 
 fn execute_tasks(custom_kb: Option<&Path>, args: &TopicTasksArgs) -> Result<()> {
@@ -3240,6 +3293,7 @@ fn required_topic_dirs() -> Vec<&'static str> {
         "reviewed",
         "graph",
         "tasks",
+        "handoff",
         "memory",
     ]
 }
@@ -3262,6 +3316,12 @@ fn required_topic_files() -> Vec<&'static str> {
         "reviewed/README.md",
         "graph/README.md",
         "tasks/README.md",
+        "handoff/AGENTS.md",
+        "handoff/protocol.md",
+        "handoff/handoff.json",
+        "handoff/manager.md",
+        "handoff/worker_task_template.md",
+        "handoff/start_prompt.md",
         "memory/confirmed_relations.md",
         "memory/completed_tasks.md",
     ]
@@ -3322,6 +3382,7 @@ fn execute_init(custom_kb: Option<&Path>, args: &TopicInitArgs) -> Result<()> {
         "reviewed",
         "graph",
         "tasks",
+        "handoff",
         "memory",
     ];
 
@@ -3354,6 +3415,9 @@ fn execute_init(custom_kb: Option<&Path>, args: &TopicInitArgs) -> Result<()> {
     }
 
     print_summary(&summary);
+    let _handoff =
+        crate::commands::handoff::ensure_default_handoffs(&kb_path, Some(&slug), args.force)?;
+    println!("[READY] Generic agent handoff files generated for project and topic.");
     Ok(())
 }
 
@@ -3460,6 +3524,7 @@ Topic-local importance, causal, method, evidence, and idea relations stay here.
 - `reviewed/` stores accepted, rejected, or deferred topic-review decisions.
 - `graph/` stores topic graph exports.
 - `tasks/` stores Worker LLM / human task handoff files for this topic.
+- `handoff/` stores generic agent topic entry files, machine-readable handoff data, and optional agent adapters.
 - `memory/` stores completed task records and confirmed relation memories.
 
 ## Boundary
@@ -3756,6 +3821,65 @@ fn topic_title(input: &str) -> String {
     } else {
         trimmed.to_string()
     }
+}
+
+pub fn slugify_topic_name(input: &str) -> String {
+    topic_slug(input)
+}
+
+pub fn ensure_topic_workspace(
+    kb_path: &Path,
+    topic: &str,
+    title: Option<&str>,
+    force: bool,
+) -> Result<String> {
+    if !kb_path.exists() {
+        return Err(anyhow!(
+            "knowledge base path does not exist: {}. Run `kb init` first.",
+            kb_path.display()
+        ));
+    }
+
+    let slug = topic_slug(topic);
+    if slug.is_empty() {
+        return Err(anyhow!(
+            "topic name must contain at least one letter or digit"
+        ));
+    }
+
+    let title = title
+        .map(|value| value.to_string())
+        .unwrap_or_else(|| topic_title(topic));
+    let topic_root = kb_path.join("topics").join(&slug);
+    let mut summary = InitSummary {
+        topic_slug: slug.clone(),
+        topic_title: title.clone(),
+        topic_path: topic_root.clone(),
+        dry_run: false,
+        ..Default::default()
+    };
+
+    ensure_dir(&topic_root, &mut summary)?;
+    for dir in [
+        "importance",
+        "relations",
+        "review",
+        "reviewed",
+        "graph",
+        "tasks",
+        "handoff",
+        "memory",
+    ] {
+        ensure_dir(&topic_root.join(dir), &mut summary)?;
+    }
+
+    for template in topic_templates(&slug, &title) {
+        let path = topic_root.join(&template.path);
+        write_template_file(&path, template.content, force, &mut summary)?;
+    }
+
+    print_summary(&summary);
+    Ok(slug)
 }
 
 #[cfg(test)]

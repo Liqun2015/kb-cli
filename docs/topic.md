@@ -298,3 +298,41 @@ It scans for deterministic signs that topic-level LLM/human work is needed:
 - confirmed relations exist and a synthesis outline may be useful.
 
 Boundary: `kb topic tasks` does not call an LLM, does not write accepted decisions, and does not infer true scientific relations. It only creates routing documents for a Manager LLM or human maintainer to assign bounded work.
+
+
+## Generic agent topic handoff
+
+`kb topic handoff <topic>` creates a topic-local entry layer for external agents. By default it is generic and tool-neutral; adapters are generated only when requested.
+
+```bash
+kb topic handoff thermal-metamaterials
+kb topic handoff thermal-metamaterials --agent claude-code
+kb topic handoff thermal-metamaterials --agent opencode
+kb topic handoff thermal-metamaterials --agent openclaw
+kb topic handoff thermal-metamaterials --all-agents
+```
+
+Default generated files:
+
+```text
+topics/<topic>/handoff/AGENTS.md
+topics/<topic>/handoff/protocol.md
+topics/<topic>/handoff/manager.md
+topics/<topic>/handoff/worker_task_template.md
+topics/<topic>/handoff/start_prompt.md
+topics/<topic>/handoff/handoff.json
+```
+
+Adapter files, when requested:
+
+```text
+topics/<topic>/handoff/CLAUDE.md
+topics/<topic>/handoff/adapters/claude-code.md
+topics/<topic>/handoff/adapters/opencode.md
+topics/<topic>/handoff/adapters/openclaw.md
+```
+
+This is separate from `kb topic tasks <topic>`:
+
+- `topic tasks` generates task queues.
+- `topic handoff` explains how an external agent should enter and process those queues safely.

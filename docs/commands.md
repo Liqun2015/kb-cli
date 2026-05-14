@@ -13,7 +13,7 @@ The guiding rule is simple:
 | Deterministic core | `init`, `ingest`, `setup`, `status`, `sync-wiki`, `lint-static`, `build-wiki` | No LLM | Maintain the file structure, manifest, wiki skeleton, and static checks. |
 | Search / inspection | `query`, `grep`, `links` | No LLM | Locate pages, lines, and WikiLink relations for later review. |
 | Text / reference processing | `extract-text`, `extract-sections`, `refs`, `refs-index`, `refs-graph`, `keywords`, `extract-metadata` | No LLM | Convert source traces into searchable text, section-level evidence, bibliographic relation candidates, and keyword/topic relation evidence. |
-| Handoff / memory | `prepare`, `tasks`, `memory` | No LLM | Prepare reviewable work items and record completed work. |
+| Handoff / memory | `prepare`, `tasks`, `handoff`, `memory` | No LLM | Prepare reviewable work items, generic agent handoff files, and completed-work records. |
 | Health / reporting | `health` | No LLM | Summarize relationship-network completeness, review backlog, and pipeline health. |
 | Proof audit | `audit-wiki` | Explicit LLM handoff | Check whether the folder has become a reviewable LLM Wiki and write an LLM audit prompt. |
 | Static viewing | `view` | No LLM | Generate a local read-only HTML dashboard from Markdown/JSON outputs. |
@@ -284,11 +284,11 @@ Future commands such as `kb topic`, `kb relation-review`, or topic graph exporte
 ## `kb topic`
 
 - **Category:** topic-specific relationship workspace command.
-- **Current subcommands:** `kb topic init <topic>`, `kb topic list`, `kb topic status <topic>`, `kb topic rank <topic>`, `kb topic relations <topic>`, `kb topic prepare <topic>`, `kb topic review <topic>`, and `kb topic tasks <topic>`.
+- **Current subcommands:** `kb topic init <topic>`, `kb topic list`, `kb topic status <topic>`, `kb topic rank <topic>`, `kb topic relations <topic>`, `kb topic prepare <topic>`, `kb topic review <topic>`, `kb topic tasks <topic>`, and `kb topic handoff <topic>`.
 - **Primary input:** topic name or slug.
-- **Primary output:** `topics/<topic>/` workspace files, topic-local reports under `topics/<topic>/importance/`, topic graph artifacts under `topics/<topic>/graph/`, review queues under `topics/<topic>/review/`, and topic handoff files under `topics/<topic>/tasks/`.
+- **Primary output:** `topics/<topic>/` workspace files, topic-local reports under `topics/<topic>/importance/`, topic graph artifacts under `topics/<topic>/graph/`, review queues under `topics/<topic>/review/`, and topic task files under `topics/<topic>/tasks/` and topic handoff files under `topics/<topic>/handoff/`.
 - **LLM allowed:** no. This command only creates deterministic scaffolding.
-- **Deferred work:** Manager LLM / Worker LLM / human reviewers fill and review topic-local importance and relation records later. `kb topic rank` produces importance candidates, `kb topic relations` compiles directed relation records into graph artifacts, `kb topic prepare` runs both, `kb topic review` turns candidates into a queue, and `kb topic tasks` writes bounded topic-local handoff files. None of these commands decides final scholarly claims.
+- **Deferred work:** Manager LLM / Worker LLM / human reviewers fill and review topic-local importance and relation records later. `kb topic rank` produces importance candidates, `kb topic relations` compiles directed relation records into graph artifacts, `kb topic prepare` runs both, `kb topic review` turns candidates into a queue, `kb topic tasks` writes bounded topic-local task files, and `kb topic handoff` writes generic external-agent entry files plus optional adapters. None of these commands decides final scholarly claims.
 
 Example:
 
@@ -302,6 +302,7 @@ kb topic relations thermal-metamaterials --dry-run
 kb topic prepare thermal-metamaterials --dry-run
 kb topic review thermal-metamaterials --dry-run
 kb topic tasks thermal-metamaterials --dry-run
+kb topic handoff thermal-metamaterials --dry-run
 ```
 
 ### `kb topic rank <topic>`
@@ -389,3 +390,84 @@ kb topic tasks thermal-metamaterials --dry-run
 kb topic tasks thermal-metamaterials --json
 kb topic tasks thermal-metamaterials --limit 3
 ```
+
+
+## `kb handoff`
+
+Generate generic external-agent handoff files, with optional agent-specific adapters. The default result is tool-neutral and starts from `AGENTS.md`.
+
+```bash
+kb handoff
+kb handoff --topic thermal-metamaterials
+kb handoff --all-topics
+kb handoff --agent claude-code
+kb handoff --agent opencode
+kb handoff --agent openclaw
+kb handoff --all-agents
+kb handoff --topic thermal-metamaterials --force
+```
+
+Default project/global files:
+
+```text
+AGENTS.md
+LLM/handoff/index.md
+LLM/handoff/protocol.md
+LLM/handoff/manager.md
+LLM/handoff/worker.md
+LLM/handoff/task_schema.md
+LLM/handoff/safety.md
+LLM/handoff/handoff.json
+```
+
+When a topic is provided, also writes generic topic files:
+
+```text
+topics/<topic>/handoff/AGENTS.md
+topics/<topic>/handoff/protocol.md
+topics/<topic>/handoff/manager.md
+topics/<topic>/handoff/worker_task_template.md
+topics/<topic>/handoff/start_prompt.md
+topics/<topic>/handoff/handoff.json
+```
+
+Adapter files are generated only when requested:
+
+```text
+CLAUDE.md
+LLM/handoff/adapters/claude-code.md
+LLM/handoff/adapters/opencode.md
+LLM/handoff/adapters/openclaw.md
+topics/<topic>/handoff/adapters/<agent>.md
+```
+
+## `kb topic handoff <topic>`
+
+Generate topic-local generic handoff files without regenerating the project-level files. Use `--agent` or `--all-agents` to add topic-specific adapters.
+
+```bash
+kb topic handoff thermal-metamaterials
+kb topic handoff thermal-metamaterials --agent claude-code
+kb topic handoff thermal-metamaterials --agent opencode
+kb topic handoff thermal-metamaterials --all-agents
+kb topic handoff thermal-metamaterials --force
+kb topic handoff thermal-metamaterials --dry-run
+```
+
+## Topic defaults during build
+
+When converting a literature directory:
+
+```bash
+kb --source /path/to/literatures setup --recursive
+```
+
+If `--topic` is omitted, the source directory name becomes the default topic.
+
+When initializing a blank database:
+
+```bash
+kb --kb-path MyKnowledgeBase init
+```
+
+If `--topic` is omitted, the database directory name becomes the default topic. Running `kb init` without `--kb-path` now exits with a prompt instead of silently creating `knowledgebase/`.

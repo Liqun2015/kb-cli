@@ -54,6 +54,13 @@ pub struct SetupArgs {
     pub name: String,
 
     #[arg(
+        long,
+        value_name = "TOPIC",
+        help = "Default topic workspace to create. Defaults to the source directory name."
+    )]
+    pub topic: Option<String>,
+
+    #[arg(
         long = "force-init",
         help = "Pass --force to init before ingesting files."
     )]
@@ -279,10 +286,12 @@ pub fn execute_setup(
     }
 
     let (kb_path, source_path) = resolve_setup_paths(custom_kb, custom_source, args.name.trim());
+    let topic = resolve_setup_topic(&source_path, args.topic.as_deref())?;
 
     println!("Setup started.");
     println!("Source directory: {}", source_path.display());
     println!("Knowledge base workspace: {}", kb_path.display());
+    println!("Default topic: {}", topic);
 
     if !source_path.is_dir() {
         return Err(anyhow!(
@@ -294,6 +303,7 @@ pub fn execute_setup(
     crate::commands::init::execute_with_source(
         Some(&kb_path),
         Some(&source_path),
+        Some(&topic),
         args.force_init,
     )?;
 
@@ -325,6 +335,13 @@ pub fn execute_setup(
 
     println!("\nSetup complete.");
     println!("Wiki home: {}", kb_path.join("wiki/Home.md").display());
+    println!(
+        "Default topic workspace: {}",
+        kb_path
+            .join("topics")
+            .join(crate::commands::topic::slugify_topic_name(&topic))
+            .display()
+    );
     println!("\nNext steps:");
     println!("  1. Review rules/LLM_WIKI_SCHEMA.md");
     println!("  2. Open wiki/Home.md in Obsidian");
@@ -333,6 +350,32 @@ pub fn execute_setup(
         kb_path.display()
     );
     Ok(())
+}
+
+fn resolve_setup_topic(source_path: &Path, explicit_topic: Option<&str>) -> Result<String> {
+    if let Some(topic) = explicit_topic {
+        let topic = topic.trim();
+        if !topic.is_empty() {
+            return Ok(topic.to_string());
+        }
+    }
+
+    let Some(name) = source_path.file_name().and_then(|name| name.to_str()) else {
+        return Err(anyhow!(
+            "could not infer a default topic from source directory: {}. Please pass `--topic <topic>`.",
+            source_path.display()
+        ));
+    };
+
+    let name = name.trim();
+    if name.is_empty() || name == "." || name == ".." {
+        return Err(anyhow!(
+            "could not infer a default topic from source directory: {}. Please pass `--topic <topic>`.",
+            source_path.display()
+        ));
+    }
+
+    Ok(name.to_string())
 }
 
 fn resolve_kb_path_for_ingest(custom_kb: Option<&Path>, custom_source: Option<&Path>) -> PathBuf {

@@ -6,25 +6,58 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.11`
+Current version: `v0.7.13`
 
-### v0.7.11
+### v0.7.13
 
-Topic Task Handoff release. This version adds a topic-local task command:
+Generic Agent Handoff release. `kb handoff` now produces a universal external-agent entry layer first, while Claude Code, OpenCode, and OpenClaw are optional adapters.
+
+New / updated commands:
 
 ```bash
-kb topic tasks <topic>
-kb topic task <topic>   # alias
+kb handoff
+kb handoff --topic <topic>
+kb handoff --all-topics
+kb handoff --agent claude-code
+kb handoff --agent opencode
+kb handoff --agent openclaw
+kb handoff --all-agents
+kb topic handoff <topic> --agent claude-code
 ```
 
-It scans one topic workspace and writes a topic Manager LLM dashboard plus bounded Worker task files under:
+Default generic handoff files include:
 
 ```text
-topics/<topic>/tasks/index.md
-topics/<topic>/tasks/items/<task_id>.md
+AGENTS.md
+LLM/handoff/index.md
+LLM/handoff/protocol.md
+LLM/handoff/manager.md
+LLM/handoff/worker.md
+LLM/handoff/task_schema.md
+LLM/handoff/safety.md
+LLM/handoff/handoff.json
+topics/<topic>/handoff/AGENTS.md
+topics/<topic>/handoff/protocol.md
+topics/<topic>/handoff/handoff.json
 ```
 
-The command detects missing topic scope, incomplete literature curation, missing importance generation, missing review queues, missing/weak relation records, missing graph exports, and synthesis opportunities. It does not call an LLM and does not accept scholarly claims.
+Agent-specific adapters are generated only when requested:
+
+```text
+CLAUDE.md
+LLM/handoff/adapters/claude-code.md
+LLM/handoff/adapters/opencode.md
+LLM/handoff/adapters/openclaw.md
+topics/<topic>/handoff/adapters/<agent>.md
+```
+
+Build-time topic defaults remain explicit:
+
+- `kb --source <literature-dir> setup` defaults the topic to the source directory name when `--topic` is omitted.
+- `kb --kb-path <database-name> init` defaults the topic to the database directory name when `--topic` is omitted.
+- `kb init` without `--kb-path` exits with a prompt instead of silently creating `knowledgebase/`.
+
+External agents should read `AGENTS.md`, process one bounded task at a time, and leave changes for human diff review.
 
 ### v0.7.10
 
