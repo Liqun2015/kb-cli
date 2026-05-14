@@ -1,8 +1,10 @@
 # LLM Command Guide
 
-Current version: `v0.7.13`
+Current version: `v0.7.15`
 
-This document is the operating guide for the top-level Manager LLM, external agent sessions, Claude Code sessions, and human operators who use `kb-cli` as a structured command layer.
+This document is the operating guide for the top-level Manager LLM, external agent sessions, Claude Code sessions, Codex sessions, Obsidian users, and human operators who use `kb-cli` as a structured command layer.
+
+Unified entry rule: humans in Obsidian start from `obsidian_main.md`; generic Managers and Codex start from `AGENTS.md`; Claude Code starts from `CLAUDE.md` when generated. All Manager paths then route through `LLM/handoff/current.md` before selecting a topic and a task.
 
 The LLM that uses these commands is the highest-level coordinator. It is not the same role as a lower-level Worker LLM that receives a bounded task from `LLM/tasks/`. See `docs/llm-hierarchy.md`.
 
@@ -357,6 +359,7 @@ For a specific adapter, request it explicitly:
 kb handoff --topic <topic> --agent claude-code
 kb handoff --topic <topic> --agent opencode
 kb handoff --topic <topic> --agent openclaw
+kb handoff --topic <topic> --agent codex
 ```
 
 Then start the agent in the knowledge-base root and ask it to read:
@@ -371,4 +374,4 @@ topics/<topic>/handoff/AGENTS.md
 topics/<topic>/tasks/index.md
 ```
 
-Claude Code should additionally read `CLAUDE.md` and the `claude-code` adapter when those files have been generated. Every external agent should process one bounded task at a time and leave changes for human diff review.
+Claude Code should additionally read `CLAUDE.md` and the `claude-code` adapter when those files have been generated. Codex should read the `codex` adapter when generated. Every external agent should process one bounded task at a time and leave changes for human diff review.

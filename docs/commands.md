@@ -394,7 +394,7 @@ kb topic tasks thermal-metamaterials --limit 3
 
 ## `kb handoff`
 
-Generate generic external-agent handoff files, with optional agent-specific adapters. The default result is tool-neutral and starts from `AGENTS.md`.
+Generate generic external-agent handoff files, with optional agent-specific adapters. The default result is tool-neutral and starts from `AGENTS.md`; Obsidian users start from `obsidian_main.md`; Manager agents then route through `LLM/handoff/current.md`.
 
 ```bash
 kb handoff
@@ -403,6 +403,7 @@ kb handoff --all-topics
 kb handoff --agent claude-code
 kb handoff --agent opencode
 kb handoff --agent openclaw
+kb handoff --agent codex
 kb handoff --all-agents
 kb handoff --topic thermal-metamaterials --force
 ```
@@ -411,6 +412,8 @@ Default project/global files:
 
 ```text
 AGENTS.md
+obsidian_main.md
+LLM/handoff/current.md
 LLM/handoff/index.md
 LLM/handoff/protocol.md
 LLM/handoff/manager.md
@@ -423,6 +426,7 @@ LLM/handoff/handoff.json
 When a topic is provided, also writes generic topic files:
 
 ```text
+topics/<topic>/index.md
 topics/<topic>/handoff/AGENTS.md
 topics/<topic>/handoff/protocol.md
 topics/<topic>/handoff/manager.md
@@ -438,6 +442,7 @@ CLAUDE.md
 LLM/handoff/adapters/claude-code.md
 LLM/handoff/adapters/opencode.md
 LLM/handoff/adapters/openclaw.md
+LLM/handoff/adapters/codex.md
 topics/<topic>/handoff/adapters/<agent>.md
 ```
 
@@ -449,6 +454,8 @@ Generate topic-local generic handoff files without regenerating the project-leve
 kb topic handoff thermal-metamaterials
 kb topic handoff thermal-metamaterials --agent claude-code
 kb topic handoff thermal-metamaterials --agent opencode
+kb topic handoff thermal-metamaterials --agent openclaw
+kb topic handoff thermal-metamaterials --agent codex
 kb topic handoff thermal-metamaterials --all-agents
 kb topic handoff thermal-metamaterials --force
 kb topic handoff thermal-metamaterials --dry-run

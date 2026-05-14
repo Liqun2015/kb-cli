@@ -302,19 +302,21 @@ Boundary: `kb topic tasks` does not call an LLM, does not write accepted decisio
 
 ## Generic agent topic handoff
 
-`kb topic handoff <topic>` creates a topic-local entry layer for external agents. By default it is generic and tool-neutral; adapters are generated only when requested.
+`kb topic handoff <topic>` creates a topic-local entry layer for external agents and a topic homepage at `topics/<topic>/index.md`. By default it is generic and tool-neutral; adapters are generated only when requested.
 
 ```bash
 kb topic handoff thermal-metamaterials
 kb topic handoff thermal-metamaterials --agent claude-code
 kb topic handoff thermal-metamaterials --agent opencode
 kb topic handoff thermal-metamaterials --agent openclaw
+kb topic handoff thermal-metamaterials --agent codex
 kb topic handoff thermal-metamaterials --all-agents
 ```
 
 Default generated files:
 
 ```text
+topics/<topic>/index.md
 topics/<topic>/handoff/AGENTS.md
 topics/<topic>/handoff/protocol.md
 topics/<topic>/handoff/manager.md
@@ -330,6 +332,7 @@ topics/<topic>/handoff/CLAUDE.md
 topics/<topic>/handoff/adapters/claude-code.md
 topics/<topic>/handoff/adapters/opencode.md
 topics/<topic>/handoff/adapters/openclaw.md
+topics/<topic>/handoff/adapters/codex.md
 ```
 
 This is separate from `kb topic tasks <topic>`:

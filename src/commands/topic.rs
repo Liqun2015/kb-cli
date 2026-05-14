@@ -208,7 +208,7 @@ pub struct TopicHandoffArgs {
         long,
         value_enum,
         default_value_t = crate::commands::handoff::AgentTarget::Generic,
-        help = "Agent adapter to generate: generic, claude-code, opencode, or openclaw"
+        help = "Agent adapter to generate: generic, claude-code, opencode, openclaw, or codex"
     )]
     pub agent: crate::commands::handoff::AgentTarget,
 

@@ -6,11 +6,29 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.13`
+Current version: `v0.7.15`
+
+### v0.7.15
+
+Unified Entry Points release. `kb handoff` now creates `obsidian_main.md` as the human-first Obsidian homepage and `LLM/handoff/current.md` as the shared Manager routing file. Topic handoff now also creates `topics/<topic>/index.md` so managers can step from root entry → current route → topic homepage → task queue → one bounded task item.
+
+New / updated entry files:
+
+```text
+obsidian_main.md
+LLM/handoff/current.md
+topics/<topic>/index.md
+```
+
+Manager agents should not infer tasks from the file tree. They should follow the routing chain described in `LLM/handoff/current.md`.
+
+### v0.7.14
+
+Codex adapter release. `kb handoff --agent codex` and `kb topic handoff <topic> --agent codex` now generate Codex-specific handoff notes while preserving the generic agent protocol.
 
 ### v0.7.13
 
-Generic Agent Handoff release. `kb handoff` now produces a universal external-agent entry layer first, while Claude Code, OpenCode, and OpenClaw are optional adapters.
+Generic Agent Handoff release. `kb handoff` now produces a universal external-agent entry layer first, while Claude Code, OpenCode, OpenClaw, and Codex are optional adapters.
 
 New / updated commands:
 
@@ -21,14 +39,20 @@ kb handoff --all-topics
 kb handoff --agent claude-code
 kb handoff --agent opencode
 kb handoff --agent openclaw
+kb handoff --agent codex
 kb handoff --all-agents
 kb topic handoff <topic> --agent claude-code
+kb topic handoff <topic> --agent opencode
+kb topic handoff <topic> --agent openclaw
+kb topic handoff <topic> --agent codex
 ```
 
 Default generic handoff files include:
 
 ```text
 AGENTS.md
+obsidian_main.md
+LLM/handoff/current.md
 LLM/handoff/index.md
 LLM/handoff/protocol.md
 LLM/handoff/manager.md
@@ -36,6 +60,7 @@ LLM/handoff/worker.md
 LLM/handoff/task_schema.md
 LLM/handoff/safety.md
 LLM/handoff/handoff.json
+topics/<topic>/index.md
 topics/<topic>/handoff/AGENTS.md
 topics/<topic>/handoff/protocol.md
 topics/<topic>/handoff/handoff.json
@@ -48,6 +73,7 @@ CLAUDE.md
 LLM/handoff/adapters/claude-code.md
 LLM/handoff/adapters/opencode.md
 LLM/handoff/adapters/openclaw.md
+LLM/handoff/adapters/codex.md
 topics/<topic>/handoff/adapters/<agent>.md
 ```
 

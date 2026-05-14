@@ -1,5 +1,37 @@
 # Changelog
 
+## v0.7.15
+
+`v0.7.15` adds unified entry points for humans and external Manager agents.
+
+### Added
+
+- Added `obsidian_main.md` as the explicit first file to open when using Obsidian.
+- Added `LLM/handoff/current.md` as the shared Manager routing file.
+- Added `topics/<topic>/index.md` as the topic homepage used before opening task queues.
+
+### Updated
+
+- Updated `AGENTS.md`, `CLAUDE.md`, and agent adapters to route through `LLM/handoff/current.md`.
+- Updated topic handoff files so Managers follow root entry → current route → topic homepage → task queue → one task item.
+- Bumped handoff schema output to `handoff.v0.7.15`.
+
+## v0.7.14
+
+`v0.7.14` adds Codex as a first-class handoff adapter while keeping `kb handoff` generic by default.
+
+### Added
+
+- Added `codex` to `--agent <generic|claude-code|opencode|openclaw|codex>`.
+- Added project-level `LLM/handoff/adapters/codex.md`.
+- Added topic-level `topics/<topic>/handoff/adapters/codex.md`.
+- Included Codex in `--all-agents` generation.
+
+### Updated
+
+- Updated README and handoff docs to show Codex alongside Claude Code, OpenCode, and OpenClaw.
+- Bumped handoff schema output to `handoff.v0.7.14`.
+
 ## v0.7.13
 
 `v0.7.13` generalizes handoff from a Claude Code-only entry layer into a generic external-agent protocol with optional adapters.

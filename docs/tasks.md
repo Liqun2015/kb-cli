@@ -200,4 +200,4 @@ kb handoff --agent claude-code
 kb handoff --all-agents
 ```
 
-The handoff files define Manager/Worker boundaries, forbidden edits, evidence rules, and start prompts. Task files remain the bounded units of work. Claude Code, OpenCode, and OpenClaw are adapters; `AGENTS.md` is the generic contract.
+The handoff files define Manager/Worker boundaries, forbidden edits, evidence rules, and start prompts. Task files remain the bounded units of work. Claude Code, OpenCode, OpenClaw, and Codex are adapters; `AGENTS.md` is the generic contract.

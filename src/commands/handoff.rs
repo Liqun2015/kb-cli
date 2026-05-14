@@ -12,6 +12,7 @@ pub enum AgentTarget {
     ClaudeCode,
     Opencode,
     Openclaw,
+    Codex,
 }
 
 impl fmt::Display for AgentTarget {
@@ -27,6 +28,7 @@ impl AgentTarget {
             AgentTarget::ClaudeCode => "claude-code",
             AgentTarget::Opencode => "opencode",
             AgentTarget::Openclaw => "openclaw",
+            AgentTarget::Codex => "codex",
         }
     }
 
@@ -54,7 +56,7 @@ pub struct HandoffArgs {
         long,
         value_enum,
         default_value_t = AgentTarget::Generic,
-        help = "Agent adapter to generate: generic, claude-code, opencode, or openclaw"
+        help = "Agent adapter to generate: generic, claude-code, opencode, openclaw, or codex"
     )]
     pub agent: AgentTarget,
 
@@ -180,7 +182,7 @@ pub fn execute_topic_handoff(
 
     let agents = selected_agents(agent, all_agents);
     let mut report = HandoffReport {
-        schema_version: "handoff.v0.7.13".to_string(),
+        schema_version: "handoff.v0.7.15".to_string(),
         generated_by: "kb-cli topic handoff".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         kb_path: kb_path.display().to_string(),
@@ -227,7 +229,7 @@ fn build_project_report(
     }
 
     Ok(HandoffReport {
-        schema_version: "handoff.v0.7.13".to_string(),
+        schema_version: "handoff.v0.7.15".to_string(),
         generated_by: "kb-cli handoff".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         kb_path: kb_path.display().to_string(),
@@ -284,6 +286,7 @@ fn selected_agents(agent: AgentTarget, all_agents: bool) -> Vec<AgentTarget> {
             AgentTarget::ClaudeCode,
             AgentTarget::Opencode,
             AgentTarget::Openclaw,
+            AgentTarget::Codex,
         ];
     }
     if agent == AgentTarget::Generic {
@@ -327,6 +330,9 @@ fn next_steps_for_agents(agents: &[AgentTarget], topic_only: bool) -> Vec<String
     if agents.contains(&AgentTarget::Openclaw) {
         out.push("For OpenClaw, use the adapter as a controlled task brief and avoid granting broad service access by default.".to_string());
     }
+    if agents.contains(&AgentTarget::Codex) {
+        out.push("For Codex, read LLM/handoff/adapters/codex.md or the topic-local Codex adapter after the generic handoff.".to_string());
+    }
     out
 }
 
@@ -336,6 +342,16 @@ fn generic_project_specs(kb_path: &Path, agents: &[AgentTarget]) -> Vec<HandoffS
             path: kb_path.join("AGENTS.md"),
             level: "project-generic".to_string(),
             content: render_project_agents_md(kb_path),
+        },
+        HandoffSpec {
+            path: kb_path.join("obsidian_main.md"),
+            level: "obsidian-main".to_string(),
+            content: render_obsidian_main(kb_path),
+        },
+        HandoffSpec {
+            path: kb_path.join("LLM/handoff/current.md"),
+            level: "global-current".to_string(),
+            content: render_current_handoff(kb_path, agents),
         },
         HandoffSpec {
             path: kb_path.join("LLM/handoff/index.md"),
@@ -399,6 +415,11 @@ fn adapter_project_specs(kb_path: &Path, agent: AgentTarget) -> Vec<HandoffSpec>
             level: "adapter-openclaw".to_string(),
             content: render_adapter_handoff(agent),
         }],
+        AgentTarget::Codex => vec![HandoffSpec {
+            path: kb_path.join("LLM/handoff/adapters/codex.md"),
+            level: "adapter-codex".to_string(),
+            content: render_adapter_handoff(agent),
+        }],
         AgentTarget::Generic => Vec::new(),
     }
 }
@@ -411,6 +432,11 @@ fn generic_topic_specs(
     agents: &[AgentTarget],
 ) -> Vec<HandoffSpec> {
     vec![
+        HandoffSpec {
+            path: topic_root.join("index.md"),
+            level: "topic-index".to_string(),
+            content: render_topic_index(slug, title),
+        },
         HandoffSpec {
             path: topic_root.join("handoff/AGENTS.md"),
             level: "topic-generic".to_string(),
@@ -471,6 +497,11 @@ fn adapter_topic_specs(
         AgentTarget::Openclaw => vec![HandoffSpec {
             path: topic_root.join("handoff/adapters/openclaw.md"),
             level: "topic-adapter-openclaw".to_string(),
+            content: render_topic_adapter_handoff(slug, title, agent),
+        }],
+        AgentTarget::Codex => vec![HandoffSpec {
+            path: topic_root.join("handoff/adapters/codex.md"),
+            level: "topic-adapter-codex".to_string(),
             content: render_topic_adapter_handoff(slug, title, agent),
         }],
         AgentTarget::Generic => Vec::new(),
@@ -556,6 +587,169 @@ fn collect_topic_slugs(kb_path: &Path) -> Result<Vec<String>> {
     Ok(out)
 }
 
+fn render_obsidian_main(kb_path: &Path) -> String {
+    let name = kb_path
+        .file_name()
+        .and_then(|value| value.to_str())
+        .unwrap_or("knowledgebase");
+    let topics = collect_topic_slugs(kb_path).unwrap_or_default();
+    let mut out = String::new();
+    out.push_str(&format!("# obsidian_main.md — READ THIS FIRST\n\n"));
+    out.push_str(&format!(
+        "This is the human-facing Obsidian homepage for the LLM Wiki `{name}`.\n\n"
+    ));
+    out.push_str("Open the whole knowledge-base directory as an Obsidian vault, then open this file first. Do not start from `raw/`, `processing/`, or a random paper page.\n\n");
+    out.push_str("## First Reading Order\n\n");
+    out.push_str("1. `obsidian_main.md` — this page.\n");
+    out.push_str("2. `LLM/handoff/current.md` — current Manager entry and topic/task routing.\n");
+    out.push_str("3. `AGENTS.md` — shared rules for all external agents.\n");
+    out.push_str("4. `topics/<topic>/index.md` — the topic workspace homepage.\n");
+    out.push_str("5. `topics/<topic>/tasks/index.md` — the topic task queue.\n");
+    out.push_str("6. `topics/<topic>/relations/` and `topics/<topic>/review/` — relation and review materials.\n\n");
+    out.push_str("## Agent Entry Files\n\n");
+    out.push_str("| role/tool | first file | then read |\n");
+    out.push_str("|---|---|---|\n");
+    out.push_str(
+        "| Human in Obsidian | `obsidian_main.md` | `LLM/handoff/current.md`, then topic index |\n",
+    );
+    out.push_str("| Generic Manager | `AGENTS.md` | `LLM/handoff/current.md` |\n");
+    out.push_str("| Claude Code | `CLAUDE.md` when generated | `AGENTS.md`, `LLM/handoff/current.md`, Claude adapter |\n");
+    out.push_str("| Codex | `AGENTS.md` | `LLM/handoff/current.md`, Codex adapter |\n");
+    out.push_str(
+        "| OpenCode/OpenClaw | `AGENTS.md` | `LLM/handoff/current.md`, matching adapter |\n\n",
+    );
+    out.push_str("## Topics\n\n");
+    if topics.is_empty() {
+        out.push_str("No topic workspace exists yet. Create one with `kb topic init <topic>` or run `kb --source <literature-dir> setup --topic <topic>`.\n\n");
+    } else {
+        for topic in topics {
+            out.push_str(&format!("- `topics/{topic}/index.md` → topic homepage\n"));
+            out.push_str(&format!(
+                "  - `topics/{topic}/tasks/index.md` → task queue\n"
+            ));
+            out.push_str(&format!(
+                "  - `topics/{topic}/handoff/AGENTS.md` → topic agent entry\n"
+            ));
+        }
+        out.push('\n');
+    }
+    out.push_str("## Human Review Rule\n\n");
+    out.push_str("Obsidian is for reading, linking, and review. It does not decide tasks automatically. Use this page and `LLM/handoff/current.md` to choose a task, then let Claude Code/Codex/OpenCode process one bounded task if needed.\n\n");
+    out.push_str("Never treat `candidate` relations as confirmed just because they appear in a graph or task file.\n");
+    out
+}
+
+fn render_current_handoff(kb_path: &Path, agents: &[AgentTarget]) -> String {
+    let topics = collect_topic_slugs(kb_path).unwrap_or_default();
+    let mut out = String::new();
+    out.push_str("# Current LLM Wiki Entry\n\n");
+    out.push_str("This is the shared routing file for Manager agents. Read it after the tool-specific root entry file.\n\n");
+    out.push_str("## Entry Resolution\n\n");
+    out.push_str("1. Human/Obsidian: open `obsidian_main.md`, then this file.\n");
+    out.push_str("2. Generic agent: read `AGENTS.md`, then this file.\n");
+    out.push_str("3. Claude Code: read `CLAUDE.md`, then `AGENTS.md`, then this file, then `LLM/handoff/adapters/claude-code.md`.\n");
+    out.push_str("4. Codex: read `AGENTS.md`, then this file, then `LLM/handoff/adapters/codex.md` if generated.\n");
+    out.push_str("5. OpenCode/OpenClaw: read `AGENTS.md`, then this file, then the matching adapter if generated.\n\n");
+    out.push_str("## Manager Task Discovery Loop\n\n");
+    out.push_str("```text\n");
+    out.push_str("read root entry file\n");
+    out.push_str("→ read LLM/handoff/current.md\n");
+    out.push_str("→ choose one topic from the list below\n");
+    out.push_str("→ read topics/<topic>/index.md\n");
+    out.push_str("→ read topics/<topic>/handoff/AGENTS.md\n");
+    out.push_str("→ read topics/<topic>/tasks/index.md\n");
+    out.push_str("→ claim exactly one task item\n");
+    out.push_str("→ process as Worker or assign to Worker\n");
+    out.push_str("→ leave Work Log and review notes\n");
+    out.push_str("```\n\n");
+    out.push_str("## Available Topics\n\n");
+    if topics.is_empty() {
+        out.push_str("No topic workspace found. Create one with `kb topic init <topic>` or convert a literature directory with `kb --source <literature-dir> setup --topic <topic>`.\n\n");
+    } else if topics.len() == 1 {
+        let topic = &topics[0];
+        out.push_str(&format!("Default topic: `{topic}`\n\n"));
+        out.push_str(&format!("- Topic homepage: `topics/{topic}/index.md`\n"));
+        out.push_str(&format!(
+            "- Topic handoff: `topics/{topic}/handoff/AGENTS.md`\n"
+        ));
+        out.push_str(&format!("- Topic tasks: `topics/{topic}/tasks/index.md`\n"));
+        out.push_str(&format!("- Topic review: `topics/{topic}/review/`\n\n"));
+    } else {
+        out.push_str(
+            "Multiple topics exist. A Manager must choose one topic before claiming a task.\n\n",
+        );
+        for topic in &topics {
+            out.push_str(&format!(
+                "- `{topic}` → `topics/{topic}/index.md`, `topics/{topic}/tasks/index.md`\n"
+            ));
+        }
+        out.push('\n');
+    }
+    out.push_str("## Generated Agent Adapters\n\n");
+    let adapter_names: Vec<String> = agents
+        .iter()
+        .copied()
+        .filter(|agent| agent.is_adapter())
+        .map(|agent| agent.slug().to_string())
+        .collect();
+    if adapter_names.is_empty() {
+        out.push_str("No adapter files were requested. Generate one with `kb handoff --agent claude-code`, `kb handoff --agent codex`, or `kb handoff --all-agents`.\n\n");
+    } else {
+        for adapter in adapter_names {
+            out.push_str(&format!(
+                "- `{adapter}` → `LLM/handoff/adapters/{adapter}.md`\n"
+            ));
+        }
+        out.push('\n');
+    }
+    out.push_str("## Claiming Rule\n\n");
+    out.push_str("A Manager may recommend a task, but should not silently complete broad semantic work. A Worker claims exactly one task item under `topics/<topic>/tasks/items/` and writes a Work Log when done.\n");
+    out
+}
+
+fn render_topic_index(slug: &str, title: &str) -> String {
+    format!(
+        r#"# Topic Workspace: {title}
+
+Topic slug: `{slug}`
+
+This is the topic homepage. Manager agents and humans should read this file before opening individual tasks.
+
+## Read Order
+
+1. `../../LLM/handoff/current.md` — global routing and current task discovery.
+2. `handoff/AGENTS.md` — topic-level agent rules.
+3. `scope.md` — topic boundary.
+4. `literature.md` — included/candidate literature.
+5. `tasks/index.md` — topic task queue.
+6. One task item under `tasks/items/`.
+
+## Topic Workbench
+
+- Scope: `scope.md`
+- Literature: `literature.md`
+- Tasks: `tasks/index.md`
+- Relations: `relations/`
+- Review queue: `review/`
+- Importance candidates: `importance/`
+- Graph artifacts: `graph/`
+- Agent handoff: `handoff/AGENTS.md`
+
+## Manager Rule
+
+Choose exactly one task from `tasks/index.md` before editing. If there is no task queue yet, run:
+
+```bash
+kb topic tasks {slug}
+```
+
+## Review Rule
+
+Keep high-value academic judgments reviewable. Do not treat `candidate` or `needs_human_review` as `confirmed` unless a human explicitly approves it.
+"#
+    )
+}
+
 fn render_project_agents_md(kb_path: &Path) -> String {
     let name = kb_path
         .file_name()
@@ -599,13 +793,29 @@ Humans confirm high-value academic judgments.
 
 Before modifying files, read:
 
-1. `llm-wiki.toml`
-2. `rules/`
-3. `LLM/handoff/index.md`
-4. `LLM/handoff/protocol.md`
-5. `LLM/tasks/index.md` when it exists
-6. the relevant `topics/<topic>/handoff/AGENTS.md`
-7. the specific task item under `topics/<topic>/tasks/items/`
+1. `LLM/handoff/current.md` — the routing file that tells Managers where to go next.
+2. `llm-wiki.toml`
+3. `rules/`
+4. `LLM/handoff/index.md`
+5. `LLM/handoff/protocol.md`
+6. `LLM/tasks/index.md` when it exists
+7. the relevant `topics/<topic>/index.md`
+8. the relevant `topics/<topic>/handoff/AGENTS.md`
+9. the specific task item under `topics/<topic>/tasks/items/`
+
+## Manager Entry Resolution
+
+A Manager must not guess the active task from the file tree. Use this path:
+
+```text
+AGENTS.md
+→ LLM/handoff/current.md
+→ topics/<topic>/index.md
+→ topics/<topic>/tasks/index.md
+→ topics/<topic>/tasks/items/<task-id>.md
+```
+
+Claim exactly one task before editing.
 
 ## Hard Rules
 
@@ -672,12 +882,13 @@ Claude Code is only one external-agent adapter. The generic project contract is 
 ## Claude Code Entry Order
 
 1. Read `AGENTS.md`.
-2. Read `llm-wiki.toml`.
-3. Read `rules/`.
-4. Read `LLM/handoff/index.md`.
-5. Read `LLM/handoff/adapters/claude-code.md`.
-6. For topic work, read `topics/<topic>/handoff/AGENTS.md` and `topics/<topic>/handoff/adapters/claude-code.md`.
-7. Read exactly one assigned task item.
+2. Read `LLM/handoff/current.md` to find the active topic/task route.
+3. Read `llm-wiki.toml`.
+4. Read `rules/`.
+5. Read `LLM/handoff/index.md`.
+6. Read `LLM/handoff/adapters/claude-code.md`.
+7. For topic work, read `topics/<topic>/index.md`, `topics/<topic>/handoff/AGENTS.md`, and `topics/<topic>/handoff/adapters/claude-code.md`.
+8. Read exactly one assigned task item.
 
 ## Claude Code Specific Rules
 
@@ -709,6 +920,8 @@ fn render_global_handoff_index(kb_path: &Path, agents: &[AgentTarget]) -> String
     out.push_str(
         "| project generic | `AGENTS.md` | Repository-wide contract for all external agents. |\n",
     );
+    out.push_str("| Obsidian first page | `obsidian_main.md` | Human-facing first page when the folder is opened as an Obsidian vault. |\n");
+    out.push_str("| current route | `LLM/handoff/current.md` | Shared Manager routing file for topic/task discovery. |\n");
     out.push_str("| global protocol | `LLM/handoff/protocol.md` | Shared Manager/Worker workflow and status rules. |\n");
     out.push_str("| global manager | `LLM/handoff/manager.md` | How a Manager agent should inspect the whole Wiki. |\n");
     out.push_str("| global worker | `LLM/handoff/worker.md` | Rules for bounded Worker tasks. |\n");
@@ -723,7 +936,7 @@ fn render_global_handoff_index(kb_path: &Path, agents: &[AgentTarget]) -> String
 
     out.push_str("## Generated Adapters\n\n");
     if adapter_names.is_empty() {
-        out.push_str("No agent-specific adapters were requested. Run `kb handoff --agent claude-code`, `kb handoff --agent opencode`, `kb handoff --agent openclaw`, or `kb handoff --all-agents` if needed.\n\n");
+        out.push_str("No agent-specific adapters were requested. Run `kb handoff --agent claude-code`, `kb handoff --agent opencode`, `kb handoff --agent openclaw`, `kb handoff --agent codex`, or `kb handoff --all-agents` if needed.\n\n");
     } else {
         for adapter in adapter_names {
             out.push_str(&format!(
@@ -801,13 +1014,14 @@ The Manager agent coordinates work across the LLM Wiki. It should not directly p
 ## Entry Checklist
 
 1. Read `AGENTS.md`.
-2. Read `llm-wiki.toml`.
-3. Read `rules/`.
-4. Read `LLM/handoff/index.md` and `LLM/handoff/protocol.md`.
-5. Run or inspect `kb health`.
-6. Inspect `LLM/tasks/index.md`.
-7. Inspect topic workspaces with `kb topic list`.
-8. For a specific topic, switch to `topics/<topic>/handoff/AGENTS.md`.
+2. Read `LLM/handoff/current.md`.
+3. Read `llm-wiki.toml`.
+4. Read `rules/`.
+5. Read `LLM/handoff/index.md` and `LLM/handoff/protocol.md`.
+6. Run or inspect `kb health`.
+7. Inspect `LLM/tasks/index.md` when it exists.
+8. Inspect topic workspaces with `kb topic list`.
+9. For a specific topic, switch to `topics/<topic>/index.md`, then `topics/<topic>/handoff/AGENTS.md`.
 
 ## Manager Responsibilities
 
@@ -829,7 +1043,7 @@ The Manager agent coordinates work across the LLM Wiki. It should not directly p
 ## Suggested First Prompt
 
 ```text
-Please read AGENTS.md, llm-wiki.toml, rules/, LLM/handoff/index.md, LLM/handoff/protocol.md, and LLM/tasks/index.md if it exists. Do not modify files yet. Return: current Wiki state, available topics, highest-priority task queues, and the safest next three actions.
+Please read AGENTS.md, LLM/handoff/current.md, llm-wiki.toml, rules/, LLM/handoff/index.md, LLM/handoff/protocol.md, and LLM/tasks/index.md if it exists. Do not modify files yet. Return: current Wiki state, available topics, highest-priority task queues, and the safest next three actions.
 ```
 "#
     .to_string()
@@ -933,12 +1147,16 @@ Agent-specific adapters may describe tool habits, but the generic evidence and r
 fn render_global_handoff_json(kb_path: &Path, agents: &[AgentTarget]) -> String {
     let topics = collect_topic_slugs(kb_path).unwrap_or_default();
     let value = serde_json::json!({
-        "schema_version": "handoff.v0.7.13",
+        "schema_version": "handoff.v0.7.15",
         "level": "project",
         "kb_path": kb_path.display().to_string(),
         "agents": agent_names(agents),
         "generic_entry": "AGENTS.md",
+        "human_entry": "obsidian_main.md",
+        "manager_route": "LLM/handoff/current.md",
         "handoff_files": {
+            "current": "LLM/handoff/current.md",
+            "obsidian_main": "obsidian_main.md",
             "index": "LLM/handoff/index.md",
             "protocol": "LLM/handoff/protocol.md",
             "manager": "LLM/handoff/manager.md",
@@ -967,10 +1185,11 @@ Claude Code should work as an external LLM Wiki agent, not as an invisible autom
 ## Entry
 
 1. Read `AGENTS.md`.
-2. Read `LLM/handoff/index.md` and `LLM/handoff/protocol.md`.
-3. Read this adapter.
-4. For topic work, read `topics/<topic>/handoff/AGENTS.md` and `topics/<topic>/handoff/adapters/claude-code.md`.
-5. Read one assigned task item.
+2. Read `LLM/handoff/current.md` to discover the topic/task route.
+3. Read `LLM/handoff/index.md` and `LLM/handoff/protocol.md`.
+4. Read this adapter.
+5. For topic work, read `topics/<topic>/index.md`, `topics/<topic>/handoff/AGENTS.md`, and `topics/<topic>/handoff/adapters/claude-code.md`.
+6. Read one assigned task item.
 
 ## Claude Code Habits
 
@@ -988,10 +1207,11 @@ OpenCode should read the generic LLM Wiki handoff first and then operate on one 
 ## Entry
 
 1. Read `AGENTS.md`.
-2. Read `LLM/handoff/index.md` and `LLM/handoff/protocol.md`.
-3. Read `LLM/handoff/manager.md` or `LLM/handoff/worker.md`, depending on role.
-4. For topic work, read `topics/<topic>/handoff/AGENTS.md`.
-5. Read exactly one task item before editing.
+2. Read `LLM/handoff/current.md` to discover the topic/task route.
+3. Read `LLM/handoff/index.md` and `LLM/handoff/protocol.md`.
+4. Read `LLM/handoff/manager.md` or `LLM/handoff/worker.md`, depending on role.
+5. For topic work, read `topics/<topic>/index.md` and `topics/<topic>/handoff/AGENTS.md`.
+6. Read exactly one task item before editing.
 
 ## OpenCode Habits
 
@@ -1008,9 +1228,10 @@ OpenClaw-like personal assistant agents may have broader service access than a c
 ## Entry
 
 1. Read `AGENTS.md`.
-2. Read `LLM/handoff/index.md` and `LLM/handoff/protocol.md`.
-3. Read one task item or one human-provided task brief.
-4. Do not access email, calendar, browser, or external services unless the task explicitly asks for it.
+2. Read `LLM/handoff/current.md` to discover the topic/task route.
+3. Read `LLM/handoff/index.md` and `LLM/handoff/protocol.md`.
+4. Read one task item or one human-provided task brief.
+5. Do not access email, calendar, browser, or external services unless the task explicitly asks for it.
 
 ## OpenClaw Boundaries
 
@@ -1018,6 +1239,34 @@ OpenClaw-like personal assistant agents may have broader service access than a c
 - Do not import outside claims into the Wiki without marking them as external and unreviewed.
 - Do not automate communications, scheduling, or external account actions as part of Wiki maintenance.
 - Return a work note instead of silently editing high-value academic judgments.
+"#
+        .to_string(),
+        AgentTarget::Codex => r#"# Codex Adapter
+
+Codex should work as an external LLM Wiki coding/knowledge agent. Use it for reviewable repository work, not invisible automatic knowledge generation.
+
+## Entry
+
+1. Read `AGENTS.md`.
+2. Read `LLM/handoff/current.md` to discover the topic/task route.
+3. Read `LLM/handoff/index.md` and `LLM/handoff/protocol.md`.
+4. Read `LLM/handoff/manager.md` or `LLM/handoff/worker.md`, depending on role.
+5. For topic work, read `topics/<topic>/index.md`, `topics/<topic>/handoff/AGENTS.md`, and `topics/<topic>/handoff/adapters/codex.md`.
+6. Read exactly one task item before editing.
+
+## Codex Habits
+
+- Treat the repository as a knowledge base first and a codebase second.
+- Prefer small, reviewable diffs and explicit work logs.
+- Use shell commands only for inspection and deterministic checks.
+- Do not run broad rewrites or formatters unless the task explicitly asks for them.
+- Leave high-value academic judgments as `candidate` or `needs_human_review` unless explicitly authorized.
+
+## Suggested First Prompt
+
+```text
+Please read AGENTS.md, LLM/handoff/current.md, LLM/handoff/protocol.md, and this Codex adapter. Do not modify files yet. Return the safest one-task work plan, the files you need to inspect, and any review risks.
+```
 "#
         .to_string(),
         AgentTarget::Generic => String::new(),
@@ -1035,12 +1284,14 @@ This file is the topic-local entry point for any external LLM Wiki work agent.
 ## Read First
 
 1. `AGENTS.md`
-2. `llm-wiki.toml`
-3. `rules/`
-4. `topics/{slug}/scope.md`
-5. `topics/{slug}/literature.md`
-6. `topics/{slug}/tasks/index.md`
-7. One task item under `topics/{slug}/tasks/items/`
+2. `LLM/handoff/current.md`
+3. `llm-wiki.toml`
+4. `rules/`
+5. `topics/{slug}/index.md`
+6. `topics/{slug}/scope.md`
+7. `topics/{slug}/literature.md`
+8. `topics/{slug}/tasks/index.md`
+9. One task item under `topics/{slug}/tasks/items/`
 
 ## Topic Boundary
 
@@ -1137,11 +1388,12 @@ Coordinate topic-local work so the Wiki can summarize and refine ideas from mult
 
 ## Entry Steps
 
-1. Read `scope.md` and decide whether the topic boundary is usable.
-2. Read `literature.md` and check whether candidate papers are inside scope.
-3. Read `tasks/index.md` and choose one task.
-4. Assign only one Worker task at a time.
-5. Review Git diff or equivalent file diff before accepting changes.
+1. Read `index.md` to understand the topic workbench.
+2. Read `scope.md` and decide whether the topic boundary is usable.
+3. Read `literature.md` and check whether candidate papers are inside scope.
+4. Read `tasks/index.md` and choose one task.
+5. Assign only one Worker task at a time.
+6. Review Git diff or equivalent file diff before accepting changes.
 
 ## What Counts as Progress
 
@@ -1179,7 +1431,7 @@ Task file:
 - topics/{slug}/tasks/items/<task-id>.md
 
 Rules:
-1. Read AGENTS.md and topics/{slug}/handoff/AGENTS.md first.
+1. Read AGENTS.md, LLM/handoff/current.md, topics/{slug}/index.md, and topics/{slug}/handoff/AGENTS.md first.
 2. Work only on files listed in the task unless I explicitly expand scope.
 3. Do not modify raw/.
 4. Do not invent references or evidence.
@@ -1203,14 +1455,16 @@ Please do not modify files yet.
 
 First read:
 1. AGENTS.md
-2. llm-wiki.toml
-3. rules/
-4. LLM/handoff/index.md
-5. LLM/handoff/protocol.md
-6. topics/{slug}/handoff/AGENTS.md
-7. topics/{slug}/scope.md
-8. topics/{slug}/literature.md
-9. topics/{slug}/tasks/index.md, if it exists
+2. LLM/handoff/current.md
+3. llm-wiki.toml
+4. rules/
+5. LLM/handoff/index.md
+6. LLM/handoff/protocol.md
+7. topics/{slug}/index.md
+8. topics/{slug}/handoff/AGENTS.md
+9. topics/{slug}/scope.md
+10. topics/{slug}/literature.md
+11. topics/{slug}/tasks/index.md, if it exists
 
 Then return:
 1. the topic goal and boundary;
@@ -1232,13 +1486,14 @@ fn render_topic_handoff_json(
     agents: &[AgentTarget],
 ) -> String {
     let value = serde_json::json!({
-        "schema_version": "handoff.v0.7.13",
+        "schema_version": "handoff.v0.7.15",
         "level": "topic",
         "kb_path": kb_path.display().to_string(),
         "topic_slug": slug,
         "topic_title": title,
         "agents": agent_names(agents),
         "generic_entry": format!("topics/{}/handoff/AGENTS.md", slug),
+        "topic_homepage": format!("topics/{}/index.md", slug),
         "handoff_files": {
             "protocol": format!("topics/{}/handoff/protocol.md", slug),
             "manager": format!("topics/{}/handoff/manager.md", slug),
@@ -1269,7 +1524,7 @@ Read `topics/{slug}/handoff/AGENTS.md` first. This file only adds Claude Code en
 ## Recommended Claude Code Prompt
 
 ```text
-Please read AGENTS.md, LLM/handoff/protocol.md, topics/{slug}/handoff/AGENTS.md, topics/{slug}/scope.md, topics/{slug}/literature.md, and topics/{slug}/tasks/index.md. Do not modify files yet. Return the topic boundary, available task items, review risks, and the safest next three actions.
+Please read AGENTS.md, LLM/handoff/current.md, LLM/handoff/protocol.md, topics/{slug}/index.md, topics/{slug}/handoff/AGENTS.md, topics/{slug}/scope.md, topics/{slug}/literature.md, and topics/{slug}/tasks/index.md. Do not modify files yet. Return the topic boundary, available task items, review risks, and the safest next three actions.
 ```
 
 ## Claude Code Rules
@@ -1291,10 +1546,12 @@ OpenCode should use the generic topic handoff as its contract and process only o
 ## Recommended Entry
 
 1. Read `AGENTS.md`.
-2. Read `topics/{slug}/handoff/AGENTS.md`.
-3. Read `topics/{slug}/tasks/index.md`.
-4. Select or accept exactly one task item.
-5. Keep the diff small and reviewable.
+2. Read `LLM/handoff/current.md`.
+3. Read `topics/{slug}/index.md`.
+4. Read `topics/{slug}/handoff/AGENTS.md`.
+5. Read `topics/{slug}/tasks/index.md`.
+6. Select or accept exactly one task item.
+7. Keep the diff small and reviewable.
 
 ## Boundary
 
@@ -1310,14 +1567,39 @@ OpenClaw-like agents should act only on the supplied LLM Wiki task brief. Do not
 
 ## Recommended Entry
 
-1. Read `topics/{slug}/handoff/AGENTS.md`.
-2. Read the assigned task item.
-3. Return a work note or small Markdown change set.
-4. Do not access outside services as part of topic maintenance.
+1. Read `AGENTS.md`.
+2. Read `LLM/handoff/current.md`.
+3. Read `topics/{slug}/index.md`.
+4. Read `topics/{slug}/handoff/AGENTS.md`.
+5. Read the assigned task item.
+6. Return a work note or small Markdown change set.
+7. Do not access outside services as part of topic maintenance.
 
 ## Boundary
 
 Use local Wiki evidence first. Outside information, if explicitly requested, must be marked as external and unreviewed.
+"#
+        ),
+        AgentTarget::Codex => format!(
+            r#"# Codex Topic Adapter: {title}
+
+Topic slug: `{slug}`
+
+Codex should use the generic topic handoff as its contract and process only one topic task at a time.
+
+## Recommended Codex Prompt
+
+```text
+Please read AGENTS.md, LLM/handoff/current.md, LLM/handoff/protocol.md, topics/{slug}/index.md, topics/{slug}/handoff/AGENTS.md, topics/{slug}/handoff/adapters/codex.md, topics/{slug}/scope.md, topics/{slug}/literature.md, and topics/{slug}/tasks/index.md. Do not modify files yet. Return a one-task plan, the files to inspect, and the review risks.
+```
+
+## Codex Rules
+
+- Keep diffs small and reviewable.
+- Do not edit `raw/`.
+- Do not run broad Markdown rewrites unless assigned.
+- Do not promote relation status without explicit task permission.
+- End by listing changed files, commands run, and unresolved review points.
 "#
         ),
         AgentTarget::Generic => String::new(),
@@ -1336,14 +1618,16 @@ This file is a Claude Code compatibility entry point. The generic topic contract
 
 1. `AGENTS.md`
 2. `CLAUDE.md`
-3. `llm-wiki.toml`
-4. `rules/`
-5. `topics/{slug}/handoff/AGENTS.md`
-6. `topics/{slug}/handoff/adapters/claude-code.md`
-7. `topics/{slug}/scope.md`
-8. `topics/{slug}/literature.md`
-9. `topics/{slug}/tasks/index.md`
-10. One task item under `topics/{slug}/tasks/items/`
+3. `LLM/handoff/current.md`
+4. `llm-wiki.toml`
+5. `rules/`
+6. `topics/{slug}/index.md`
+7. `topics/{slug}/handoff/AGENTS.md`
+8. `topics/{slug}/handoff/adapters/claude-code.md`
+9. `topics/{slug}/scope.md`
+10. `topics/{slug}/literature.md`
+11. `topics/{slug}/tasks/index.md`
+12. One task item under `topics/{slug}/tasks/items/`
 
 ## Claude Code Boundary
 
