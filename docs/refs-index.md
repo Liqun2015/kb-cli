@@ -11,7 +11,7 @@ It is part of the LLM Wiki literature-relationship core: the goal is not merely 
 It uses deterministic evidence only:
 
 - DOI exact matches when available
-- local paper metadata from `logs/papers_metadata.json`
+- local paper metadata from `interfaces/logs/papers_metadata.json`
 - local paper filenames
 - title / filename token overlap
 - reference entry lines from `processing/text/`

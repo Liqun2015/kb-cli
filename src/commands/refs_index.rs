@@ -208,9 +208,21 @@ fn run_refs_index(kb_path: &Path, args: &RefsIndexArgs) -> Result<RefsIndexRepor
     })
 }
 
+fn paper_metadata_path(kb_path: &Path) -> std::path::PathBuf {
+    let current = kb_path.join("interfaces/logs/papers_metadata.json");
+    if current.exists() {
+        return current;
+    }
+    let legacy = kb_path.join("logs/papers_metadata.json");
+    if legacy.exists() {
+        return legacy;
+    }
+    current
+}
+
 fn load_local_papers(kb_path: &Path) -> Result<Vec<LocalPaper>> {
     let mut metadata_by_filename = BTreeMap::new();
-    let metadata_path = kb_path.join("logs/papers_metadata.json");
+    let metadata_path = paper_metadata_path(kb_path);
     if metadata_path.exists() {
         if let Ok(content) = fs::read_to_string(&metadata_path) {
             if let Ok(items) = serde_json::from_str::<Vec<PaperMetadata>>(&content) {

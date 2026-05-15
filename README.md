@@ -6,7 +6,11 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.18`
+Current version: `v0.7.20`
+
+### v0.7.20
+
+Interface Directory release. The generated, non-source artifact layer is now named `interfaces/` rather than `outputs/`, because its real role is human-machine interaction and machine-machine handoff/communication. `interfaces/README.md`, `AGENTS.md`, `CLAUDE.md`, and handoff files explicitly tell agents that `interfaces/` is not the durable knowledge source. Generated HTML/reports/logs remain disposable; Markdown/JSON/TOML under `wiki/`, `topics/`, `processing/`, `LLM/`, `rules/`, and `llm-wiki.toml` remain the source of truth.
 
 ### v0.7.18
 
@@ -209,7 +213,7 @@ It creates a clean child workspace:
 ├── wiki/
 ├── rules/
 ├── processing/
-├── outputs/
+├── interfaces/
 ├── LLM/
 └── topics/
 ```
@@ -255,8 +259,8 @@ kb view
 `kb view --relations` generates:
 
 ```text
-outputs/html/relationship_viewer.html
-outputs/html/relationship_data.json
+interfaces/html/relationship_viewer.html
+interfaces/html/relationship_data.json
 ```
 
 As of v0.7.10, `kb view --relations` is the topic overview, while `kb view --relations --topic <topic>` is the strict single-topic relation graph. Confirmed or accepted edges are rendered as solid lines, candidate or LLM-review-needed edges as dashed lines, and missing or unresolved references as dotted lines.
@@ -315,7 +319,7 @@ This version adds:
 kb audit-wiki
 ```
 
-The command checks whether a folder has moved from a loose material pile into a reviewable, human/AI-maintainable Markdown LLM Wiki. It performs deterministic layer checks, audits topic review queue usability, writes an audit report under `outputs/reports/`, and generates an explicit LLM review prompt under `LLM/tasks/`.
+The command checks whether a folder has moved from a loose material pile into a reviewable, human/AI-maintainable Markdown LLM Wiki. It performs deterministic layer checks, audits topic review queue usability, writes an audit report under `interfaces/reports/`, and generates an explicit LLM review prompt under `LLM/tasks/`.
 
 It also improves the `kb topic review <topic>` queue format so reviewers can record `final_decision`, `confidence`, `uncertainty`, `review_notes`, and `accepted_record_path`.
 
@@ -383,9 +387,8 @@ knowledgebase/
 │   ├── tasks/        # Manager index, Worker task items, and handoff reports
 │   └── memory/       # Completed-task audit memory
 ├── processing/       # Deterministic intermediate outputs, extracted text, and section slices
-├── outputs/          # Generated reports and static viewer output
+├── interfaces/          # Generated reports and static viewer output
 ├── references/       # Templates and reference materials
-└── logs/             # Metadata and logs
 ```
 
 Topic-specific review work lives under:
@@ -511,7 +514,7 @@ This workflow is not meant to replace human judgment. It is meant to make AI-ass
 | `kb view` | Generate and open the static HTML review dashboard. |
 | `kb view --relations` | Generate the topic relation overview page and `relationship_data.json`. |
 | `kb view --relations --topic <topic>` | Generate the strict single-topic directed relation graph. |
-| `kb view --relations --data-only` | Generate only `outputs/html/relationship_data.json`. |
+| `kb view --relations --data-only` | Generate only `interfaces/html/relationship_data.json`. |
 | `kb shell` | Start a deterministic interactive command shell. |
 
 For detailed command behavior, see `docs/commands.md`, `docs/extract-sections.md`, `docs/llm-task-index.md`, `docs/audit-wiki.md`, and `docs/topic-review-command.md`.
@@ -563,7 +566,7 @@ The command checks the presence and traceability of source materials, processing
 It writes:
 
 ```text
-outputs/reports/wiki_audit_<timestamp>.md
+interfaces/reports/wiki_audit_<timestamp>.md
 LLM/tasks/wiki_audit_llm_review_<timestamp>.md
 ```
 

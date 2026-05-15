@@ -83,7 +83,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &AuditWikiArgs) -> Result<()> {
     let dry_run = args.dry_run || args.preview;
 
     if !dry_run {
-        let reports_dir = kb_path.join("outputs/reports");
+        let reports_dir = kb_path.join("interfaces/reports");
         fs::create_dir_all(&reports_dir)?;
         let stamp = chrono::Utc::now().format("%Y%m%d_%H%M%S");
         let report_path = reports_dir.join(format!("wiki_audit_{stamp}.md"));
@@ -463,10 +463,14 @@ fn check_llm_workbench_layer(kb_path: &Path) -> AuditCheck {
 }
 
 fn check_review_outputs_layer(kb_path: &Path) -> AuditCheck {
-    let lint =
-        count_files_with_prefix(&kb_path.join("outputs/reports"), "lint_static_", Some("md"));
-    let health = count_files_with_prefix(&kb_path.join("outputs/reports"), "health_", Some("md"));
-    let viewer = kb_path.join("outputs/html/index.html").is_file();
+    let lint = count_files_with_prefix(
+        &kb_path.join("interfaces/reports"),
+        "lint_static_",
+        Some("md"),
+    );
+    let health =
+        count_files_with_prefix(&kb_path.join("interfaces/reports"), "health_", Some("md"));
+    let viewer = kb_path.join("interfaces/html/index.html").is_file();
     let score = if lint > 0 && health > 0 && viewer {
         10
     } else if lint > 0 || health > 0 || viewer {
@@ -476,7 +480,7 @@ fn check_review_outputs_layer(kb_path: &Path) -> AuditCheck {
     };
     AuditCheck {
         id: "review_outputs".to_string(),
-        layer: "outputs".to_string(),
+        layer: "interfaces".to_string(),
         status: status_from_score(score, 10).to_string(),
         score,
         max_score: 10,
@@ -1156,11 +1160,11 @@ mod tests {
         fs::write(kb_path.join("LLM/tasks/task.md"), "task")?;
         fs::create_dir_all(kb_path.join("LLM/memory"))?;
         fs::write(kb_path.join("LLM/memory/completed_tasks.md"), "memory")?;
-        fs::create_dir_all(kb_path.join("outputs/reports"))?;
-        fs::write(kb_path.join("outputs/reports/lint_static_1.md"), "lint")?;
-        fs::write(kb_path.join("outputs/reports/health_1.md"), "health")?;
-        fs::create_dir_all(kb_path.join("outputs/html"))?;
-        fs::write(kb_path.join("outputs/html/index.html"), "html")?;
+        fs::create_dir_all(kb_path.join("interfaces/reports"))?;
+        fs::write(kb_path.join("interfaces/reports/lint_static_1.md"), "lint")?;
+        fs::write(kb_path.join("interfaces/reports/health_1.md"), "health")?;
+        fs::create_dir_all(kb_path.join("interfaces/html"))?;
+        fs::write(kb_path.join("interfaces/html/index.html"), "html")?;
 
         let args = AuditWikiArgs {
             dry_run: true,

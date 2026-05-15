@@ -30,11 +30,11 @@ kb --kb-path "D:\\github\\llm-wiki\\quantum" tasks
 ```
 
 
-## Why `LLM/tasks/` instead of `outputs/tasks/`
+## Why `LLM/tasks/` instead of `interfaces/tasks/`
 
 `kb-cli` deterministic commands are the first scouting pass. They search, scan, inspect, and organize what they can do reliably. In that sense, they are the front line that maps the terrain and does the simple work first.
 
-The hard work that remains—OCR, layout repair, reference reconciliation, citation graph reasoning, link repair, or Wiki drafting—belongs to a later human/LLM/agent layer. For that reason, handoff lists are written under `LLM/tasks/`, not under the generic `outputs/` tree.
+The hard work that remains—OCR, layout repair, reference reconciliation, citation graph reasoning, link repair, or Wiki drafting—belongs to a later human/LLM/agent layer. For that reason, handoff lists are written under `LLM/tasks/`, not under the generic `interfaces/` tree.
 
 `LLM/tasks/` is a workbench for future explicit LLM/agent skills. It is not an automatic execution directory, and `kb tasks` does not run those agents.
 

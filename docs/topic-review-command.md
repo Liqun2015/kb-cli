@@ -70,7 +70,7 @@ topics/<topic>/graph/
 
 These are optional and should not be required for the first skeleton.
 
-## Outputs
+## Interfaces
 
 Default output directory:
 

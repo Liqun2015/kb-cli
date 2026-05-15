@@ -44,7 +44,7 @@ topics/       topic-specific relation overlays and topic-local importance record
 LLM/tasks/    bounded work orders for future human/LLM/agent handling
 LLM/memory/   completed-task records and accepted decisions
 rules/        operating contract for human and AI maintainers
-outputs/      generated reports and static viewer output
+interfaces/      generated reports and static viewer output
 ```
 
 This separation matters. For example, a source PDF should not be rewritten. A candidate relation should not be treated as reviewed knowledge. A topic-local interpretation should not be mixed into the global bibliographic index.

@@ -18,7 +18,7 @@ Before `v0.7.3`, task material was useful but scattered:
 LLM/tasks/*.md
 topics/<topic>/tasks/items/*.md
 topics/<topic>/review/review_queue.md
-outputs/reports/*.md
+interfaces/reports/*.md
 ```
 
 Starting in `v0.7.3`, `kb tasks` makes the Manager LLM entry point explicit:

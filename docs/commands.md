@@ -6,6 +6,11 @@ The guiding rule is simple:
 
 > Every command must have one clear ability. When a command cannot safely finish a semantic task, it should report evidence and defer the hard part to `LLM/tasks/` or human review.
 
+## Interface Directory Boundary
+
+`interfaces/` is the single directory for generated, non-source interface artifacts used for human-machine review, machine-machine handoff, diagnostics, and generated review pages. It is not the durable source of truth. See `docs/interface-boundary.md`.
+
+
 ## Command categories
 
 | Category | Commands | Default LLM behavior | Purpose |
@@ -86,7 +91,7 @@ kb build thermal-metamaterials --dry-run
 ### `kb build-wiki`
 
 - **Ability:** build deterministic wiki skeleton pages from local metadata and raw materials.
-- **Primary input:** `raw/`, `logs/papers_metadata.json`, `processing/manifest.json`.
+- **Primary input:** `raw/`, `interfaces/logs/papers_metadata.json`, `processing/manifest.json`.
 - **Primary output:** `wiki/` skeleton pages and indexes.
 - **Allows LLM:** no.
 - **Deferred work:** actual scientific synthesis and relationship interpretation belong to Manager/Worker LLM workflows.
@@ -103,7 +108,7 @@ kb build thermal-metamaterials --dry-run
 
 - **Ability:** detect static wiki issues such as broken WikiLinks, orphan pages, empty pages, duplicate titles, and missing source front matter.
 - **Primary input:** `wiki/`.
-- **Primary output:** terminal summary, JSON, or `outputs/reports/lint_static_*.md`.
+- **Primary output:** terminal summary, JSON, or `interfaces/reports/lint_static_*.md`.
 - **Allows LLM:** no.
 - **Deferred work:** link repair, source traceability repair, and concept cleanup should become `LLM/tasks/` items.
 
@@ -188,7 +193,7 @@ kb build thermal-metamaterials --dry-run
 
 - **Ability:** extract basic PDF metadata.
 - **Primary input:** `raw/papers/`.
-- **Primary output:** metadata logs.
+- **Primary output:** metadata artifacts.
 - **Allows LLM:** no.
 - **Deferred work:** metadata cleanup, title normalization, and identity reconciliation may become human/LLM tasks.
 
@@ -216,16 +221,16 @@ kb build thermal-metamaterials --dry-run
 ### `kb health`
 
 - **Ability:** summarize deterministic LLM Wiki and literature-relation health.
-- **Primary input:** `raw/`, `processing/text/`, `processing/refs/`, `processing/keywords/`, `wiki/`, `LLM/tasks/`, `LLM/memory/`, `outputs/reports/`.
-- **Primary output:** `outputs/reports/health_*.md`, terminal summary, or JSON.
+- **Primary input:** `raw/`, `processing/text/`, `processing/refs/`, `processing/keywords/`, `wiki/`, `LLM/tasks/`, `LLM/memory/`, `interfaces/reports/`.
+- **Primary output:** `interfaces/reports/health_*.md`, terminal summary, or JSON.
 - **Allows LLM:** no. It is a dashboard/scouting command for Manager LLM sessions.
 - **Deferred work:** missing extraction, missing Introduction/References sections, uncertain bibliographic index relations, keyword/topic review, and initial wiki drafting become bounded handoff hints. Use `kb tasks` for consolidated `LLM/tasks/` files.
 
 ### `kb audit-wiki`
 
 - **Ability:** audit whether the local folder has moved from a material pile to a reviewable, human/AI-maintainable Markdown LLM Wiki.
-- **Primary input:** `raw/`, `rules/`, `processing/manifest.json`, `processing/text/`, `processing/refs/`, `wiki/`, `topics/`, `LLM/tasks/`, `LLM/memory/`, and `outputs/`.
-- **Primary output:** `outputs/reports/wiki_audit_*.md`; unless `--no-llm-prompt` is used, also `LLM/tasks/wiki_audit_llm_review_*.md`.
+- **Primary input:** `raw/`, `rules/`, `processing/manifest.json`, `processing/text/`, `processing/refs/`, `wiki/`, `topics/`, `LLM/tasks/`, `LLM/memory/`, and `interfaces/`.
+- **Primary output:** `interfaces/reports/wiki_audit_*.md`; unless `--no-llm-prompt` is used, also `LLM/tasks/wiki_audit_llm_review_*.md`.
 - **Allows LLM:** not as a hidden call. It generates an explicit bounded LLM audit prompt.
 - **Deferred work:** a Manager LLM or human reviewer should use the generated prompt to independently evaluate the proof chain.
 
@@ -234,11 +239,11 @@ kb build thermal-metamaterials --dry-run
 ### `kb view` / `kb view --relations`
 
 - **Ability:** generate static local HTML viewers for generated LLM Wiki artifacts.
-- **Regular dashboard:** `kb view` writes `outputs/html/index.html`.
-- **Topic overview mode:** `kb view --relations` writes `outputs/html/relationship_viewer.html` and `outputs/html/relationship_data.json` as a topic index for all workspaces under `topics/`.
+- **Regular dashboard:** `kb view` writes `interfaces/html/index.html`.
+- **Topic overview mode:** `kb view --relations` writes `interfaces/html/relationship_viewer.html` and `interfaces/html/relationship_data.json` as a topic index for all workspaces under `topics/`.
 - **Single-topic graph mode:** `kb view --relations --topic <topic>` writes a filtered relation graph for only the requested topic. It does not keep unrelated global/topic data in the JSON.
 - **Data-only export:** `kb view --relations --data-only` writes only `relationship_data.json`.
-- **Primary input:** regular dashboard reads `wiki/`, `processing/refs/`, `processing/keywords/`, `outputs/reports/`, `LLM/tasks/`, and `LLM/memory/`; relation mode reads `topics/` and, when `--topic` is provided, the selected topic workspace.
+- **Primary input:** regular dashboard reads `wiki/`, `processing/refs/`, `processing/keywords/`, `interfaces/reports/`, `LLM/tasks/`, and `LLM/memory/`; relation mode reads `topics/` and, when `--topic` is provided, the selected topic workspace.
 - **Allows LLM:** no.
 - **Deferred work:** relationship edges marked candidate, ambiguous, missing, or `needs_llm_review` are review inputs for Manager/Worker LLM workflows. The viewer itself is display-only and must not execute local commands or interpret natural language.
 - **Boundary:** do not add a separate `kb view-relations` command; topic relationship viewing belongs under `kb view --relations`.

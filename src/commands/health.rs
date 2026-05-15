@@ -11,7 +11,7 @@ use walkdir::WalkDir;
 pub struct HealthArgs {
     #[arg(
         long,
-        help = "Preview health report without writing outputs/reports/health_*.md"
+        help = "Preview health report without writing interfaces/reports/health_*.md"
     )]
     pub dry_run: bool,
 
@@ -111,7 +111,8 @@ fn run_health(kb_path: &Path, args: &HealthArgs) -> Result<HealthReport> {
         list_named_reports(&kb_path.join("processing/keywords"), "keywords_", "md");
     let task_reports = list_files_with_ext(&kb_path.join("LLM/tasks"), &["md", "json"]);
     let memory_files = list_files_with_ext(&kb_path.join("LLM/memory"), &["md", "json"]);
-    let lint_reports = list_named_reports(&kb_path.join("outputs/reports"), "lint_static_", "md");
+    let lint_reports =
+        list_named_reports(&kb_path.join("interfaces/reports"), "lint_static_", "md");
 
     let empty_text_files = text_files
         .iter()
@@ -501,8 +502,8 @@ fn check_lint_reports(lint_reports: &[PathBuf]) -> HealthCheck {
             id: "lint-reports".to_string(),
             category: "wiki_structure".to_string(),
             status: "warn".to_string(),
-            summary: "No lint-static report was found under outputs/reports/.".to_string(),
-            evidence: vec!["outputs/reports/ has no lint_static_*.md reports".to_string()],
+            summary: "No lint-static report was found under interfaces/reports/.".to_string(),
+            evidence: vec!["interfaces/reports/ has no lint_static_*.md reports".to_string()],
             recommended_next: vec![
                 "Run `kb lint-static` to check broken links, orphans, and source front matter."
                     .to_string(),
@@ -654,7 +655,7 @@ fn summarize_status(checks: &[HealthCheck]) -> (String, i32) {
 }
 
 fn write_markdown_report(kb_path: &Path, report: &HealthReport) -> Result<PathBuf> {
-    let out_dir = kb_path.join("outputs/reports");
+    let out_dir = kb_path.join("interfaces/reports");
     fs::create_dir_all(&out_dir)?;
     let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S");
     let out_path = out_dir.join(format!("health_{timestamp}.md"));

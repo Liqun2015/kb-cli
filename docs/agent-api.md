@@ -113,7 +113,7 @@ kb --kb-path /path/to/literature-folder/knowledgebase lint-static --json
 kb --kb-path /path/to/literature-folder/knowledgebase lint-static --strict
 ```
 
-Reports are written under `outputs/reports/` unless `--dry-run`, `--preview`, or `--no-report` is used. `--no-report` is specific to `lint-static`.
+Reports are written under `interfaces/reports/` unless `--dry-run`, `--preview`, or `--no-report` is used. `--no-report` is specific to `lint-static`.
 
 
 ## Query skeleton
@@ -191,7 +191,7 @@ long-running background daemon
 `ingest` and `setup` default to copy mode unless `--move` is explicitly provided. Recursive mode skips generated/project folders such as:
 
 ```text
-raw, wiki, processing, references, topics, outputs, logs, knowledgebase, .git, .obsidian, target, node_modules
+raw, wiki, processing, references, topics, interfaces, knowledgebase, .git, .obsidian, target, node_modules
 ```
 
 For automation, prefer running a dry run first:
@@ -237,7 +237,7 @@ It must not execute the deferred work. It must not call an LLM, run OCR, rewrite
 
 Future integrations should distinguish the Manager LLM from Worker LLMs.
 
-- The Manager LLM is the highest-level LLM. It may invoke deterministic `kb` commands, inspect outputs, generate task handoffs, delegate bounded work, and record completion memory.
+- The Manager LLM is the highest-level LLM. It may invoke deterministic `kb` commands, inspect interface artifacts, generate task handoffs, delegate bounded work, and record completion memory.
 - Worker LLMs receive scoped tasks with explicit file lists and requirements. They should not decide global workflow or silently expand scope.
 - Deterministic `kb` commands remain Rust-native tools and must not secretly call LLM APIs.
 
@@ -299,7 +299,7 @@ These documents are schema contracts for future Manager LLM, Worker LLM, and thi
 
 ## Static viewer boundary
 
-`kb view` is a static display command. It renders existing Markdown/JSON outputs into `outputs/html/index.html` and opens that static file in the system default browser by default. `kb view --no-open` refreshes the file without opening a browser. It must not call an LLM, start a local server, execute shell commands from the browser, or modify source/wiki files. The `kb-view>` box inside the generated HTML is display navigation only.
+`kb view` is a static display command. It renders existing Markdown/JSON outputs into `interfaces/html/index.html` and opens that static file in the system default browser by default. `kb view --no-open` refreshes the file without opening a browser. It must not call an LLM, start a local server, execute shell commands from the browser, or modify source/wiki files. The `kb-view>` box inside the generated HTML is display navigation only.
 
 `kb view --relations` is the topic relation overview. It lists topic workspaces under `topics/`. `kb view --relations --topic <topic>` is a strict single-topic graph and must not include unrelated topics in `relationship_data.json`.
 

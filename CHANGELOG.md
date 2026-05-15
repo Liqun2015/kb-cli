@@ -1,5 +1,32 @@
 # Changelog
 
+## v0.7.20
+
+`v0.7.20` renames the generated non-source artifact layer from `outputs/` to `interfaces/` to better express its purpose as the human-machine and machine-machine communication layer.
+
+### Changed
+
+- Renamed the disposable artifact directory from `outputs/` to `interfaces/`.
+- Updated generated root marker policy fields to use `interfaces_dir`, `logs_dir = "interfaces/logs"`, and interface-boundary language.
+- Updated `kb view`, health/lint/audit reports, metadata logs, handoff files, and docs to write generated HTML/reports/logs under `interfaces/`.
+- Kept the source-of-truth rule unchanged: durable knowledge remains in Markdown/JSON/TOML under `raw/`, `wiki/`, `topics/`, `processing/`, `LLM/`, `rules/`, and root handoff files.
+
+## v0.7.19
+
+`v0.7.19` centralized non-knowledge, disposable artifacts under `outputs/` and told external agents not to treat generated HTML/reports/logs as source-of-truth knowledge. This directory was renamed to `interfaces/` in v0.7.20.
+
+### Added
+
+- Added `outputs/README.md` as the artifact-boundary notice for humans and LLM agents.
+- Added explicit artifact-boundary notices to generated `AGENTS.md`, `CLAUDE.md`, Obsidian entry, current handoff, generic protocol, and topic handoff files.
+- Added review-only notices to generated HTML viewers.
+
+### Changed
+
+- Treated `outputs/` as the single directory for disposable non-knowledge artifacts: HTML views, reports, figures/slides, answers, and logs.
+- Moved generated metadata logs from `logs/papers_metadata.json` to `outputs/logs/papers_metadata.json`, while keeping a legacy read fallback for existing development workspaces.
+- Updated `llm-wiki.toml` layout/policy text so agents know that Markdown/JSON/TOML under knowledge layers remain the source of truth, while generated artifacts are regenerable.
+
 ## v0.7.18
 
 `v0.7.18` removes the legacy prepare command path from the active CLI. The old `kb prepare` workflow had already been split across deterministic build stages, topic tasks, and handoff generation; keeping it as a command caused workflow ambiguity.
@@ -175,11 +202,11 @@ Main changes:
 
 - Extended the existing `kb view` command with a new `--relations` mode.
 - `kb view --relations` generates:
-  - `outputs/html/relationship_viewer.html`
-  - `outputs/html/relationship_data.json`
+  - `interfaces/html/relationship_viewer.html`
+  - `interfaces/html/relationship_data.json`
 - Added `--topic <topic>` for default topic focus in the relationship viewer.
 - Added `--data-only` for generating only the relationship JSON data source.
-- Kept regular `kb view` behavior unchanged for `outputs/html/index.html`.
+- Kept regular `kb view` behavior unchanged for `interfaces/html/index.html`.
 - Added cross-links between the regular dashboard and the relationship graph viewer.
 - The relationship viewer is static and read-only; it does not call LLMs, execute commands, or mark candidate relations as confirmed.
 - Solid edges represent confirmed or accepted relations; dashed edges represent candidate or LLM-review-needed relations; dotted edges represent missing or unresolved references.
@@ -227,7 +254,7 @@ Main changes:
 
 - Added `kb audit-wiki`, a deterministic proof-audit command for checking whether a folder has become a reviewable Markdown LLM Wiki.
 - The audit checks source materials, rules, manifest, processing outputs, wiki pages, source traceability, reference/index outputs, topic workspaces, explicit LLM handoff records, memory records, and review outputs.
-- The audit writes `outputs/reports/wiki_audit_<timestamp>.md`.
+- The audit writes `interfaces/reports/wiki_audit_<timestamp>.md`.
 - Unless disabled with `--no-llm-prompt`, the audit also writes `LLM/tasks/wiki_audit_llm_review_<timestamp>.md` so a Manager LLM can independently evaluate the proof chain.
 - Added review queue usability auditing for `topics/*/review/review_queue.md`.
 - Improved `kb topic review <topic>` output so `review_queue.md` includes editable decision fields: `final_decision`, `confidence`, `uncertainty`, `review_notes`, and `accepted_record_path`.
@@ -634,7 +661,7 @@ Main changes:
 - Generated placeholder WikiLinks such as `[[Concept Placeholder]]`, `[[Topic Placeholder]]`, and `[[LLM_WIKI_SCHEMA]]` were removed.
 - `--dry-run` remains supported.
 - `--preview` is available as an equivalent inspection alias for dry-run-capable commands.
-- `kb lint-static --no-report` is available as a clearer alias for checking without writing `outputs/reports/lint_static_*.md`.
+- `kb lint-static --no-report` is available as a clearer alias for checking without writing `interfaces/reports/lint_static_*.md`.
 
 ## v0.4.4
 
@@ -645,7 +672,7 @@ Main changes:
 - Added `kb lint-static`.
 - Checks broken `[[WikiLinks]]`, orphan pages, source-derived pages missing `source_ids` / `source_files`, empty pages, and duplicate titles.
 - Does not call an LLM and does not rewrite `wiki/`.
-- Writes a reviewable report under `outputs/reports/`.
+- Writes a reviewable report under `interfaces/reports/`.
 
 ## v0.4.3
 

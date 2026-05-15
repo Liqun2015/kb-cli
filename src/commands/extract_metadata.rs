@@ -21,7 +21,7 @@ pub struct PaperMetadata {
 pub fn execute(custom_kb: Option<&Path>, force: bool) -> Result<()> {
     let kb_path = crate::commands::init::get_kb_path(custom_kb);
     let papers_dir = kb_path.join("raw/papers");
-    let metadata_path = kb_path.join("logs/papers_metadata.json");
+    let metadata_path = kb_path.join("interfaces/logs/papers_metadata.json");
 
     if !papers_dir.exists() {
         println!("Papers directory not found: {}", papers_dir.display());

@@ -12,13 +12,13 @@ It is a display layer, not an execution layer.
 kb view
 kb view --no-open
 kb view --dry-run
-kb view --output-dir outputs/html
+kb view --output-dir interfaces/html
 ```
 
 Default output:
 
 ```text
-outputs/html/index.html
+interfaces/html/index.html
 ```
 
 `kb view` opens the generated file with the system default browser by default. Use `kb view --no-open` when you only want to refresh the HTML file without opening a browser. Neither mode starts a server or grants the page permission to execute local commands.
@@ -39,8 +39,8 @@ This intentionally does **not** add a separate `kb view-relations` command.
 Default outputs:
 
 ```text
-outputs/html/relationship_viewer.html
-outputs/html/relationship_data.json
+interfaces/html/relationship_viewer.html
+interfaces/html/relationship_data.json
 ```
 
 `relationship_viewer.html` is a static review page for topic-level relationship work. It supports two distinct modes.
@@ -89,7 +89,7 @@ kb view --relations --data-only
 Generates only:
 
 ```text
-outputs/html/relationship_data.json
+interfaces/html/relationship_data.json
 ```
 
 It does not generate HTML and does not open a browser.
@@ -111,14 +111,14 @@ The page must not invent semantic academic claims. It only visualizes existing d
 
 ## What the regular dashboard displays
 
-The regular `outputs/html/index.html` scans and renders the latest available artifacts from:
+The regular `interfaces/html/index.html` scans and renders the latest available artifacts from:
 
 ```text
 wiki/
 processing/refs/refs_index_*.md
 processing/refs/refs_graph_*.json / *.mmd / *.dot
 processing/keywords/keywords_*.md
-outputs/reports/health_*.md
+interfaces/reports/health_*.md
 LLM/tasks/index.md and LLM/tasks/llm_tasks_*.md
 LLM/memory/completed_tasks.md
 topics/<topic>/
@@ -194,3 +194,8 @@ Do not manually edit generated HTML as project state. Re-run `kb view` or `kb vi
 ## Windows browser opening note
 
 On Windows, `kb view` opens generated HTML through `rundll32.exe url.dll,FileProtocolHandler` instead of `cmd /C start`. This is more robust on systems where `start` reports access denied for local HTML files. Use `--no-open` to generate files without opening a browser.
+
+
+## Disposable HTML Artifacts
+
+`kb view` writes HTML under `interfaces/html/`. These files are human review artifacts, not Wiki source files. Delete and regenerate them when needed. Accepted review decisions must be written back to Markdown/JSON/TOML source files outside `interfaces/`.

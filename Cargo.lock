@@ -330,7 +330,7 @@ dependencies = [
 
 [[package]]
 name = "kb-cli"
-version = "0.7.18"
+version = "0.7.20"
 dependencies = [
  "anyhow",
  "chrono",

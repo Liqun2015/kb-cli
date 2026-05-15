@@ -5,7 +5,7 @@
 It does **not** call an LLM, does **not** modify `raw/`, and does **not** rewrite `wiki/`. By default it writes a reviewable report under:
 
 ```text
-outputs/reports/lint_static_<timestamp>.md
+interfaces/reports/lint_static_<timestamp>.md
 ```
 
 Current version: `v0.7.10`

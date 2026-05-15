@@ -48,7 +48,7 @@ kb keywords thermal cloak --path processing/text
 kb keywords diffusion conductivity --path processing/text/papers
 ```
 
-## Outputs
+## Interfaces
 
 Default report path:
 

@@ -12,7 +12,7 @@ use walkdir::WalkDir;
 pub struct LintStaticArgs {
     #[arg(
         long,
-        help = "Preview lint results without writing outputs/reports/lint_static_*.md"
+        help = "Preview lint results without writing interfaces/reports/lint_static_*.md"
     )]
     pub dry_run: bool,
 
@@ -485,7 +485,7 @@ fn relative_path_string(kb_path: &Path, path: &Path) -> String {
 }
 
 fn write_report(kb_path: &Path, report: &LintStaticReport) -> Result<PathBuf> {
-    let reports_dir = kb_path.join("outputs/reports");
+    let reports_dir = kb_path.join("interfaces/reports");
     fs::create_dir_all(&reports_dir)?;
     let timestamp = chrono::Utc::now().format("%Y%m%d_%H%M%S").to_string();
     let report_path = reports_dir.join(format!("lint_static_{timestamp}.md"));
@@ -744,7 +744,7 @@ status: compiled
         };
         execute(Some(&kb_path), &args)?;
 
-        assert!(!kb_path.join("outputs/reports").exists());
+        assert!(!kb_path.join("interfaces/reports").exists());
 
         let _ = fs::remove_dir_all(&kb_path);
         Ok(())
@@ -764,7 +764,7 @@ status: compiled
         };
         execute(Some(&kb_path), &args)?;
 
-        let reports_dir = kb_path.join("outputs/reports");
+        let reports_dir = kb_path.join("interfaces/reports");
         let report_count = fs::read_dir(&reports_dir)?
             .filter_map(|entry| entry.ok())
             .filter(|entry| entry.path().extension().and_then(|s| s.to_str()) == Some("md"))

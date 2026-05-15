@@ -185,7 +185,7 @@ Before adding topic-specific relationship features, confirm that `docs/topic-rel
 kb view --dry-run
 ```
 
-The command should report the planned `outputs/html/index.html` path without writing files.
+The command should report the planned `interfaces/html/index.html` path without writing files.
 
 
 ## Topic workspace inspection smoke checks

@@ -31,15 +31,15 @@ The audit checks the transformation chain from source pile to maintainable LLM W
 | `processing/refs/` | Whether reference/index/graph artifacts exist. |
 | `topics/` | Whether topic workspaces, importance candidates, and review queues exist. |
 | `LLM/tasks/` and `LLM/memory/` | Whether LLM work is explicit and auditable. |
-| `outputs/` | Whether lint, health, and viewer outputs exist. |
+| `interfaces/` | Whether lint, health, and viewer outputs exist. |
 | `topics/*/review/review_queue.md` | Whether review queue format is actually usable. |
 
-## Outputs
+## Interfaces
 
 By default, the command writes two files:
 
 ```text
-outputs/reports/wiki_audit_<timestamp>.md
+interfaces/reports/wiki_audit_<timestamp>.md
 LLM/tasks/wiki_audit_llm_review_<timestamp>.md
 ```
 

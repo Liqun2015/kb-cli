@@ -15,7 +15,7 @@ Future LLM/agent work must be explicit, reviewable, and grounded in deterministi
 ```text
 processing/text/
 processing/refs/
-outputs/reports/
+interfaces/reports/
 wiki/**/*.md
 processing/manifest.json
 ```
@@ -168,7 +168,7 @@ Future LLM/agent skills should prefer reviewable artifacts such as:
 processing/proposals/*.md
 processing/refs/*.json
 processing/refs/*.md
-outputs/reports/*.md
+interfaces/reports/*.md
 ```
 
 They should not silently modify `raw/`, and they should not directly rewrite long-term `wiki/` content without a review path.

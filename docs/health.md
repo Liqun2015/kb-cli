@@ -42,7 +42,7 @@ kb --kb-path "D:\github\llm-wiki\quantum" health
 By default, `kb health` writes:
 
 ```text
-outputs/reports/health_YYYYMMDD_HHMMSS.md
+interfaces/reports/health_YYYYMMDD_HHMMSS.md
 ```
 
 The report includes:

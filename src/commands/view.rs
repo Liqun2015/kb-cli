@@ -16,7 +16,7 @@ pub struct ViewArgs {
     #[arg(
         long = "output-dir",
         value_name = "DIR",
-        help = "Output directory relative to the knowledge base. Defaults to outputs/html/."
+        help = "Output directory relative to the knowledge base. Defaults to interfaces/html/."
     )]
     pub output_dir: Option<PathBuf>,
 
@@ -103,7 +103,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
     let output_dir = args
         .output_dir
         .clone()
-        .unwrap_or_else(|| PathBuf::from("outputs/html"));
+        .unwrap_or_else(|| PathBuf::from("interfaces/html"));
     let output_root = resolve_under_kb(&kb_path, &output_dir);
     let output_path = output_root.join("index.html");
 
@@ -225,7 +225,7 @@ fn execute_relationship_view(kb_path: &Path, args: &ViewArgs) -> Result<()> {
     let output_dir = args
         .output_dir
         .clone()
-        .unwrap_or_else(|| PathBuf::from("outputs/html"));
+        .unwrap_or_else(|| PathBuf::from("interfaces/html"));
     let output_root = resolve_under_kb(kb_path, &output_dir);
     let data_path = output_root.join("relationship_data.json");
     let html_path = output_root.join("relationship_viewer.html");
@@ -852,7 +852,7 @@ fn build_relationship_manager_tasks(
     source_refs_graph: &Option<String>,
     topic: Option<&str>,
 ) -> Vec<RelationshipTask> {
-    let mut files = vec!["outputs/html/relationship_data.json".to_string()];
+    let mut files = vec!["interfaces/html/relationship_data.json".to_string()];
     if let Some(path) = source_refs_graph {
         files.push(path.clone());
     }
@@ -894,7 +894,7 @@ fn build_relationship_worker_tasks(
     source_refs_graph: &Option<String>,
     topic: Option<&str>,
 ) -> Vec<RelationshipTask> {
-    let mut files = vec!["outputs/html/relationship_data.json".to_string()];
+    let mut files = vec!["interfaces/html/relationship_data.json".to_string()];
     if let Some(path) = source_refs_graph {
         files.push(path.clone());
     }
@@ -972,7 +972,7 @@ fn render_relationship_viewer(kb_path: &Path, data: &RelationshipData) -> Result
     html.push_str("<div class=\"legend\"><div><span class=\"line solid\"></span> confirmed/accepted</div><div><span class=\"line dashed\"></span> candidate/needs review</div><div><span class=\"line dotted\"></span> missing/unresolved</div></div>\n");
     html.push_str("</aside>\n<main class=\"relation-main\">\n<header><h1>");
     html.push_str(&kb_name);
-    html.push_str("</h1><p>Static topic relationship review page. Without --topic it lists topic workspaces; with --topic it shows one topic-local directed graph.</p></header>\n");
+    html.push_str("</h1><p>Static topic relationship review page. Without --topic it lists topic workspaces; with --topic it shows one topic-local directed graph.</p><div class=\"artifact-notice\"><strong>Interface artifact:</strong> this HTML file is generated under <code>interfaces/</code> for human review and agent communication only. Do not treat it as the knowledge source; write accepted decisions back to Markdown/JSON/TOML outside <code>interfaces/</code>.</div></header>\n");
     html.push_str("<section class=\"panel active\" id=\"overview\"><h2>Overview</h2><div id=\"overviewGrid\" class=\"metric-grid\"></div><div id=\"warnings\"></div></section>\n");
     html.push_str("<section class=\"panel\" id=\"graph\"><h2>Graph</h2><p class=\"hint\">Solid edges are confirmed/accepted. Dashed edges are candidates or need LLM review. Dotted edges are missing or unresolved references.</p><div class=\"graph-wrap\"><svg id=\"graphSvg\" viewBox=\"0 0 1100 680\" role=\"img\" aria-label=\"Relationship graph\"></svg></div></section>\n");
     html.push_str("<section class=\"panel\" id=\"topics\"><h2>Topics</h2><div id=\"topicsTable\"></div></section>\n");
@@ -990,6 +990,8 @@ fn render_relationship_viewer(kb_path: &Path, data: &RelationshipData) -> Result
 }
 
 const RELATIONSHIP_VIEWER_CSS: &str = r#"
+.artifact-notice { margin-top: 0.8rem; padding: 0.8rem 1rem; border: 1px solid #f6ad55; background: #fffaf0; color: #744210; border-radius: 12px; font-size: 0.92rem; }
+.artifact-notice code { background: rgba(116,66,16,0.08); padding: 0.1rem 0.25rem; border-radius: 4px; }
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Segoe UI", Arial, sans-serif; }
 body { background: #f5f7fa; color: #243042; line-height: 1.6; }
 .relation-shell { display: flex; min-height: 100vh; }
@@ -1370,7 +1372,7 @@ fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
         title: "Health".to_string(),
         subtitle: "Latest deterministic project health report".to_string(),
         html: render_source_card_or_empty(
-            latest_matching_file(kb_path, "outputs/reports", "health_", "md")?,
+            latest_matching_file(kb_path, "interfaces/reports", "health_", "md")?,
             "No health report found. Run `kb health` first.",
         ),
     });
@@ -1465,7 +1467,7 @@ fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
     );
     html.push_str("<main class=\"main\">\n<header><h1>");
     html.push_str(&kb_name);
-    html.push_str("</h1><p class=\"subtitle\">LLM Wiki of your knowledge base for the purpose of swift and high quality research</p></header>\n");
+    html.push_str("</h1><p class=\"subtitle\">LLM Wiki of your knowledge base for the purpose of swift and high quality research</p><div class=\"artifact-notice\"><strong>Interface artifact:</strong> this HTML file is generated under <code>interfaces/</code> for human review and agent communication only. Do not treat it as the knowledge source; write accepted decisions back to Markdown/JSON/TOML outside <code>interfaces/</code>.</div></header>\n");
     html.push_str("<nav class=\"nav-tabs\">\n");
     html.push_str(&nav_buttons);
     html.push_str("</nav>\n");
@@ -1479,6 +1481,8 @@ fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
 const VIEWER_CSS: &str = r#"
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: "Segoe UI", Arial, sans-serif; }
 body { background: #f5f7fa; color: #2d3748; line-height: 1.6; }
+.artifact-notice { margin-top: 0.8rem; padding: 0.8rem 1rem; border: 1px solid #f6ad55; background: #fffaf0; color: #744210; border-radius: 12px; font-size: 0.92rem; }
+.artifact-notice code { background: rgba(116,66,16,0.08); padding: 0.1rem 0.25rem; border-radius: 4px; }
 .container { display: flex; min-height: 100vh; position: relative; }
 .sidebar { width: 340px; background: #fff; border-right: 1px solid #e2e8f0; display: flex; flex-direction: column; transition: width 0.2s; overflow: hidden; flex-shrink: 0; }
 .sidebar.hidden { width: 0; }

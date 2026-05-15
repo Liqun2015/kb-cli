@@ -90,7 +90,7 @@ kb --source /path/to/literature-folder setup --recursive --move
 kb --source /path/to/literature-folder setup --recursive
 ```
 
-Recursive mode skips managed/generated folders including `knowledgebase`, `raw`, `wiki`, `processing`, `references`, `topics`, `outputs`, `logs`, `.git`, `.obsidian`, `target`, and `node_modules`.
+Recursive mode skips managed/generated folders including `knowledgebase`, `raw`, `wiki`, `processing`, `references`, `topics`, `interfaces`, `.git`, `.obsidian`, `target`, and `node_modules`.
 
 ## 6. Manual workflow
 

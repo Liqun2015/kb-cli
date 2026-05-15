@@ -1,6 +1,6 @@
 # LLM Command Guide
 
-Current version: `v0.7.18`
+Current version: `v0.7.19`
 
 This document is the operating guide for the top-level Manager LLM, external agent sessions, Claude Code sessions, Codex sessions, Obsidian users, and human operators who use `kb-cli` as a structured command layer.
 
@@ -45,7 +45,7 @@ Use `kb-cli` commands to collect that evidence, then hand bounded evidence to th
 | `kb build <topic>` | Run the one-command topic preparation pipeline | initialized workspace, `raw/`, topic name | `processing/text/`, `processing/refs/`, `topics/<topic>/tasks/`, `LLM/handoff/` | enter Claude Code/Codex/Obsidian workflow | semantic interpretation / scholarly confirmation |
 | `kb build-wiki` | Generate deterministic wiki skeleton pages | `raw/`, manifest | `wiki/` | draft richer paper/concept pages | semantic summaries |
 | `kb sync-wiki` | Sync wiki front matter back to manifest | `wiki/` | `processing/manifest.json` | audit source traceability | source judgment |
-| `kb lint-static` | Find static wiki problems | `wiki/` | `outputs/reports/` | repair links, sources, isolated pages | semantic link repair |
+| `kb lint-static` | Find static wiki problems | `wiki/` | `interfaces/reports/` | repair links, sources, isolated pages | semantic link repair |
 | `kb query` | Find relevant wiki pages | `wiki/**/*.md` | stdout / JSON | answer a topic-level question | answer synthesis |
 | `kb grep` | Find exact lines and structure traces | selected text paths | stdout / JSON | inspect keywords, fields, DOI traces, TODOs | interpretation |
 | `kb extract-text` | Extract direct text where possible | `raw/papers/` or chosen files | `processing/text/` | read PDF contents | OCR/layout repair |
@@ -330,7 +330,7 @@ Worker LLMs should not invent new relation types unless the Manager LLM explicit
 
 ## Static viewer boundary
 
-`kb view` is a static display command. It may render existing Markdown/JSON outputs into `outputs/html/index.html`, but it must not call an LLM, execute shell commands from the browser, or modify source/wiki files. The `kb-view>` box inside the generated HTML is display navigation only.
+`kb view` is a static display command. It may render existing Markdown/JSON outputs into `interfaces/html/index.html`, but it must not call an LLM, execute shell commands from the browser, or modify source/wiki files. The `kb-view>` box inside the generated HTML is display navigation only.
 
 
 ## Topic workspace initialization

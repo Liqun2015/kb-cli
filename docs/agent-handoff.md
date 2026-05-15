@@ -1,6 +1,6 @@
 # Generic Agent Handoff
 
-`kb-cli v0.7.18` treats handoff as a generic external-agent protocol. Claude Code, OpenCode, OpenClaw, and Codex are adapters, not the core protocol.
+`kb-cli v0.7.19` treats handoff as a generic external-agent protocol. Claude Code, OpenCode, OpenClaw, and Codex are adapters, not the core protocol.
 
 ## Human and Manager entry points
 
@@ -72,3 +72,8 @@ Adapters add tool-specific entry notes without changing the evidence and review 
 - External agents process one bounded task at a time.
 - High-value academic judgments require human review.
 - `raw/` is never modified by agents.
+
+
+## Interface Directory Boundary
+
+`interfaces/` is the single directory for non-knowledge, regenerable artifacts. Agents may inspect `interfaces/html/`, `interfaces/reports/`, and `interfaces/logs/`, but must write accepted decisions back to durable Markdown/JSON/TOML files outside `interfaces/`.

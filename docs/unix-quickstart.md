@@ -63,9 +63,9 @@ knowledgebase/raw/
 knowledgebase/wiki/
 knowledgebase/rules/
 knowledgebase/processing/
-knowledgebase/outputs/
+knowledgebase/interfaces/
 knowledgebase/references/
-knowledgebase/logs/
+knowledgebase/interfaces/logs/
 ```
 
 ## 4. Preview before writing
@@ -146,7 +146,7 @@ kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" query thermal cloak
 Open the generated lint report under:
 
 ```text
-$HOME/github/LLM-wiki/quantum/outputs/reports/
+$HOME/github/LLM-wiki/quantum/interfaces/reports/
 ```
 
 ## 8. Run tests before release
@@ -166,8 +166,8 @@ cargo build --release
 - `--move` changes the folder layout and should be used only when intentional.
 - `--dry-run` previews write-like actions.
 - `--preview` is an alias for `--dry-run` on dry-run-capable commands.
-- `lint-static --no-report` checks without writing `outputs/reports/lint_static_*.md`.
-- Recursive ingest skips managed folders such as `raw`, `wiki`, `rules`, `processing`, `references`, `topics`, `outputs`, `logs`, `.git`, `.obsidian`, `target`, and `node_modules`.
+- `lint-static --no-report` checks without writing `interfaces/reports/lint_static_*.md`.
+- Recursive ingest skips managed folders such as `raw`, `wiki`, `rules`, `processing`, `references`, `topics`, `interfaces`, `.git`, `.obsidian`, `target`, and `node_modules`.
 
 ## 10. Troubleshooting
 
@@ -216,5 +216,5 @@ Useful files:
 wiki/Home.md
 processing/manifest.json
 rules/LLM_WIKI_SCHEMA.md
-outputs/reports/
+interfaces/reports/
 ```

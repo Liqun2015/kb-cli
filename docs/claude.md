@@ -139,8 +139,7 @@ wiki
 rules
 processing
 references
-outputs
-logs
+interfaces
 .git
 .obsidian
 target
@@ -347,7 +346,7 @@ Do not implement a universal causal graph. Do not auto-confirm causal, contradic
 
 ## Static viewer boundary
 
-`kb view` is a static display command. It renders existing Markdown/JSON outputs into `outputs/html/index.html` and opens that static file in the system default browser by default. `kb view --no-open` refreshes the file without opening a browser. It must not call an LLM, start a local server, execute shell commands from the browser, or modify source/wiki files. The `kb-view>` box inside the generated HTML is display navigation only.
+`kb view` is a static display command. It renders existing Markdown/JSON outputs into `interfaces/html/index.html` and opens that static file in the system default browser by default. `kb view --no-open` refreshes the file without opening a browser. It must not call an LLM, start a local server, execute shell commands from the browser, or modify source/wiki files. The `kb-view>` box inside the generated HTML is display navigation only.
 
 
 ## Topic workspace rule
@@ -387,3 +386,8 @@ kb view --relations --topic <topic>
 ```
 
 `kb view --relations --topic <topic>` must be treated as a strict single-topic view. Do not mix unrelated topic graphs into the same review task. Do not mark generated candidate or `needs_human_review` edges as confirmed without explicit review evidence.
+
+
+## Interface Directory Boundary
+
+`interfaces/` contains generated, regenerable artifacts such as HTML review pages, reports, answers, figures, slides, and logs. It is not a durable knowledge source. Claude Code and other agents may inspect it for review context, but accepted decisions must be written back to Markdown/JSON/TOML outside `interfaces/`.
