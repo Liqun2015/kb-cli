@@ -7,7 +7,7 @@ This document records what `kb-cli v0.7.10` actually supports. It is intentional
 | Command | Purpose |
 |---|---|
 | `kb init [--force]` | Create the local LLM Wiki directory structure and generated `rules/` layer. |
-| `kb [--source PATH] [--kb-path PATH] ingest [--copy\|--move] [--recursive] [--dry-run\|--preview]` | Organize source files from the source directory into `raw/` subfolders. |
+| `kb [--source PATH] [--lib PATH] ingest [--copy\|--move] [--recursive] [--dry-run\|--preview]` | Organize source files from the source directory into `raw/` subfolders. |
 | `kb --source <folder> setup [--recursive] [--copy\|--move] [--dry-run\|--preview]` | Create `<folder>/knowledgebase` by default, then run `init + ingest + extract-metadata + build-wiki`. `kb bootstrap` is a compatibility alias. |
 | `kb extract-metadata [--force]` | Extract PDF metadata from `raw/papers/`. |
 | `kb build-wiki` | Generate Markdown wiki pages and indexes. |
@@ -88,10 +88,10 @@ This is cross-platform because the workflow is implemented inside the Rust CLI, 
 `kb status` is implemented:
 
 ```bash
-kb --kb-path /path/to/literature-folder/knowledgebase status
-kb --kb-path /path/to/literature-folder/knowledgebase status --json
-kb --kb-path /path/to/literature-folder/knowledgebase status --unprocessed
-kb --kb-path /path/to/literature-folder/knowledgebase status --dry-run
+kb --lib /path/to/literature-folder/knowledgebase status
+kb --lib /path/to/literature-folder/knowledgebase status --json
+kb --lib /path/to/literature-folder/knowledgebase status --unprocessed
+kb --lib /path/to/literature-folder/knowledgebase status --dry-run
 ```
 
 Current behavior:
@@ -107,10 +107,10 @@ The manifest is not a stable external API yet; treat it as a local project file 
 `kb lint-static` is implemented as a deterministic local Markdown health check. It does not call an LLM and does not rewrite `wiki/`.
 
 ```bash
-kb --kb-path /path/to/literature-folder/knowledgebase lint-static
-kb --kb-path /path/to/literature-folder/knowledgebase lint-static --no-report
-kb --kb-path /path/to/literature-folder/knowledgebase lint-static --json
-kb --kb-path /path/to/literature-folder/knowledgebase lint-static --strict
+kb --lib /path/to/literature-folder/knowledgebase lint-static
+kb --lib /path/to/literature-folder/knowledgebase lint-static --no-report
+kb --lib /path/to/literature-folder/knowledgebase lint-static --json
+kb --lib /path/to/literature-folder/knowledgebase lint-static --strict
 ```
 
 Reports are written under `interfaces/reports/` unless `--dry-run`, `--preview`, or `--no-report` is used. `--no-report` is specific to `lint-static`.
@@ -121,10 +121,10 @@ Reports are written under `interfaces/reports/` unless `--dry-run`, `--preview`,
 `kb query` is implemented in v0.5.0 as deterministic local keyword search over `wiki/**/*.md`.
 
 ```bash
-kb --kb-path /path/to/literature-folder/knowledgebase query thermal cloak
-kb --kb-path /path/to/literature-folder/knowledgebase query thermal cloak --limit 5
-kb --kb-path /path/to/literature-folder/knowledgebase query thermal cloak --json
-kb --kb-path /path/to/literature-folder/knowledgebase query thermal cloak --title-only
+kb --lib /path/to/literature-folder/knowledgebase query thermal cloak
+kb --lib /path/to/literature-folder/knowledgebase query thermal cloak --limit 5
+kb --lib /path/to/literature-folder/knowledgebase query thermal cloak --json
+kb --lib /path/to/literature-folder/knowledgebase query thermal cloak --title-only
 ```
 
 Current behavior:
@@ -299,7 +299,7 @@ These documents are schema contracts for future Manager LLM, Worker LLM, and thi
 
 ## Static viewer boundary
 
-`kb view` is a static display command. It renders existing Markdown/JSON outputs into `interfaces/html/index.html` and opens that static file in the system default browser by default. `kb view --no-open` refreshes the file without opening a browser. It must not call an LLM, start a local server, execute shell commands from the browser, or modify source/wiki files. The `kb-view>` box inside the generated HTML is display navigation only.
+`kb view` is a static display command. It renders existing Markdown/JSON outputs into `interfaces/html/index.html` and opens that static file in the system default browser by default. `kb view --no-open` refreshes the file without opening a browser. It must not call an LLM, start a local server, execute shell commands from the browser, or modify source/wiki files. The **启动 LLM** panel only provides copyable external-agent commands/prompts; the `kb-view>` box is display navigation only.
 
 `kb view --relations` is the topic relation overview. It lists topic workspaces under `topics/`. `kb view --relations --topic <topic>` is a strict single-topic graph and must not include unrelated topics in `relationship_data.json`.
 

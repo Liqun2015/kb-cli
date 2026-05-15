@@ -31,8 +31,8 @@ kb links --json
 With an explicit knowledge-base path:
 
 ```bash
-kb --kb-path ./quantum links
-kb --kb-path "D:\\github\\llm-wiki\\quantum" links --unresolved
+kb --lib ./quantum links
+kb --lib "D:\\github\\llm-wiki\\quantum" links --unresolved
 ```
 
 ## Options

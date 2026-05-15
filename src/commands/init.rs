@@ -72,7 +72,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &InitArgs) -> Result<()> {
         Some(path) => resolve_user_path(path),
         None => {
             return Err(anyhow!(
-                "initializing a blank LLM Wiki requires a database name/path. Use `kb --kb-path <database-name> init [--topic <topic>]`, or convert a literature folder with `kb --source <literature-dir> setup`."
+                "initializing a blank LLM Wiki requires a database name/path. Use `kb --lib <database-name> init [--topic <topic>]`, or convert a literature folder with `kb --source <literature-dir> setup`."
             ));
         }
     };
@@ -94,7 +94,7 @@ pub fn execute_with_source(
     );
 
     if kb_path.exists() {
-        println!("Knowledge base path already exists. Ensuring directory structure...");
+        println!("LLM Wiki library path already exists. Ensuring directory structure...");
         println!("Current directories:");
         list_existing_dirs(&kb_path);
     }
@@ -550,11 +550,11 @@ rules/LINT_POLICY.md
 kb --source /path/to/literature-folder setup --recursive
 
 # Manual workflow
-kb --kb-path /path/to/literature-folder/knowledgebase init
-kb --source /path/to/literature-folder --kb-path /path/to/literature-folder/knowledgebase ingest --copy --recursive
-kb --kb-path /path/to/literature-folder/knowledgebase extract-metadata
-kb --kb-path /path/to/literature-folder/knowledgebase build-wiki
-kb --kb-path /path/to/literature-folder/knowledgebase status
+kb --lib /path/to/literature-folder/knowledgebase init
+kb --source /path/to/literature-folder --lib /path/to/literature-folder/knowledgebase ingest --copy --recursive
+kb --lib /path/to/literature-folder/knowledgebase extract-metadata
+kb --lib /path/to/literature-folder/knowledgebase build-wiki
+kb --lib /path/to/literature-folder/knowledgebase status
 ```
 
 ## Root Marker

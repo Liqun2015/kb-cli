@@ -16,11 +16,11 @@ cargo build --release
 After implementation, test with a temporary knowledge base:
 
 ```bash
-kb --kb-path /tmp/kb init
-kb --kb-path /tmp/kb topic init thermal-metamaterials
+kb --lib /tmp/kb init
+kb --lib /tmp/kb topic init thermal-metamaterials
 mkdir -p /tmp/kb/topics/thermal-metamaterials/importance
 cp examples/topic-review/importance_candidate_example.md /tmp/kb/topics/thermal-metamaterials/importance/
-kb --kb-path /tmp/kb topic review thermal-metamaterials
+kb --lib /tmp/kb topic review thermal-metamaterials
 ```
 
 Expected outputs:

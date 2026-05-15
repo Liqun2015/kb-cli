@@ -95,20 +95,20 @@ Recursive mode skips managed/generated folders including `knowledgebase`, `raw`,
 ## 6. Manual workflow
 
 ```bash
-kb --kb-path /path/to/literature-folder/knowledgebase init
-kb --source /path/to/literature-folder --kb-path /path/to/literature-folder/knowledgebase ingest --copy --recursive
-kb --kb-path /path/to/literature-folder/knowledgebase extract-metadata
-kb --kb-path /path/to/literature-folder/knowledgebase build-wiki
-kb --kb-path /path/to/literature-folder/knowledgebase status
-kb --kb-path /path/to/literature-folder/knowledgebase build <topic> --dry-run
+kb --lib /path/to/literature-folder/knowledgebase init
+kb --source /path/to/literature-folder --lib /path/to/literature-folder/knowledgebase ingest --copy --recursive
+kb --lib /path/to/literature-folder/knowledgebase extract-metadata
+kb --lib /path/to/literature-folder/knowledgebase build-wiki
+kb --lib /path/to/literature-folder/knowledgebase status
+kb --lib /path/to/literature-folder/knowledgebase build <topic> --dry-run
 ```
 
 ## 7. Inspect manifest status
 
 ```bash
-kb --kb-path /path/to/literature-folder/knowledgebase status
-kb --kb-path /path/to/literature-folder/knowledgebase status --json
-kb --kb-path /path/to/literature-folder/knowledgebase status --unprocessed
+kb --lib /path/to/literature-folder/knowledgebase status
+kb --lib /path/to/literature-folder/knowledgebase status --json
+kb --lib /path/to/literature-folder/knowledgebase status --unprocessed
 ```
 
 The manifest is written to:
@@ -122,13 +122,13 @@ The manifest is written to:
 After `status` has created `processing/manifest.json`, preview the deterministic topic build pipeline:
 
 ```bash
-kb --kb-path /path/to/literature-folder/knowledgebase build <topic> --dry-run
+kb --lib /path/to/literature-folder/knowledgebase build <topic> --dry-run
 ```
 
 Write review artifacts:
 
 ```bash
-kb --kb-path /path/to/literature-folder/knowledgebase build <topic>
+kb --lib /path/to/literature-folder/knowledgebase build <topic>
 ```
 
 This writes deterministic text/reference/topic task and handoff artifacts. It does not call an LLM or edit final scholarly claims.
@@ -138,21 +138,21 @@ This writes deterministic text/reference/topic task and handoff artifacts. It do
 After a human or AI has edited Markdown pages under `wiki/`, run:
 
 ```bash
-kb --kb-path /path/to/literature-folder sync-wiki --dry-run
-kb --kb-path /path/to/literature-folder sync-wiki
-kb --kb-path /path/to/literature-folder lint-static
+kb --lib /path/to/literature-folder sync-wiki --dry-run
+kb --lib /path/to/literature-folder sync-wiki
+kb --lib /path/to/literature-folder lint-static
 ```
 
 For linting without writing a report:
 
 ```bash
-kb --kb-path /path/to/literature-folder lint-static --no-report
+kb --lib /path/to/literature-folder lint-static --no-report
 ```
 
 Then run a local keyword query over the wiki:
 
 ```bash
-kb --kb-path /path/to/literature-folder query thermal cloak
+kb --lib /path/to/literature-folder query thermal cloak
 ```
 
 ## 10. Open in Obsidian

@@ -14,20 +14,20 @@ Current version: `v0.7.10`
 
 ```bash
 # Write a Markdown lint report
-kb --kb-path /path/to/literature-folder/knowledgebase lint-static
+kb --lib /path/to/literature-folder/knowledgebase lint-static
 
 # Check without writing a report
-kb --kb-path /path/to/literature-folder/knowledgebase lint-static --no-report
+kb --lib /path/to/literature-folder/knowledgebase lint-static --no-report
 
 # Equivalent inspection aliases
-kb --kb-path /path/to/literature-folder/knowledgebase lint-static --dry-run
-kb --kb-path /path/to/literature-folder/knowledgebase lint-static --preview
+kb --lib /path/to/literature-folder/knowledgebase lint-static --dry-run
+kb --lib /path/to/literature-folder/knowledgebase lint-static --preview
 
 # Machine-readable summary
-kb --kb-path /path/to/literature-folder/knowledgebase lint-static --json
+kb --lib /path/to/literature-folder/knowledgebase lint-static --json
 
 # CI/script mode: fail when issues are found
-kb --kb-path /path/to/literature-folder/knowledgebase lint-static --strict
+kb --lib /path/to/literature-folder/knowledgebase lint-static --strict
 ```
 
 `--dry-run` remains supported. `--preview` is a general inspection alias. For `lint-static`, `--no-report` is the clearest wording because the only skipped write is the Markdown report file.
@@ -155,13 +155,13 @@ This order keeps the work reviewable and avoids chasing cosmetic orphan-page war
 For scripts:
 
 ```bash
-kb --kb-path /path/to/literature-folder/knowledgebase lint-static --json
+kb --lib /path/to/literature-folder/knowledgebase lint-static --json
 ```
 
 For CI-like checks:
 
 ```bash
-kb --kb-path /path/to/literature-folder/knowledgebase lint-static --strict
+kb --lib /path/to/literature-folder/knowledgebase lint-static --strict
 ```
 
 `--strict` returns a non-zero exit code when any issue group is found. It is best used after the Wiki has passed a normal report review at least once.

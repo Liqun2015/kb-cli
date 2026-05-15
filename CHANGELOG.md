@@ -1,12 +1,32 @@
 # Changelog
 
+## v0.7.24
+
+`v0.7.24` standardizes the global library selector as `--lib` so all commands use the same library vocabulary as `kb create --lib <A> --from <B> --about <topic>`.
+
+### Changed
+
+- Replaced the old global library-path parameter with `--lib`.
+- Updated shell delegation to call batch commands with `--lib`.
+- Updated generated prompts, launch-panel examples, docs, and command examples to use `--lib`.
+- Kept internal Rust variable names such as `kb_path` only where they describe filesystem paths inside the implementation.
+
+## v0.7.23
+
+`v0.7.23` adds a safe LLM launch panel to the regular HTML dashboard.
+
+- Added a visible **启动 LLM** button to `interfaces/html/index.html`.
+- The button opens a static launch section with copyable Claude Code / Codex terminal commands, a Manager startup prompt, and a Worker task prompt.
+- The HTML viewer still does not execute shell commands, call an LLM, or modify knowledge files. It only helps the operator hand off work to an external LLM agent.
+- Added the launch section as a normal dashboard tab so it is reachable by sidebar, header button, and `kb-view> open llm-launch`.
+
 ## v0.7.22
 
 `v0.7.22` adds `kb create` as the clean one-command path for turning an existing literature folder into an agent-ready LLM Wiki.
 
 - Added `kb create --lib <A> --from <B> --about <topic>`.
 - The preferred form is explicit: `--lib` names the target LLM Wiki database, `--from` names the source-material folder, and `--about` names the topic.
-- `kb create` is equivalent to `kb --kb-path <A> --source <B> setup --recursive --topic <topic>` followed by `kb --kb-path <A> build <topic>`.
+- `kb create` is equivalent to `kb --lib <A> --source <B> setup --recursive --topic <topic>` followed by `kb --lib <A> build <topic>`.
 - `setup` and `build` remain available as lower-level commands for debugging or partial reruns.
 
 ## v0.7.20
@@ -197,8 +217,8 @@ Main changes:
 - `setup` prints both the source directory and the knowledge base workspace before running.
 - `ingest` can now read from an external source directory while writing into a separate knowledge base workspace.
 - Recursive ingest skips the generated `knowledgebase/` workspace so it does not ingest its own outputs.
-- Added `setup --name <DIR>` to customize the child workspace name when `--kb-path` is not provided.
-- Kept `--kb-path` as the advanced/manual layout override and kept `bootstrap` as the compatibility alias for `setup`.
+- Added `setup --name <DIR>` to customize the child workspace name when `--lib` is not provided.
+- Kept `--lib` as the advanced/manual layout override and kept `bootstrap` as the compatibility alias for `setup`.
 - Updated documentation to recommend the source-folder-to-child-workspace layout.
 
 No hidden LLM call, semantic duplicate detection, or automatic scientific relationship inference is added.
@@ -725,9 +745,9 @@ Main changes:
 Useful prepare commands:
 
 ```bash
-kb --kb-path /path/to/kb prepare --new --dry-run
-kb --kb-path /path/to/kb prepare --new
-kb --kb-path /path/to/kb prepare --file raw/papers/example.pdf
+kb --lib /path/to/kb prepare --new --dry-run
+kb --lib /path/to/kb prepare --new
+kb --lib /path/to/kb prepare --file raw/papers/example.pdf
 ```
 
 Generated files:
@@ -769,10 +789,10 @@ Main changes:
 Useful status modes:
 
 ```bash
-kb --kb-path /path/to/kb status
-kb --kb-path /path/to/kb status --json
-kb --kb-path /path/to/kb status --unprocessed
-kb --kb-path /path/to/kb status --dry-run
+kb --lib /path/to/kb status
+kb --lib /path/to/kb status --json
+kb --lib /path/to/kb status --unprocessed
+kb --lib /path/to/kb status --dry-run
 ```
 
 ## v0.2.0

@@ -1331,6 +1331,14 @@ fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
     });
 
     sections.push(ViewerSection {
+        id: "llm-launch".to_string(),
+        title: "启动 LLM".to_string(),
+        subtitle: "Copy safe launch commands and Manager prompts for external LLM agents"
+            .to_string(),
+        html: render_llm_launch(kb_path)?,
+    });
+
+    sections.push(ViewerSection {
         id: "wiki".to_string(),
         title: "Wiki".to_string(),
         subtitle: "Wiki home or project README".to_string(),
@@ -1467,7 +1475,7 @@ fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
     );
     html.push_str("<main class=\"main\">\n<header><h1>");
     html.push_str(&kb_name);
-    html.push_str("</h1><p class=\"subtitle\">LLM Wiki of your knowledge base for the purpose of swift and high quality research</p><div class=\"artifact-notice\"><strong>Interface artifact:</strong> this HTML file is generated under <code>interfaces/</code> for human review and agent communication only. Do not treat it as the knowledge source; write accepted decisions back to Markdown/JSON/TOML outside <code>interfaces/</code>.</div></header>\n");
+    html.push_str("</h1><p class=\"subtitle\">LLM Wiki of your knowledge base for the purpose of swift and high quality research</p><div class=\"header-actions\"><button class=\"primary-action\" data-target=\"llm-launch\">启动 LLM</button><a class=\"secondary-action\" href=\"relationship_viewer.html\">查看关系图</a></div><div class=\"artifact-notice\"><strong>Interface artifact:</strong> this HTML file is generated under <code>interfaces/</code> for human review and agent communication only. Do not treat it as the knowledge source; write accepted decisions back to Markdown/JSON/TOML outside <code>interfaces/</code>.</div></header>\n");
     html.push_str("<nav class=\"nav-tabs\">\n");
     html.push_str(&nav_buttons);
     html.push_str("</nav>\n");
@@ -1507,6 +1515,20 @@ body { background: #f5f7fa; color: #2d3748; line-height: 1.6; }
 header { text-align: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #4299e1; }
 h1 { color: #2b6cb0; font-size: 1.65rem; }
 .subtitle, .section-subtitle, .path { color: #718096; font-size: 0.92rem; }
+
+.header-actions { display: flex; gap: 0.65rem; flex-wrap: wrap; margin-top: 1rem; }
+.primary-action, .secondary-action, .copy-btn { border: 0; border-radius: 8px; padding: 0.62rem 0.9rem; font-weight: 700; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; }
+.primary-action { background: #2b6cb0; color: white; }
+.secondary-action { background: #e8f4f8; color: #2b6cb0; border: 1px solid #bee3f8; }
+.copy-btn { background: #edf2f7; color: #2d3748; border: 1px solid #cbd5e0; font-size: 0.85rem; padding: 0.45rem 0.7rem; }
+.copy-btn:hover, .primary-action:hover, .secondary-action:hover { filter: brightness(0.97); }
+.llm-launch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1rem 0; }
+.llm-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem; background: #f8fafc; }
+.llm-card h3 { margin-top: 0; }
+.launch-snippet { position: relative; }
+.launch-snippet pre { margin-top: 0.45rem; }
+.launch-note { background: #fffaf0; border: 1px solid #f6ad55; color: #744210; border-radius: 8px; padding: 0.8rem; margin: 0.8rem 0; }
+
 .nav-tabs { display: flex; gap: 0.5rem; background: #fff; padding: 0.5rem; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem; flex-wrap: wrap; }
 .nav-tab { padding: 0.55rem 1rem; border: 0; border-radius: 5px; background: #e8f4f8; color: #2b6cb0; cursor: pointer; }
 .nav-tab.active { background: #4299e1; color: white; }
@@ -1564,7 +1586,7 @@ function runViewCommand() {
   commandInput.value = '';
   const lower = raw.toLowerCase();
   if (lower === 'help') {
-    log('Commands: <code>open overview</code>, <code>open refs-index</code>, <code>open refs-graph</code>, <code>open keywords</code>, <code>open health</code>, <code>open tasks</code>, <code>open memory</code>, <code>open topics</code>, <code>find WORD</code>, <code>topic NAME</code>, <code>clear</code>.');
+    log('Commands: <code>open overview</code>, <code>open llm-launch</code>, <code>open refs-index</code>, <code>open refs-graph</code>, <code>open keywords</code>, <code>open health</code>, <code>open tasks</code>, <code>open memory</code>, <code>open topics</code>, <code>find WORD</code>, <code>topic NAME</code>, <code>clear</code>.');
   } else if (lower === 'clear') {
     commandLog.innerHTML = '';
   } else if (lower.startsWith('open ')) {
@@ -1596,13 +1618,35 @@ function escapeHtml(s) {
   return s.replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
 }
 
+
+async function copyTextFrom(id, button) {
+  const target = document.getElementById(id);
+  if (!target) return;
+  const text = target.innerText;
+  try {
+    await navigator.clipboard.writeText(text);
+    if (button) {
+      const original = button.textContent;
+      button.textContent = '已复制';
+      setTimeout(() => button.textContent = original, 1200);
+    }
+    log(`Copied <code>${escapeHtml(id)}</code> to clipboard.`);
+  } catch (err) {
+    log('Clipboard copy failed. Select and copy the block manually.');
+  }
+}
+
+document.querySelectorAll('[data-copy-target]').forEach(btn => {
+  btn.addEventListener('click', () => copyTextFrom(btn.dataset.copyTarget, btn));
+});
+
 toggleBtn.addEventListener('click', () => {
   sidebar.classList.toggle('hidden');
   toggleBtn.classList.toggle('collapsed');
   toggleBtn.textContent = sidebar.classList.contains('hidden') ? '›' : '‹';
 });
 
-document.querySelectorAll('.nav-tab, .sidebar-link').forEach(tab => {
+document.querySelectorAll('.nav-tab, .sidebar-link, .primary-action').forEach(tab => {
   tab.addEventListener('click', () => switchTab(tab.dataset.target));
 });
 
@@ -1611,6 +1655,104 @@ commandInput.addEventListener('keydown', e => {
   if (e.key === 'Enter') runViewCommand();
 });
 "#;
+
+fn render_llm_launch(kb_path: &Path) -> Result<String> {
+    let kb_display = kb_path.display().to_string();
+    let mut topics = Vec::new();
+    let topics_dir = kb_path.join("topics");
+    if topics_dir.exists() {
+        for entry in fs::read_dir(&topics_dir)? {
+            let entry = entry?;
+            if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
+                let file_name = entry.file_name();
+                if let Some(name) = file_name.to_str() {
+                    if !name.trim().is_empty() {
+                        topics.push(name.to_string());
+                    }
+                }
+            }
+        }
+    }
+    topics.sort();
+
+    let default_topic = topics
+        .first()
+        .cloned()
+        .unwrap_or_else(|| "<topic>".to_string());
+    let topic_tasks = if default_topic == "<topic>" {
+        "topics/<topic>/tasks/index.md".to_string()
+    } else {
+        format!("topics/{}/tasks/index.md", default_topic)
+    };
+    let topic_index = if default_topic == "<topic>" {
+        "topics/<topic>/index.md".to_string()
+    } else {
+        format!("topics/{}/index.md", default_topic)
+    };
+
+    let topic_options = if topics.is_empty() {
+        "<p class=\"empty\">No topic directory found yet. Run <code>kb build &lt;topic&gt;</code> before launching an LLM Worker.</p>".to_string()
+    } else {
+        let mut out = String::from("<ul>");
+        for topic in &topics {
+            out.push_str(&format!(
+                "<li><code>{}</code> — <code>topics/{}/tasks/index.md</code></li>",
+                html_escape(topic),
+                html_escape(topic)
+            ));
+        }
+        out.push_str("</ul>");
+        out
+    };
+
+    let claude_command = format!("cd \"{}\"\nclaude", kb_display);
+    let codex_command = format!("cd \"{}\"\ncodex", kb_display);
+    let manager_prompt = format!(
+        "请先不要修改任何文件。\n\n你现在进入的是一个 LLM Wiki 知识库。请先阅读：\n1. AGENTS.md\n2. CLAUDE.md（如果你是 Claude Code）\n3. LLM/handoff/current.md\n4. {}\n5. {}\n6. topics/{}/handoff/AGENTS.md（如果存在）\n\n然后返回：\n1. 当前 topic 的研究目标；\n2. 当前已有材料；\n3. 当前任务列表；\n4. 哪些任务适合由你处理；\n5. 哪些任务必须人工确认；\n6. 你建议优先处理的前三个任务。\n\n在我确认前，不要修改文件。",
+        topic_index,
+        topic_tasks,
+        default_topic
+    );
+    let worker_prompt = format!(
+        "请作为 Worker Agent 处理 {} 中的一个具体任务。\n\n规则：\n1. 一次只处理一个 task；\n2. 只依据 raw/、processing/、wiki/、topics/、LLM/ 中已有材料；\n3. 不要把 interfaces/ 当作知识源；\n4. 不要删除 raw/；\n5. 不要把 candidate relation 自动改为 confirmed；\n6. 证据不足时标记 needs_human_review；\n7. 修改完成后在任务文件末尾添加 Work Log；\n8. 最后列出 changed files、evidence used、remaining uncertainty。",
+        topic_tasks
+    );
+
+    let mut out = String::new();
+    out.push_str("<div class=\"launch-note\"><strong>安全边界：</strong>这个 HTML 是静态界面，不能、也不应该直接执行本机命令。\n它只提供启动外部 LLM Agent 的命令和提示词；请复制到终端或对应 Agent 界面后执行。</div>");
+    out.push_str("<div class=\"llm-launch-grid\">");
+    out.push_str("<article class=\"llm-card\"><h3>Claude Code</h3><p>适合语义型知识工作：paper card、relation evidence、concept page、topic synthesis。</p>");
+    out.push_str(
+        "<button class=\"copy-btn\" data-copy-target=\"claude-launch-command\">复制命令</button>",
+    );
+    out.push_str(&format!("<div class=\"launch-snippet\"><pre id=\"claude-launch-command\"><code>{}</code></pre></div></article>", html_escape(&claude_command)));
+    out.push_str("<article class=\"llm-card\"><h3>Codex</h3><p>适合工程型工作：检查目录结构、修 Markdown、维护 kb-cli、跑命令、更新文档。</p>");
+    out.push_str(
+        "<button class=\"copy-btn\" data-copy-target=\"codex-launch-command\">复制命令</button>",
+    );
+    out.push_str(&format!("<div class=\"launch-snippet\"><pre id=\"codex-launch-command\"><code>{}</code></pre></div></article>", html_escape(&codex_command)));
+    out.push_str("</div>");
+
+    out.push_str("<h3>当前 Topic 任务入口</h3>");
+    out.push_str(&topic_options);
+
+    out.push_str("<h3>Manager 启动提示词</h3>");
+    out.push_str("<button class=\"copy-btn\" data-copy-target=\"manager-launch-prompt\">复制 Manager Prompt</button>");
+    out.push_str(&format!(
+        "<pre id=\"manager-launch-prompt\"><code>{}</code></pre>",
+        html_escape(&manager_prompt)
+    ));
+
+    out.push_str("<h3>Worker 领取任务提示词</h3>");
+    out.push_str("<button class=\"copy-btn\" data-copy-target=\"worker-launch-prompt\">复制 Worker Prompt</button>");
+    out.push_str(&format!(
+        "<pre id=\"worker-launch-prompt\"><code>{}</code></pre>",
+        html_escape(&worker_prompt)
+    ));
+
+    out.push_str("<div class=\"suggestion-box\"><strong>推荐流程：</strong><br><code>kb build &lt;topic&gt;</code> → <code>kb view</code> → 点击 <strong>启动 LLM</strong> → 复制命令与 Manager Prompt → Agent 读取任务 → 人工审查回写。</div>");
+    Ok(out)
+}
 
 fn render_overview(kb_path: &Path) -> String {
     let rows = [

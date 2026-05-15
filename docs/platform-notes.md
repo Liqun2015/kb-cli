@@ -36,19 +36,19 @@ Do not add large platform-specific branches to the Rust core unless a real bug r
 Windows PowerShell:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum" status
+kb --lib "D:\github\LLM-wiki\quantum" status
 ```
 
 macOS/Linux:
 
 ```bash
-kb --kb-path "$HOME/github/LLM-wiki/quantum" status
+kb --lib "$HOME/github/LLM-wiki/quantum" status
 ```
 
 Cross-platform relative path:
 
 ```bash
-kb --kb-path ./quantum status
+kb --lib ./quantum status
 ```
 
 ## Wrapper scripts

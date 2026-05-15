@@ -71,21 +71,21 @@ knowledgebase\interfaces\logs\
 For a dry run, use either `--dry-run` or its alias `--preview`:
 
 ```powershell
-kb --source "D:\github\LLM-wiki\quantum" --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" ingest --copy --recursive --dry-run
-kb --source "D:\github\LLM-wiki\quantum" --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" ingest --copy --recursive --preview
+kb --source "D:\github\LLM-wiki\quantum" --lib "D:\github\LLM-wiki\quantum\knowledgebase" ingest --copy --recursive --dry-run
+kb --source "D:\github\LLM-wiki\quantum" --lib "D:\github\LLM-wiki\quantum\knowledgebase" ingest --copy --recursive --preview
 ```
 
 For linting only, the clearest wording is `--no-report`:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" lint-static --no-report
+kb --lib "D:\github\LLM-wiki\quantum\knowledgebase" lint-static --no-report
 ```
 
 Equivalent aliases still work:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" lint-static --dry-run
-kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" lint-static --preview
+kb --lib "D:\github\LLM-wiki\quantum\knowledgebase" lint-static --dry-run
+kb --lib "D:\github\LLM-wiki\quantum\knowledgebase" lint-static --preview
 ```
 
 ## 5. Recommended verification flow
@@ -93,11 +93,11 @@ kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" lint-static --preview
 After setup or after an AI/human edits `wiki\`, run:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" status
-kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" sync-wiki --dry-run
-kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" sync-wiki
-kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" lint-static
-kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" query thermal cloak
+kb --lib "D:\github\LLM-wiki\quantum\knowledgebase" status
+kb --lib "D:\github\LLM-wiki\quantum\knowledgebase" sync-wiki --dry-run
+kb --lib "D:\github\LLM-wiki\quantum\knowledgebase" sync-wiki
+kb --lib "D:\github\LLM-wiki\quantum\knowledgebase" lint-static
+kb --lib "D:\github\LLM-wiki\quantum\knowledgebase" query thermal cloak
 ```
 
 Open the generated lint report here:
@@ -168,7 +168,7 @@ where.exe kb
 Always pass an explicit path:
 
 ```powershell
-kb --kb-path "D:\github\LLM-wiki\quantum\knowledgebase" status
+kb --lib "D:\github\LLM-wiki\quantum\knowledgebase" status
 ```
 
 ### A path contains spaces

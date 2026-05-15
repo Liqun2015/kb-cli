@@ -74,7 +74,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &BuildArgs) -> Result<()> {
     let kb_path = commands::init::get_kb_path(custom_kb);
     if !kb_path.exists() {
         return Err(anyhow!(
-            "knowledge base path does not exist: {}. Run `kb --kb-path <database-name> init` or `kb --source <literature-dir> setup` first.",
+            "knowledge base path does not exist: {}. Run `kb --lib <database-name> init` or `kb --source <literature-dir> setup` first.",
             kb_path.display()
         ));
     }

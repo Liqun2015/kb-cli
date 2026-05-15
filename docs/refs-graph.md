@@ -56,10 +56,10 @@ kb refs-graph --path processing/refs/refs_index_20260509_120000.md
 kb refs-graph --dry-run
 ```
 
-Use with a specific KB path:
+Use with a specific library path:
 
 ```bash
-kb --kb-path "D:\\github\\llm-wiki\\quantum" refs-graph --json
+kb --lib "D:\\github\\llm-wiki\\quantum" refs-graph --json
 ```
 
 ## Visual protocol

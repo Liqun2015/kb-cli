@@ -23,7 +23,7 @@ Core knowledge-base commands should have a clear mapping between batch mode and 
 For example:
 
 ```bash
-kb --kb-path ./quantum query thermal cloak
+kb --lib ./quantum query thermal cloak
 ```
 
 maps to shell mode like:
@@ -88,7 +88,7 @@ This keeps behavior consistent and testable.
 
 `kb shell` is the deterministic shell entry point.
 
-The shell handles only session commands directly (`use`, `pwd`, `clear`, `help`, `exit`). Known knowledge-base commands are delegated back to the same batch-mode `kb` executable with the current `--kb-path` value. This preserves one-to-one command semantics without creating a separate business-logic stack.
+The shell handles only session commands directly (`use`, `pwd`, `clear`, `help`, `exit`). Known knowledge-base commands are delegated back to the same batch-mode `kb` executable with the current `--lib` value. This preserves one-to-one command semantics without creating a separate business-logic stack.
 
 Unknown input is a safe no-op. The final `else` branch in shell parsing must return safely; it must not become a natural-language interpretation step, LLM fallback, model call, agent trigger, shell escape, or arbitrary command executor.
 

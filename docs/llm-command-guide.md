@@ -331,7 +331,7 @@ Worker LLMs should not invent new relation types unless the Manager LLM explicit
 
 ## Static viewer boundary
 
-`kb view` is a static display command. It may render existing Markdown/JSON outputs into `interfaces/html/index.html`, but it must not call an LLM, execute shell commands from the browser, or modify source/wiki files. The `kb-view>` box inside the generated HTML is display navigation only.
+`kb view` is a static display command. It may render existing Markdown/JSON outputs into `interfaces/html/index.html`, but it must not call an LLM, execute shell commands from the browser, or modify source/wiki files. The **启动 LLM** panel only provides copyable external-agent commands/prompts; the `kb-view>` box is display navigation only.
 
 
 ## Topic workspace initialization

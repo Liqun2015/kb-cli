@@ -11,7 +11,7 @@ kb shell
 With an explicit knowledge base path:
 
 ```bash
-kb --kb-path ./quantum shell
+kb --lib ./quantum shell
 ```
 
 The prompt is:
@@ -27,7 +27,7 @@ kb>
 It is a repeated command interface for humans, Manager LLM sessions, and local maintenance workflows. Known knowledge-base commands entered in shell mode should keep the same meaning as their batch-mode equivalents. Unknown input is rejected safely.
 
 ```text
-kb --kb-path ./quantum query thermal cloak
+kb --lib ./quantum query thermal cloak
 ```
 
 maps to:
@@ -51,7 +51,7 @@ exit         Leave shell mode
 
 ## Strict whitelist command delegation
 
-Only known `kb` batch commands are delegated to the same `kb` binary with the current `--kb-path` value.
+Only known `kb` batch commands are delegated to the same `kb` binary with the current `--lib` value.
 
 Unknown input is a safe no-op. The shell must not guess intent, interpret natural language, or pass arbitrary text into an LLM-like fallback.
 

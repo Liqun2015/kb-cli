@@ -49,7 +49,7 @@ pub struct SetupArgs {
     #[arg(
         long = "name",
         default_value = "knowledgebase",
-        help = "Workspace directory name created under --source when --kb-path is not provided."
+        help = "Workspace directory name created under --source when --lib is not provided."
     )]
     pub name: String,
 
@@ -346,7 +346,7 @@ pub fn execute_setup(
     println!("  1. Review rules/LLM_WIKI_SCHEMA.md");
     println!("  2. Open wiki/Home.md in Obsidian");
     println!(
-        "  3. Run: kb --kb-path \"{}\" status --unprocessed",
+        "  3. Run: kb --lib \"{}\" status --unprocessed",
         kb_path.display()
     );
     Ok(())

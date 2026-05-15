@@ -291,7 +291,7 @@ When keyword/topic candidates are found, unresolved semantic interpretation shou
 - It is deterministic.
 - It is not an LLM chat interface.
 - It handles only session commands directly: `use`, `pwd`, `clear`, `help`, and `exit`.
-- Known knowledge-base commands should map to batch-mode commands with the current `--kb-path`.
+- Known knowledge-base commands should map to batch-mode commands with the current `--lib`.
 - Unknown input must return safely without interpretation, LLM calls, shell escapes, or arbitrary execution.
 - It is suitable for Manager LLM sessions that need to repeatedly run structured commands before assigning bounded work to Worker LLMs.
 
@@ -307,4 +307,4 @@ The global bibliographic relation layer remains under `processing/refs/`; topic-
 
 ## Static viewer boundary
 
-`kb view` is a static display command. It may render existing Markdown/JSON outputs into `interfaces/html/index.html`, but it must not call an LLM, execute shell commands from the browser, or modify source/wiki files. The `kb-view>` box inside the generated HTML is display navigation only.
+`kb view` is a static display command. It may render existing Markdown/JSON outputs into `interfaces/html/index.html`, but it must not call an LLM, execute shell commands from the browser, or modify source/wiki files. The **启动 LLM** panel only provides copyable external-agent commands/prompts; the `kb-view>` box is display navigation only.

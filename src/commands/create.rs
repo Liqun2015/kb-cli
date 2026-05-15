@@ -117,7 +117,7 @@ pub fn execute(
     println!();
     println!("Equivalent expanded commands:");
     println!(
-        "  kb --kb-path \"{}\" --source \"{}\" setup --recursive --topic \"{}\"{}{}",
+        "  kb --lib \"{}\" --source \"{}\" setup --recursive --topic \"{}\"{}{}",
         kb_path.display(),
         source_path.display(),
         topic,
@@ -129,7 +129,7 @@ pub fn execute(
         },
     );
     println!(
-        "  kb --kb-path \"{}\" build \"{}\"{}{}",
+        "  kb --lib \"{}\" build \"{}\"{}{}",
         kb_path.display(),
         topic_slug,
         if args.force { " --force" } else { "" },
@@ -209,7 +209,7 @@ fn resolve_create_lib(
             let global_kb = commands::init::resolve_user_path(global_kb);
             if arg_lib != global_kb {
                 return Err(anyhow!(
-                    "use either `kb create --lib <A>` or global `--kb-path <A>`, not both with different paths: --lib={} --kb-path={}",
+                    "use either `kb create --lib <A>` or global `--lib <A>`, not both with different paths: --lib={} global --lib={}",
                     arg_lib.display(),
                     global_kb.display()
                 ));
@@ -220,7 +220,7 @@ fn resolve_create_lib(
         (None, Some(global_kb)) => Ok(commands::init::resolve_user_path(global_kb)),
         (None, None) => {
             // v0.7.21 compatibility: `kb create <literature-folder> --topic <topic>`
-            // created `<literature-folder>/knowledgebase` unless a custom kb path was supplied.
+            // created `<literature-folder>/knowledgebase` unless a custom library path was supplied.
             let source_for_legacy = arg_from.or(global_source).or(legacy_source);
             if let Some(source) = source_for_legacy {
                 let source = commands::init::resolve_user_path(source);

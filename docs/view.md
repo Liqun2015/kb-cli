@@ -144,6 +144,25 @@ The topic relationship page includes a return link to:
 index.html
 ```
 
+## LLM launch panel
+
+The regular dashboard includes a visible **启动 LLM** button. It opens the `llm-launch` tab inside `interfaces/html/index.html`.
+
+This panel is a safe handoff aid only. It provides copyable:
+
+```text
+cd <knowledge-base>
+claude
+
+cd <knowledge-base>
+codex
+
+Manager startup prompt
+Worker task prompt
+```
+
+The button does **not** execute shell commands, start an LLM process, call an API, or modify source files. The operator must copy the command/prompt into a terminal or agent interface. This keeps the boundary clear: HTML is a human interface artifact, not an automation runtime.
+
 ## Display-only command box
 
 The sidebar input box in the regular dashboard is intentionally not an LLM chat window and not a bridge to the local shell.

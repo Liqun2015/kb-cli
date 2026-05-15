@@ -63,7 +63,7 @@ The guiding rule is simple:
 ### `kb create --lib <A> --from <B> --about <topic>`
 
 - **Ability:** turn an existing literature/source-material folder into a complete, named, agent-ready LLM Wiki database in one command.
-- **Equivalent stages:** `kb --kb-path <A> --source <B> setup --recursive --topic <topic> -> kb --kb-path <A> build <topic>`.
+- **Equivalent stages:** `kb --lib <A> --source <B> setup --recursive --topic <topic> -> kb --lib <A> build <topic>`.
 - **Primary input:** an existing literature folder supplied with `--from <B>`.
 - **Primary output:** the target LLM Wiki database supplied with `--lib <A>`, with source files organized under `raw/`, deterministic evidence under `processing/`, topic workbench files under `topics/<topic>/`, agent handoff files, and human/agent interface files under `interfaces/`.
 - **Allows LLM:** no. This command still only runs deterministic setup/build stages.
@@ -261,7 +261,7 @@ kb build thermal-metamaterials --dry-run
 - **Single-topic graph mode:** `kb view --relations --topic <topic>` writes a filtered relation graph for only the requested topic. It does not keep unrelated global/topic data in the JSON.
 - **Data-only export:** `kb view --relations --data-only` writes only `relationship_data.json`.
 - **Primary input:** regular dashboard reads `wiki/`, `processing/refs/`, `processing/keywords/`, `interfaces/reports/`, `LLM/tasks/`, and `LLM/memory/`; relation mode reads `topics/` and, when `--topic` is provided, the selected topic workspace.
-- **Allows LLM:** no.
+- **Allows LLM:** no hidden call. The regular dashboard includes a safe **启动 LLM** launch panel with copyable external-agent commands/prompts, but the viewer itself never starts an LLM, executes shell commands, or modifies files.
 - **Deferred work:** relationship edges marked candidate, ambiguous, missing, or `needs_llm_review` are review inputs for Manager/Worker LLM workflows. The viewer itself is display-only and must not execute local commands or interpret natural language.
 - **Boundary:** do not add a separate `kb view-relations` command; topic relationship viewing belongs under `kb view --relations`.
 
@@ -508,7 +508,7 @@ If `--topic` is omitted, the source directory name becomes the default topic.
 When initializing a blank database:
 
 ```bash
-kb --kb-path MyKnowledgeBase init
+kb --lib MyKnowledgeBase init
 ```
 
-If `--topic` is omitted, the database directory name becomes the default topic. Running `kb init` without `--kb-path` now exits with a prompt instead of silently creating `knowledgebase/`.
+If `--topic` is omitted, the database directory name becomes the default topic. Running `kb init` without `--lib` now exits with a prompt instead of silently creating `knowledgebase/`.

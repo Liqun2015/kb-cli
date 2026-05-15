@@ -6,7 +6,23 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.22`
+Current version: `v0.7.24`
+
+### v0.7.24
+
+Library Flag release. The global library selector is now `--lib` across the CLI. This aligns every command with the explicit create syntax:
+
+```bash
+kb create --lib <A> --from <B> --about <topic>
+kb --lib <A> view
+kb --lib <A> build <topic>
+```
+
+`--lib` means “the target LLM Wiki library/database directory.”
+
+### v0.7.23
+
+LLM Launch Panel release. `kb view` now adds a safe **启动 LLM** button to `interfaces/html/index.html`. It opens a static panel with copyable Claude Code / Codex launch commands and bounded Manager/Worker prompts. The HTML still does not execute shell commands or call an LLM; it only helps the operator start an external agent deliberately.
 
 ### v0.7.22
 
@@ -19,8 +35,8 @@ kb create --lib <A> --from <B> --about <topic>
 This is equivalent to:
 
 ```bash
-kb --kb-path <A> --source <B> setup --recursive --topic <topic>
-kb --kb-path <A> build <topic>
+kb --lib <A> --source <B> setup --recursive --topic <topic>
+kb --lib <A> build <topic>
 ```
 
 `setup` and `build` are still available when debugging or rerunning only part of the workflow.
@@ -52,8 +68,8 @@ kb create --lib <A> --from <B> --about <topic>
 Expanded form:
 
 ```bash
-kb --kb-path <A> --source <B> setup --recursive --topic <topic>
-kb --kb-path <A> build <topic>
+kb --lib <A> --source <B> setup --recursive --topic <topic>
+kb --lib <A> build <topic>
 ```
 
 ### v0.7.17
@@ -172,8 +188,8 @@ topics/<topic>/handoff/adapters/<agent>.md
 Build-time topic defaults remain explicit:
 
 - `kb --source <literature-dir> setup` defaults the topic to the source directory name when `--topic` is omitted.
-- `kb --kb-path <database-name> init` defaults the topic to the database directory name when `--topic` is omitted.
-- `kb init` without `--kb-path` exits with a prompt instead of silently creating `knowledgebase/`.
+- `kb --lib <database-name> init` defaults the topic to the database directory name when `--topic` is omitted.
+- `kb init` without `--lib` exits with a prompt instead of silently creating `knowledgebase/`.
 
 External agents should read `AGENTS.md`, process one bounded task at a time, and leave changes for human diff review.
 
@@ -247,7 +263,7 @@ The original literature folder remains the human source-material pile. The gener
 init -> ingest -> extract-metadata -> build-wiki
 ```
 
-Safe copy mode remains the default unless `--move` is explicitly provided. `kb bootstrap` remains available as a compatibility alias for `kb setup`. Advanced users can still use `--kb-path` to initialize or operate on a specific knowledge base directory.
+Safe copy mode remains the default unless `--move` is explicitly provided. `kb bootstrap` remains available as a compatibility alias for `kb setup`. Advanced users can still use `--lib` to initialize or operate on a specific knowledge base directory.
 
 ## LLM Wiki Root Marker
 
@@ -460,8 +476,8 @@ kb create --lib "$HOME/github/LLM-wiki/quantum-kb" --from "$HOME/github/LLM-wiki
 Expanded two-step form:
 
 ```bash
-kb --kb-path <A> --source <B> setup --recursive --topic <topic>
-kb --kb-path <A> build <topic>
+kb --lib <A> --source <B> setup --recursive --topic <topic>
+kb --lib <A> build <topic>
 ```
 
 This creates:
@@ -487,8 +503,8 @@ By default, `create` copies files into `<A>/raw/`. Use `--move` only when you ex
 Advanced/manual layout remains available:
 
 ```bash
-kb --kb-path /path/to/specific/knowledgebase init
-kb --source /path/to/literature-folder --kb-path /path/to/specific/knowledgebase ingest --recursive
+kb --lib /path/to/specific/knowledgebase init
+kb --source /path/to/literature-folder --lib /path/to/specific/knowledgebase ingest --recursive
 ```
 
 ## Core Workflow
@@ -497,7 +513,7 @@ The expected workflow is:
 
 1. Keep source materials in the original literature folder
 2. Use `kb create --lib <A> --from <B> --about <topic>` to create the target LLM Wiki database, copy materials into `<A>/raw/`, and run the deterministic build pipeline
-3. Use `kb --kb-path <A> --source <B> setup --recursive --topic <topic>` and `kb --kb-path <A> build <topic>` separately only when debugging or rerunning partial stages
+3. Use `kb --lib <A> --source <B> setup --recursive --topic <topic>` and `kb --lib <A> build <topic>` separately only when debugging or rerunning partial stages
 4. Use `LLM/tasks/index.md` as the Manager LLM task dashboard
 5. Build or update Markdown knowledge pages under `wiki/`
 6. Use topic commands to inspect topic-specific relationship workspaces
