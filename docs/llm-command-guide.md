@@ -42,6 +42,7 @@ Use `kb-cli` commands to collect that evidence, then hand bounded evidence to th
 |---|---|---|---|---|---|
 | `kb init` | Create project directories | project root | `raw/`, `wiki/`, `processing/`, `rules/`, `LLM/` | start a new local wiki | none |
 | `kb ingest` | Register/copy raw files | source files, `raw/` | `raw/`, `processing/manifest.json` | summarize newly added sources | source interpretation |
+| `kb create --lib <A> --from <B> --about <topic>` | Run setup --recursive followed by build <topic> | target library, literature folder, topic | full LLM Wiki database with raw/, processing/, topics/, handoff, interfaces/ | open Obsidian or external agent | no LLM; semantic work deferred |
 | `kb build <topic>` | Run the one-command topic preparation pipeline | initialized workspace, `raw/`, topic name | `processing/text/`, `processing/refs/`, `topics/<topic>/tasks/`, `LLM/handoff/` | enter Claude Code/Codex/Obsidian workflow | semantic interpretation / scholarly confirmation |
 | `kb build-wiki` | Generate deterministic wiki skeleton pages | `raw/`, manifest | `wiki/` | draft richer paper/concept pages | semantic summaries |
 | `kb sync-wiki` | Sync wiki front matter back to manifest | `wiki/` | `processing/manifest.json` | audit source traceability | source judgment |

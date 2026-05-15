@@ -1,6 +1,7 @@
 pub mod audit_wiki;
 pub mod build;
 pub mod build_wiki;
+pub mod create;
 pub mod extract_metadata;
 pub mod extract_sections;
 pub mod extract_text;

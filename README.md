@@ -6,7 +6,24 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.20`
+Current version: `v0.7.22`
+
+### v0.7.22
+
+Create Command release. `kb create` is now the recommended one-command path for turning an existing literature folder into a named, agent-ready LLM Wiki database.
+
+```bash
+kb create --lib <A> --from <B> --about <topic>
+```
+
+This is equivalent to:
+
+```bash
+kb --kb-path <A> --source <B> setup --recursive --topic <topic>
+kb --kb-path <A> build <topic>
+```
+
+`setup` and `build` are still available when debugging or rerunning only part of the workflow.
 
 ### v0.7.20
 
@@ -29,8 +46,14 @@ one-command assembly       -> kb build <topic>
 The recommended user path is now:
 
 ```bash
-kb --source <literature-folder> setup --recursive --topic <topic>
-kb build <topic>
+kb create --lib <A> --from <B> --about <topic>
+```
+
+Expanded form:
+
+```bash
+kb --kb-path <A> --source <B> setup --recursive --topic <topic>
+kb --kb-path <A> build <topic>
 ```
 
 ### v0.7.17
@@ -419,40 +442,47 @@ kb
 Turn an existing literature folder into a local LLM Wiki without polluting the original folder:
 
 ```bash
-kb --source /path/to/your/literature-folder setup --recursive
+kb create --lib /path/to/your/llm-wiki --from /path/to/your/literature-folder --about <topic>
 ```
 
 Windows example:
 
 ```powershell
-kb --source "D:\github\LLM-wiki\quantum" setup --recursive
+kb create --lib "D:\github\LLM-wiki\quantum-kb" --from "D:\github\LLM-wiki\quantum" --about quantum
 ```
 
 macOS/Linux example:
 
 ```bash
-kb --source "$HOME/github/LLM-wiki/quantum" setup --recursive
+kb create --lib "$HOME/github/LLM-wiki/quantum-kb" --from "$HOME/github/LLM-wiki/quantum" --about quantum
+```
+
+Expanded two-step form:
+
+```bash
+kb --kb-path <A> --source <B> setup --recursive --topic <topic>
+kb --kb-path <A> build <topic>
 ```
 
 This creates:
 
 ```text
-/path/to/your/literature-folder/knowledgebase/
+/path/to/your/llm-wiki/
 ```
 
-and runs:
+and runs the full pre-LLM preparation path:
 
 ```text
-init -> ingest -> extract-metadata -> build-wiki
+setup --recursive -> build <topic>
 ```
 
 Use preview mode first when working with a large or messy literature directory:
 
 ```bash
-kb --source /path/to/your/literature-folder setup --recursive --preview
+kb create --lib /path/to/your/llm-wiki --from /path/to/your/literature-folder --about <topic> --dry-run
 ```
 
-By default, `setup` copies files into `knowledgebase/raw/`. Use `--move` only when you explicitly want to move source files.
+By default, `create` copies files into `<A>/raw/`. Use `--move` only when you explicitly want to move source files.
 
 Advanced/manual layout remains available:
 
@@ -466,8 +496,8 @@ kb --source /path/to/literature-folder --kb-path /path/to/specific/knowledgebase
 The expected workflow is:
 
 1. Keep source materials in the original literature folder
-2. Use `kb --source <folder> setup --recursive` to create the `knowledgebase/` workspace and copy materials into `knowledgebase/raw/`
-3. Use `kb build <topic>` after setup to generate evidence, topic workbench, tasks, and handoff files
+2. Use `kb create --lib <A> --from <B> --about <topic>` to create the target LLM Wiki database, copy materials into `<A>/raw/`, and run the deterministic build pipeline
+3. Use `kb --kb-path <A> --source <B> setup --recursive --topic <topic>` and `kb --kb-path <A> build <topic>` separately only when debugging or rerunning partial stages
 4. Use `LLM/tasks/index.md` as the Manager LLM task dashboard
 5. Build or update Markdown knowledge pages under `wiki/`
 6. Use topic commands to inspect topic-specific relationship workspaces

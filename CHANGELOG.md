@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.7.22
+
+`v0.7.22` adds `kb create` as the clean one-command path for turning an existing literature folder into an agent-ready LLM Wiki.
+
+- Added `kb create --lib <A> --from <B> --about <topic>`.
+- The preferred form is explicit: `--lib` names the target LLM Wiki database, `--from` names the source-material folder, and `--about` names the topic.
+- `kb create` is equivalent to `kb --kb-path <A> --source <B> setup --recursive --topic <topic>` followed by `kb --kb-path <A> build <topic>`.
+- `setup` and `build` remain available as lower-level commands for debugging or partial reruns.
+
 ## v0.7.20
 
 `v0.7.20` renames the generated non-source artifact layer from `outputs/` to `interfaces/` to better express its purpose as the human-machine and machine-machine communication layer.

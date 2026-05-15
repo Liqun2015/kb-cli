@@ -60,6 +60,23 @@ The guiding rule is simple:
 - **Deferred work:** semantic synthesis, citation reconciliation, OCR/layout repair, and relationship judgment remain explicit LLM/human review tasks.
 - **Compatibility:** `kb bootstrap` remains available as an older alias, but documentation should prefer `kb setup`.
 
+### `kb create --lib <A> --from <B> --about <topic>`
+
+- **Ability:** turn an existing literature/source-material folder into a complete, named, agent-ready LLM Wiki database in one command.
+- **Equivalent stages:** `kb --kb-path <A> --source <B> setup --recursive --topic <topic> -> kb --kb-path <A> build <topic>`.
+- **Primary input:** an existing literature folder supplied with `--from <B>`.
+- **Primary output:** the target LLM Wiki database supplied with `--lib <A>`, with source files organized under `raw/`, deterministic evidence under `processing/`, topic workbench files under `topics/<topic>/`, agent handoff files, and human/agent interface files under `interfaces/`.
+- **Allows LLM:** no. This command still only runs deterministic setup/build stages.
+- **Deferred work:** OCR repair, paper-card semantic completion, relation confirmation, concept-page writing, and synthesis remain external-agent or human-review tasks.
+- **Useful options:** `--lib`, `--from`, `--about`, `--move`, `--force`, `--dry-run`, `--limit`.
+
+Examples:
+
+```bash
+kb create --lib D:\LLM-wiki\thermal --from D:\Literatures\thermal-metamaterials --about thermal-metamaterials
+kb create --lib D:\LLM-wiki\thermal --from D:\Literatures\thermal-metamaterials --about thermal-metamaterials --dry-run
+```
+
 
 ### `kb build <topic>`
 

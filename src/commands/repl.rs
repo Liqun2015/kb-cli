@@ -133,6 +133,7 @@ fn is_known_batch_command(command: &str) -> bool {
             | "ingest"
             | "setup"
             | "bootstrap"
+            | "create"
             | "build"
             | "assemble"
             | "build-wiki"

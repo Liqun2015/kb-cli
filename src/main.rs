@@ -44,6 +44,11 @@ enum Commands {
     )]
     Setup(commands::ingest::SetupArgs),
     #[command(
+        name = "create",
+        about = "Create a full LLM Wiki library from source materials: setup --recursive, then build <topic>"
+    )]
+    Create(commands::create::CreateArgs),
+    #[command(
         name = "build",
         visible_alias = "assemble",
         about = "Run the one-command deterministic pipeline that prepares a topic for LLM Wiki agents"
@@ -135,6 +140,9 @@ fn main() -> anyhow::Result<()> {
         Some(Commands::Setup(args)) => {
             commands::ingest::execute_setup(cli.kb_path.as_deref(), cli.source.as_deref(), args)
         }
+        Some(Commands::Create(args)) => {
+            commands::create::execute(cli.kb_path.as_deref(), cli.source.as_deref(), args)
+        }
         Some(Commands::Build(args)) => commands::build::execute(cli.kb_path.as_deref(), args),
         Some(Commands::BuildWiki) => commands::build_wiki::execute(cli.kb_path.as_deref()),
         Some(Commands::Query(args)) => commands::query::execute(cli.kb_path.as_deref(), args),
@@ -193,6 +201,7 @@ fn main() -> anyhow::Result<()> {
                 "       use --source PATH to create PATH/knowledgebase as the default workspace"
             );
             println!("  bootstrap                   Compatibility alias for setup");
+            println!("  create --lib <A> --from <B> --about <topic>  Create a library from a literature folder, then build it");
             println!("  extract-metadata [--force]  Extract PDF metadata");
             println!("  extract-text [--dry-run|--preview] [--force] [--json]  Extract text into processing/text");
             println!("  extract-sections [--dry-run|--preview] [--force] [--json]  Slice Introduction/References into processing/sections");
