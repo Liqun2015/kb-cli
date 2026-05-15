@@ -6,7 +6,72 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.15`
+Current version: `v0.7.18`
+
+### v0.7.18
+
+Remove Legacy Prepare release. The old top-level `kb prepare` command and the legacy `kb topic prepare <topic>` alias have been removed from the active CLI. Their responsibilities are now handled by the clearer build pipeline:
+
+```text
+raw/source handling        -> kb setup / kb ingest / kb status
+text and section evidence  -> kb extract-text / kb extract-sections
+reference candidates       -> kb refs / kb refs-index / kb refs-graph
+topic importance/relations -> kb topic build <topic>
+topic task handoff         -> kb topic tasks <topic>
+agent/Obsidian entrypoints -> kb handoff / kb topic handoff <topic>
+one-command assembly       -> kb build <topic>
+```
+
+The recommended user path is now:
+
+```bash
+kb --source <literature-folder> setup --recursive --topic <topic>
+kb build <topic>
+```
+
+### v0.7.17
+
+Workflow naming realignment release. The second, topic-specific LLM Wiki workflow moved from old `prepare` wording to `build` wording. `kb topic build <topic>` became the preferred wrapper for topic-local importance ranking plus directed relation graph compilation. In v0.7.18 the legacy alias was removed from the active CLI.
+
+The two recommended workflows are now:
+
+```text
+Workflow 1: init/setup -> build global evidence and generic citation/reference layers -> inspect with kb view
+Workflow 2: kb topic build <topic> -> kb topic review/tasks/handoff -> inspect with kb view --relations --topic <topic>
+```
+
+For the complete post-setup assembly, continue to use:
+
+```bash
+kb build thermal-metamaterials
+```
+
+### v0.7.16
+
+One-command build pipeline release. `kb build <topic>` now bundles the deterministic post-setup preparation sequence into a single command that prepares text evidence, reference candidates, topic graph/review/tasks, and all generic/agent-specific handoff files.
+
+```bash
+kb build thermal-metamaterials
+kb build thermal-metamaterials --force
+kb build thermal-metamaterials --dry-run
+```
+
+Equivalent expanded pipeline:
+
+```bash
+kb extract-text
+kb extract-sections
+kb refs
+kb refs-index
+kb refs-graph
+kb topic build thermal-metamaterials
+kb topic review thermal-metamaterials
+kb topic tasks thermal-metamaterials
+kb handoff --all-agents
+kb topic handoff thermal-metamaterials --all-agents
+```
+
+The single command remains deterministic: it does not call an LLM and does not confirm scholarly relations. The individual commands remain available for debugging or partial rebuilds.
 
 ### v0.7.15
 
@@ -103,7 +168,7 @@ opens the concrete directed relation graph for only that topic. The generated `r
 
 ### v0.7.9
 
-Topic Prepare release. `kb topic prepare <topic>` is now the user-level wrapper for the topic workflow: it runs topic-local importance ranking and topic relation graph compilation in one step. It pairs:
+Topic build precursor release. Historically, this release introduced the user-level wrapper for the topic workflow: it runs topic-local importance ranking and topic relation graph compilation in one step. It pairs:
 
 ```bash
 kb topic rank <topic>
@@ -113,9 +178,11 @@ kb topic relations <topic>
 into:
 
 ```bash
-kb topic prepare <topic>
+kb topic build <topic>
 kb view --relations --topic <topic>
 ```
+
+In `v0.7.17`, the preferred command name for this second workflow became `kb topic build <topic>`. In `v0.7.18`, the old alias was removed from the active CLI.
 
 `kb topic relations <topic>` compiles directed relation rows from `topics/<topic>/relations/*.md` and writes graph artifacts under `topics/<topic>/graph/`. It does not call an LLM or decide final scholarly claims.
 
@@ -282,7 +349,7 @@ This version defines the review workflow that connects `kb topic rank <topic>` o
 `kb-cli` starts from Andrej Karpathy's proposal for operating a local knowledge base in Markdown:
 
 - source materials are kept under `raw/`
-- `kb prepare` generates reviewable task materials
+- `kb build <topic>` generates reviewable topic tasks, handoff files, and agent/Obsidian entry points
 - Markdown knowledge pages are maintained under `wiki/`
 - future human/AI maintainers are constrained by the `rules/` layer
 
@@ -397,11 +464,11 @@ The expected workflow is:
 
 1. Keep source materials in the original literature folder
 2. Use `kb --source <folder> setup --recursive` to create the `knowledgebase/` workspace and copy materials into `knowledgebase/raw/`
-3. Use `kb prepare` or `kb tasks` to generate reviewable task materials
+3. Use `kb build <topic>` after setup to generate evidence, topic workbench, tasks, and handoff files
 4. Use `LLM/tasks/index.md` as the Manager LLM task dashboard
 5. Build or update Markdown knowledge pages under `wiki/`
 6. Use topic commands to inspect topic-specific relationship workspaces
-7. Use `kb topic prepare <topic>` to run topic-local importance ranking and relation graph compilation
+7. Use `kb topic build <topic>` to run topic-local importance ranking and relation graph compilation
 8. Use `kb view --relations` to inspect all topic workspaces, then `kb view --relations --topic <topic>` to inspect one topic graph
 9. Use `kb topic review <topic>` to build a review queue from candidates when needed
 10. Use `kb topic tasks <topic>` to generate topic-local Worker handoff files
@@ -417,8 +484,8 @@ This workflow is not meant to replace human judgment. It is meant to make AI-ass
 | `kb init` | Create the local LLM Wiki structure and generated rules layer. |
 | `kb ingest --copy` | Organize source files into `raw/` subfolders. |
 | `kb --source <folder> setup --recursive` | Create `<folder>/knowledgebase`, then run `init + ingest + extract-metadata + build-wiki`. |
+| `kb build <topic>` | Run the one-command deterministic pipeline: extract text/sections, build refs, assemble topic review/tasks, and generate all handoff files. |
 | `kb status` | Refresh and inspect `processing/manifest.json`. |
-| `kb prepare --new` | Generate reviewable task materials without calling an LLM. |
 | `kb sync-wiki` | Link accepted wiki pages back to the manifest. |
 | `kb lint-static` | Check broken WikiLinks, orphan pages, empty pages, and source-front-matter issues. |
 | `kb query <terms...>` | Search Markdown pages with local keyword matching. |
@@ -438,7 +505,7 @@ This workflow is not meant to replace human judgment. It is meant to make AI-ass
 | `kb topic status <topic>` | Inspect a topic workspace. |
 | `kb topic rank <topic>` | Generate deterministic topic-local importance candidates. |
 | `kb topic relations <topic>` | Compile topic-local directed relation records into graph artifacts. |
-| `kb topic prepare <topic>` | Run topic ranking and relation graph compilation together. |
+| `kb topic build <topic>` | Run topic ranking and relation graph compilation together. |
 | `kb topic review <topic>` | Build a deterministic review queue from topic-local candidates. |
 | `kb topic tasks <topic>` | Generate topic-local Manager/Worker LLM handoff tasks. |
 | `kb view` | Generate and open the static HTML review dashboard. |

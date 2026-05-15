@@ -79,7 +79,6 @@ The index summarizes:
 
 - pending Worker task items
 - topic review queues
-- prepare agent prompts
 - older handoff reports and audit-review tasks
 - recommended Manager → Worker → human review loop
 

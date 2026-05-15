@@ -127,9 +127,9 @@ Generated placeholder links that previously caused guaranteed broken-link noise,
 ## Intended workflow
 
 ```text
-kb prepare --new
+kb build <topic>
         ↓
-AI/human writes source-linked wiki Markdown
+AI/human works from topic task files and writes source-linked wiki Markdown
         ↓
 kb sync-wiki
         ↓

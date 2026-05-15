@@ -43,14 +43,14 @@ enum Commands {
         about = "Set up a knowledge base: init, ingest, extract metadata, and build wiki"
     )]
     Setup(commands::ingest::SetupArgs),
+    #[command(
+        name = "build",
+        visible_alias = "assemble",
+        about = "Run the one-command deterministic pipeline that prepares a topic for LLM Wiki agents"
+    )]
+    Build(commands::build::BuildArgs),
     #[command(about = "Build Wiki from raw materials")]
     BuildWiki,
-    #[command(
-        name = "prepare",
-        alias = "compile",
-        about = "Prepare LLM/wiki handoff artifacts from raw files without calling an LLM"
-    )]
-    Prepare(commands::prepare::PrepareArgs),
     #[command(about = "Search wiki Markdown pages with local keyword matching")]
     Query(commands::query::QueryArgs),
     #[command(
@@ -135,8 +135,8 @@ fn main() -> anyhow::Result<()> {
         Some(Commands::Setup(args)) => {
             commands::ingest::execute_setup(cli.kb_path.as_deref(), cli.source.as_deref(), args)
         }
+        Some(Commands::Build(args)) => commands::build::execute(cli.kb_path.as_deref(), args),
         Some(Commands::BuildWiki) => commands::build_wiki::execute(cli.kb_path.as_deref()),
-        Some(Commands::Prepare(args)) => commands::prepare::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Query(args)) => commands::query::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Links(args)) => commands::links::execute(cli.kb_path.as_deref(), args),
         Some(Commands::Keywords(args)) => commands::keywords::execute(cli.kb_path.as_deref(), args),
@@ -196,8 +196,9 @@ fn main() -> anyhow::Result<()> {
             println!("  extract-metadata [--force]  Extract PDF metadata");
             println!("  extract-text [--dry-run|--preview] [--force] [--json]  Extract text into processing/text");
             println!("  extract-sections [--dry-run|--preview] [--force] [--json]  Slice Introduction/References into processing/sections");
+            println!("  build <topic> [--force] [--dry-run]  Run extract/ref/topic/task/handoff pipeline for one topic");
+            println!("  assemble <topic>            Compatibility alias for build");
             println!("  build-wiki                  Build wiki pages");
-            println!("  prepare [--new|--file PATH] [--dry-run|--preview]  Prepare LLM/wiki handoff artifacts");
             println!("  query <terms...> [--limit N] [--snippets N] [--json] [--title-only]  Search wiki Markdown pages");
             println!("  links [--unresolved|--ambiguous|--resolved] [--json]  Scan wiki WikiLinks and resolution hints");
             println!("  keywords [terms...] [--path PATH] [--json] [--dry-run]  Detect keyword/topic relation candidates");
@@ -217,7 +218,7 @@ fn main() -> anyhow::Result<()> {
             );
             println!("  topic rank <topic> [--json] [--dry-run]  Generate topic-local importance candidates");
             println!("  topic relations <topic> [--json] [--dry-run]  Compile directed topic relations into graph artifacts");
-            println!("  topic prepare <topic> [--limit N] [--json] [--dry-run]  Run rank + relations for a topic");
+            println!("  topic build <topic> [--limit N] [--json] [--dry-run]  Run rank + relations for a topic");
             println!(
                 "  topic review <topic> [--json] [--dry-run] [--force]  Build a topic review queue"
             );

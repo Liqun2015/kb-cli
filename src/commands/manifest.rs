@@ -253,7 +253,7 @@ pub fn print_summary(summary: &ManifestSummary, dry_run: bool) {
 
     if summary.unprocessed_files > 0 {
         println!(
-            "\nNext: run `kb status --unprocessed` to list files awaiting future prepare work."
+            "\nNext: run `kb build <topic>` after text extraction and topic selection, or `kb status --unprocessed` to inspect unprocessed raw files."
         );
     }
 }

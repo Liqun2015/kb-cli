@@ -1,6 +1,6 @@
 # Generic Agent Handoff
 
-`kb-cli v0.7.15` treats handoff as a generic external-agent protocol. Claude Code, OpenCode, OpenClaw, and Codex are adapters, not the core protocol.
+`kb-cli v0.7.18` treats handoff as a generic external-agent protocol. Claude Code, OpenCode, OpenClaw, and Codex are adapters, not the core protocol.
 
 ## Human and Manager entry points
 

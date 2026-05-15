@@ -273,7 +273,7 @@ fn check_wiki_pages(wiki_pages: &[PathBuf]) -> HealthCheck {
             summary: "No Markdown wiki pages found under wiki/.".to_string(),
             evidence: vec!["wiki/ contains no Markdown pages".to_string()],
             recommended_next: vec![
-                "Run `kb build-wiki` or use `kb prepare` to create bounded wiki-writing tasks."
+                "Run `kb build <topic>` to create topic tasks and handoff files, or `kb build-wiki` for deterministic wiki skeletons."
                     .to_string(),
             ],
         }
@@ -623,7 +623,7 @@ fn build_deferred_tasks(
             target_agent: "Wiki Drafting Worker".to_string(),
             goal: "Create initial reviewable wiki pages only after Manager LLM selects bounded source files.".to_string(),
             requirements: vec![
-                "Use kb prepare or an explicit task file before editing wiki/.".to_string(),
+                "Use `kb topic tasks <topic>` or an explicit task file before editing wiki/.".to_string(),
                 "Include source_files and source_ids front matter when possible.".to_string(),
                 "Do not invent claims that are not supported by evidence.".to_string(),
             ],

@@ -465,7 +465,7 @@ fn add_topic_relationships(
                     .to_string(),
             );
         } else {
-            warnings.push("No topics/ directory found; run `kb topic init <topic>` or `kb topic prepare <topic>` first.".to_string());
+            warnings.push("No topics/ directory found; run `kb topic init <topic>` or `kb topic build <topic>` first.".to_string());
         }
         return Ok(Vec::new());
     }
@@ -481,7 +481,7 @@ fn add_topic_relationships(
     if let Some(slug) = &requested_slug {
         if !topics_dir.join(slug).exists() {
             warnings.push(format!(
-                "Requested topic `{}` was not found under topics/. Run `kb topic prepare {}` first.",
+                "Requested topic `{}` was not found under topics/. Run `kb topic build {}` first.",
                 slug, slug
             ));
             return Ok(Vec::new());

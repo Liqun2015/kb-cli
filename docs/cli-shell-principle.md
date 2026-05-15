@@ -39,7 +39,7 @@ Likewise, deterministic commands should keep the same meaning across modes:
 |---|---|
 | `kb init` | `kb> init` |
 | `kb ingest` | `kb> ingest` |
-| `kb prepare` | `kb> prepare` |
+| `kb build <topic>` | `kb> build <topic>` |
 | `kb build-wiki` | `kb> build-wiki` |
 | `kb sync-wiki` | `kb> sync-wiki` |
 | `kb lint-static` | `kb> lint-static` |

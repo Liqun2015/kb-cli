@@ -1,6 +1,6 @@
 # LLM Command Guide
 
-Current version: `v0.7.15`
+Current version: `v0.7.18`
 
 This document is the operating guide for the top-level Manager LLM, external agent sessions, Claude Code sessions, Codex sessions, Obsidian users, and human operators who use `kb-cli` as a structured command layer.
 
@@ -42,7 +42,7 @@ Use `kb-cli` commands to collect that evidence, then hand bounded evidence to th
 |---|---|---|---|---|---|
 | `kb init` | Create project directories | project root | `raw/`, `wiki/`, `processing/`, `rules/`, `LLM/` | start a new local wiki | none |
 | `kb ingest` | Register/copy raw files | source files, `raw/` | `raw/`, `processing/manifest.json` | summarize newly added sources | source interpretation |
-| `kb prepare` | Generate reviewable writing/task materials | manifest, raw records | `processing/proposals/` | write or update wiki pages | actual wiki writing |
+| `kb build <topic>` | Run the one-command topic preparation pipeline | initialized workspace, `raw/`, topic name | `processing/text/`, `processing/refs/`, `topics/<topic>/tasks/`, `LLM/handoff/` | enter Claude Code/Codex/Obsidian workflow | semantic interpretation / scholarly confirmation |
 | `kb build-wiki` | Generate deterministic wiki skeleton pages | `raw/`, manifest | `wiki/` | draft richer paper/concept pages | semantic summaries |
 | `kb sync-wiki` | Sync wiki front matter back to manifest | `wiki/` | `processing/manifest.json` | audit source traceability | source judgment |
 | `kb lint-static` | Find static wiki problems | `wiki/` | `outputs/reports/` | repair links, sources, isolated pages | semantic link repair |
@@ -56,6 +56,31 @@ Use `kb-cli` commands to collect that evidence, then hand bounded evidence to th
 | `kb tasks` | Generate deferred work lists and task index | project state | `LLM/tasks/index.md`, `LLM/tasks/items/` | assign bounded work to Manager/Worker LLMs | execution of tasks |
 | `kb topic tasks <topic>` | Generate topic-local handoff tasks | `topics/<topic>/` | `topics/<topic>/tasks/index.md`, `topics/<topic>/tasks/items/` | assign bounded topic-local Worker LLM tasks | execution of tasks / scholarly judgment |
 | `kb memory` | Record completed task outcomes | operator input | `LLM/memory/` | inspect project history | validation of quality |
+
+## One-command topic build pipeline
+
+For a newly initialized or setup workspace, prefer the bundled topic preparation command:
+
+```bash
+kb build thermal-metamaterials
+```
+
+This is equivalent to running the deterministic preparation chain:
+
+```bash
+kb extract-text
+kb extract-sections
+kb refs
+kb refs-index
+kb refs-graph
+kb topic build thermal-metamaterials
+kb topic review thermal-metamaterials
+kb topic tasks thermal-metamaterials
+kb handoff --all-agents
+kb topic handoff thermal-metamaterials --all-agents
+```
+
+Use the individual commands when debugging a failed stage or when intentionally rebuilding only part of the workspace. `kb build <topic>` still does not call any LLM; it only prepares evidence, queues, graphs, and handoff files for external agents and human review.
 
 ## Standard Manager-led maintenance loop
 

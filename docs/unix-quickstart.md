@@ -83,22 +83,26 @@ For linting without writing a report, use:
 kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" lint-static --no-report
 ```
 
-## 5. Prepare AI/human handoff artifacts
+## 5. Build AI/human handoff artifacts
 
-`prepare` creates reviewable planning artifacts. It does not call an LLM and does not edit `wiki/`.
+`kb build <topic>` creates reviewable planning, task, and handoff artifacts. It does not call an LLM and does not edit final scholarly claims.
 
 ```bash
 kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" status
-kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" prepare --new --dry-run
-kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" prepare --new
+kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" build <topic> --dry-run
+kb --kb-path "$HOME/github/LLM-wiki/quantum/knowledgebase" build <topic>
 ```
 
 Generated files:
 
 ```text
-processing/prepare_queue.json
-processing/proposals/prepare_plan_<timestamp>.md
-processing/proposals/prepare_agent_prompt_<timestamp>.md
+processing/text/
+processing/sections/
+processing/refs/
+topics/<topic>/tasks/
+topics/<topic>/handoff/
+LLM/handoff/current.md
+obsidian_main.md
 ```
 
 ## 6. Build kb-cli itself when needed

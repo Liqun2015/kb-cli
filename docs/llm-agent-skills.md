@@ -142,7 +142,8 @@ kb extract-text --structure --agent
 Related deterministic foundation:
 
 ```bash
-kb prepare
+kb build <topic>
+kb topic tasks <topic>
 kb query
 kb grep
 kb refs

@@ -58,7 +58,7 @@ Also check the CLI help text:
 
 ```bash
 kb --help
-kb prepare --help
+kb build --help
 kb lint-static --help
 kb query --help
 kb links --help

@@ -100,7 +100,7 @@ kb --source /path/to/literature-folder --kb-path /path/to/literature-folder/know
 kb --kb-path /path/to/literature-folder/knowledgebase extract-metadata
 kb --kb-path /path/to/literature-folder/knowledgebase build-wiki
 kb --kb-path /path/to/literature-folder/knowledgebase status
-kb --kb-path /path/to/literature-folder/knowledgebase prepare --new --dry-run
+kb --kb-path /path/to/literature-folder/knowledgebase build <topic> --dry-run
 ```
 
 ## 7. Inspect manifest status
@@ -117,21 +117,21 @@ The manifest is written to:
 /path/to/literature-folder/knowledgebase/processing/manifest.json
 ```
 
-## 8. Plan prepare work
+## 8. Build topic workbench
 
-After `status` has created `processing/manifest.json`, preview future AI/human wiki-maintenance work:
+After `status` has created `processing/manifest.json`, preview the deterministic topic build pipeline:
 
 ```bash
-kb --kb-path /path/to/literature-folder/knowledgebase prepare --new --dry-run
+kb --kb-path /path/to/literature-folder/knowledgebase build <topic> --dry-run
 ```
 
 Write review artifacts:
 
 ```bash
-kb --kb-path /path/to/literature-folder/knowledgebase prepare --new
+kb --kb-path /path/to/literature-folder/knowledgebase build <topic>
 ```
 
-This writes `processing/prepare_queue.json` and proposal files under `processing/proposals/`. It does not call an LLM or edit `wiki/`.
+This writes deterministic text/reference/topic task and handoff artifacts. It does not call an LLM or edit final scholarly claims.
 
 ## 9. Close the review loop
 
@@ -149,7 +149,7 @@ For linting without writing a report:
 kb --kb-path /path/to/literature-folder lint-static --no-report
 ```
 
-Then run a local keyword query over the prepared wiki:
+Then run a local keyword query over the wiki:
 
 ```bash
 kb --kb-path /path/to/literature-folder query thermal cloak

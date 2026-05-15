@@ -35,7 +35,7 @@ This release establishes manifest tracking. `kb status` must scan `raw/` and mai
 processing/manifest.json
 ```
 
-The manifest is the bridge between the source-material layer and future AI prepare operations. It should track raw files by relative path, source kind, size, SHA-256 content hash, status, first-seen timestamp, and last-seen timestamp; missing raw files should remain as `raw_missing`.
+The manifest is the bridge between the source-material layer and future AI/agent task operations. It should track raw files by relative path, source kind, size, SHA-256 content hash, status, first-seen timestamp, and last-seen timestamp; missing raw files should remain as `raw_missing`.
 
 The rule/schema layer added in v0.2.0 remains required. `kb init` must still generate:
 
@@ -67,7 +67,6 @@ extract-metadata
 extract-text
 build-wiki
 status
-prepare
 sync-wiki
 lint-static
 query
@@ -119,7 +118,7 @@ background daemon
 cloud sync
 ```
 
-`prepare` is implemented only as a review-first planning command. It generates `processing/prepare_queue.json` and `processing/proposals/prepare_plan_*.md`; it does not call an LLM or edit `wiki/`. `query` is implemented as deterministic local keyword search only; `lint-static` is implemented as a deterministic local health check.
+`query` is implemented as deterministic local keyword search only; `lint-static` is implemented as a deterministic local health check.
 
 ## Safety rules for init/ingest/setup
 
@@ -203,7 +202,7 @@ Do not allow commands to silently cross category boundaries. In particular:
 - Deterministic commands must not call LLM APIs.
 - Search and inspection commands should be Rust-native whenever practical and must not require external `grep` or `rg`.
 - Text conversion commands such as `extract-text` may reserve future agent paths, but OCR/LLM/agent modes must be explicit and opt-in.
-- `prepare` generates reviewable task materials; it does not secretly execute LLM work.
+- `build`, `topic tasks`, and `handoff` generate reviewable task materials; they do not secretly execute LLM work.
 
 ## Extract-text future boundary
 
@@ -222,7 +221,7 @@ Use `docs/llm-agent-skills.md` as the place to document those future skill bound
 
 - `extract-text` may feed a future PDF Text Conversion Agent.
 - `refs` may feed a future Reference Reconciliation Agent or Citation Graph Building Agent.
-- `prepare` may feed a future Wiki Drafting / Concept Synthesis Agent.
+- `topic tasks` and `handoff` may feed a future Wiki Drafting / Concept Synthesis Agent.
 
 Do not silently convert deterministic commands into agent commands.
 
@@ -368,7 +367,7 @@ When using `kb topic rank <topic>`, treat the output as a deterministic candidat
 
 ## Topic preparation wrapper rule
 
-Use `kb topic prepare <topic>` when you need to refresh the topic-level graph preparation layer. It wraps:
+Use `kb topic build <topic>` when you need to refresh the topic-level graph build layer. It wraps:
 
 ```text
 kb topic rank <topic>

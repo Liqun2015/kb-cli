@@ -1,4 +1,5 @@
 pub mod audit_wiki;
+pub mod build;
 pub mod build_wiki;
 pub mod extract_metadata;
 pub mod extract_sections;
@@ -16,7 +17,6 @@ pub mod memory;
 pub mod model;
 pub mod model_config;
 pub mod model_switch;
-pub mod prepare;
 pub mod query;
 pub mod refs;
 pub mod refs_graph;

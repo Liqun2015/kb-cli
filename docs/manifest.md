@@ -50,18 +50,18 @@ If a file disappears from `raw/`, its manifest entry is retained with:
 status = raw_missing
 ```
 
-This keeps enough history for future lint/prepare commands to warn about wiki pages whose source file no longer exists.
+This keeps enough history for future lint/build/task commands to warn about wiki pages whose source file no longer exists.
 
 ## Why It Exists
 
-The manifest feeds the prepare-planning stage:
+The manifest feeds the deterministic build pipeline:
 
 ```bash
-kb prepare --new --dry-run
-kb prepare --new
+kb build <topic> --dry-run
+kb build <topic>
 ```
 
-In the current prepare-planning workflow, `kb prepare` compares `raw/` against `processing/manifest.json` and generates a queue/proposal for new or changed files. It does not call an LLM or edit `wiki/` directly.
+The build pipeline uses manifest, extracted text, section evidence, reference candidates, topic tasks, and handoff files to prepare a reviewable LLM Wiki workspace. It does not call an LLM or edit final scholarly claims.
 
 ## Safe Boundary
 

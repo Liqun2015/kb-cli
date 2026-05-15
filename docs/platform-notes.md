@@ -17,7 +17,7 @@ kb init
 kb ingest
 kb build-wiki
 kb status
-kb prepare
+kb build <topic>
 kb sync-wiki
 kb lint-static
 ```

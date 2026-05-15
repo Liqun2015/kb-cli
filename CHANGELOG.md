@@ -1,5 +1,55 @@
 # Changelog
 
+## v0.7.18
+
+`v0.7.18` removes the legacy prepare command path from the active CLI. The old `kb prepare` workflow had already been split across deterministic build stages, topic tasks, and handoff generation; keeping it as a command caused workflow ambiguity.
+
+### Removed
+
+- Removed top-level `kb prepare` and its `compile` alias from the CLI.
+- Removed the `kb topic prepare <topic>` legacy alias. Use `kb topic build <topic>`.
+- Removed `src/commands/prepare.rs` from the command module list.
+- Removed prepare-prompt collection from `kb tasks`; topic-level task files are now the primary Worker handoff unit.
+
+### Changed
+
+- Renamed internal topic-build args/report types from `TopicPrepare*` to `TopicBuild*`.
+- Updated docs and help text to route users through `kb build <topic>`, `kb topic build <topic>`, `kb topic tasks <topic>`, and handoff files.
+- Existing historical changelog entries still document earlier releases, but active workflow docs no longer recommend `prepare`.
+
+## v0.7.17
+
+`v0.7.17` realigns workflow naming around `build`. The second, topic-specific workflow is now expressed as `kb topic build <topic>` rather than `kb topic prepare <topic>`.
+
+### Added
+
+- Added `kb topic build <topic>` as the preferred wrapper for `kb topic rank <topic>` + `kb topic relations <topic>`.
+
+### Changed
+
+- Updated `kb build <topic>` to call and display the `topic build` stage.
+- Clarified that top-level `kb prepare` is a low-level raw-file wiki writing queue, not the main LLM Wiki assembly workflow.
+- Updated README and command docs so the two main workflows are described as setup/init plus build-based topic assembly.
+
+### Compatibility
+
+- Kept `kb topic prepare <topic>` as a legacy compatibility alias for older scripts and notes.
+- Kept top-level `kb prepare` available for raw-file-level proposal queues.
+
+## v0.7.16
+
+`v0.7.16` adds a one-command deterministic build pipeline for preparing an initialized LLM Wiki topic for humans and external agents.
+
+### Added
+
+- Added `kb build <topic>` with alias `kb assemble <topic>`.
+- The pipeline originally ran `extract-text`, `extract-sections`, `refs`, `refs-index`, `refs-graph`, `topic prepare`, `topic review`, `topic tasks`, `handoff --all-agents`, and `topic handoff <topic> --all-agents` in order. In v0.7.17, the topic stage is named `topic build` while `topic prepare` remains a legacy alias.
+- Added pipeline controls: `--dry-run`, `--force`, `--skip-extract`, `--skip-refs`, `--skip-review`, `--skip-tasks`, `--skip-handoff`, `--limit`, `--title`, and `--no-init`.
+
+### Boundary
+
+- `kb build <topic>` still performs only deterministic preparation. It does not call an LLM, does not confirm scholarly relations, and does not replace the individual commands used for debugging.
+
 ## v0.7.15
 
 `v0.7.15` adds unified entry points for humans and external Manager agents.

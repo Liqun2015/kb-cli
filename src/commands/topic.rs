@@ -22,8 +22,10 @@ pub enum TopicCommand {
     Rank(TopicRankArgs),
     #[command(about = "Compile topic-local directed relation records into graph artifacts")]
     Relations(TopicRelationsArgs),
-    #[command(about = "Prepare a topic graph by running topic rank and topic relations")]
-    Prepare(TopicPrepareArgs),
+    #[command(
+        about = "Build a topic graph preparation layer by running topic rank and topic relations"
+    )]
+    Build(TopicBuildArgs),
     #[command(about = "Build a deterministic review queue from topic-local importance candidates")]
     Review(TopicReviewArgs),
     #[command(
@@ -141,8 +143,8 @@ pub struct TopicRelationsArgs {
 }
 
 #[derive(Debug, Clone, Args)]
-pub struct TopicPrepareArgs {
-    #[arg(value_name = "TOPIC", help = "Topic name or slug to prepare")]
+pub struct TopicBuildArgs {
+    #[arg(value_name = "TOPIC", help = "Topic name or slug to build")]
     pub topic: String,
 
     #[arg(
@@ -165,13 +167,13 @@ pub struct TopicPrepareArgs {
     )]
     pub no_init: bool,
 
-    #[arg(long, help = "Preview topic preparation without writing files")]
+    #[arg(long, help = "Preview topic build without writing files")]
     pub dry_run: bool,
 
     #[arg(long, help = "Alias for --dry-run")]
     pub preview: bool,
 
-    #[arg(long, help = "Print a machine-readable JSON topic preparation report")]
+    #[arg(long, help = "Print a machine-readable JSON topic build report")]
     pub json: bool,
 }
 
@@ -275,7 +277,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &TopicArgs) -> Result<()> {
         TopicCommand::Status(status_args) => execute_status(custom_kb, status_args),
         TopicCommand::Rank(rank_args) => execute_rank(custom_kb, rank_args),
         TopicCommand::Relations(relations_args) => execute_relations(custom_kb, relations_args),
-        TopicCommand::Prepare(prepare_args) => execute_prepare(custom_kb, prepare_args),
+        TopicCommand::Build(build_args) => execute_topic_build(custom_kb, build_args),
         TopicCommand::Review(review_args) => execute_review(custom_kb, review_args),
         TopicCommand::Tasks(tasks_args) => execute_tasks(custom_kb, tasks_args),
         TopicCommand::Handoff(handoff_args) => execute_handoff(custom_kb, handoff_args),
@@ -347,7 +349,7 @@ struct TopicGraphEdge {
 }
 
 #[derive(Debug, serde::Serialize)]
-struct TopicPrepareReport {
+struct TopicBuildReport {
     schema_version: String,
     generated_by: String,
     generated_at: String,
@@ -964,7 +966,7 @@ fn execute_relations(custom_kb: Option<&Path>, args: &TopicRelationsArgs) -> Res
     Ok(())
 }
 
-fn execute_prepare(custom_kb: Option<&Path>, args: &TopicPrepareArgs) -> Result<()> {
+fn execute_topic_build(custom_kb: Option<&Path>, args: &TopicBuildArgs) -> Result<()> {
     let kb_path = crate::commands::init::get_kb_path(custom_kb);
     let slug = topic_slug(&args.topic);
     if slug.is_empty() {
@@ -976,6 +978,7 @@ fn execute_prepare(custom_kb: Option<&Path>, args: &TopicPrepareArgs) -> Result<
     let dry_run = args.dry_run || args.preview;
     let mut initialized_missing_workspace = false;
     let mut warnings = Vec::new();
+    let generated_by = "kb-cli topic build";
 
     if !topic_root.exists() {
         if args.no_init {
@@ -988,7 +991,7 @@ fn execute_prepare(custom_kb: Option<&Path>, args: &TopicPrepareArgs) -> Result<
         initialized_missing_workspace = true;
         if dry_run {
             warnings.push(format!(
-                "topic workspace would be initialized before preparation: topics/{slug}/"
+                "topic workspace would be initialized before topic build: topics/{slug}/"
             ));
         } else {
             let title = args
@@ -1000,9 +1003,9 @@ fn execute_prepare(custom_kb: Option<&Path>, args: &TopicPrepareArgs) -> Result<
     }
 
     if dry_run {
-        let report = TopicPrepareReport {
-            schema_version: "topic-prepare.v0.7.10".to_string(),
-            generated_by: "kb-cli topic prepare".to_string(),
+        let report = TopicBuildReport {
+            schema_version: "topic-build.v0.7.17".to_string(),
+            generated_by: generated_by.to_string(),
             generated_at: chrono::Utc::now().to_rfc3339(),
             topic_slug: slug.clone(),
             topic_path: relative_path_string(&kb_path, &topic_root),
@@ -1025,7 +1028,7 @@ fn execute_prepare(custom_kb: Option<&Path>, args: &TopicPrepareArgs) -> Result<
         if args.json {
             println!("{}", serde_json::to_string_pretty(&report)?);
         } else {
-            print_prepare_report(&report);
+            print_build_report(&report);
         }
         return Ok(());
     }
@@ -1045,9 +1048,9 @@ fn execute_prepare(custom_kb: Option<&Path>, args: &TopicPrepareArgs) -> Result<
     write_topic_relations_report(&kb_path, &slug, &mut relations_report)?;
     warnings.extend(relations_report.warnings.clone());
 
-    let report = TopicPrepareReport {
-        schema_version: "topic-prepare.v0.7.10".to_string(),
-        generated_by: "kb-cli topic prepare".to_string(),
+    let report = TopicBuildReport {
+        schema_version: "topic-build.v0.7.17".to_string(),
+        generated_by: generated_by.to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         topic_slug: slug.clone(),
         topic_path: relative_path_string(&kb_path, &topic_root),
@@ -1071,7 +1074,7 @@ fn execute_prepare(custom_kb: Option<&Path>, args: &TopicPrepareArgs) -> Result<
     if args.json {
         println!("{}", serde_json::to_string_pretty(&report)?);
     } else {
-        print_prepare_report(&report);
+        print_build_report(&report);
     }
     Ok(())
 }
@@ -1162,7 +1165,7 @@ fn build_topic_relations_report(
 
     let next_steps = vec![
         format!("Edit topics/{slug}/relations/*.md to add evidence-backed directed paper-to-paper relations."),
-        format!("Run `kb topic prepare {slug}` after changing literature, importance, or relation files."),
+        format!("Run `kb topic build {slug}` after changing literature, importance, or relation files."),
         format!("Inspect with `kb view --relations --topic {slug}`."),
     ];
 
@@ -1566,8 +1569,8 @@ fn print_relations_report(report: &TopicRelationsReport) {
     }
 }
 
-fn print_prepare_report(report: &TopicPrepareReport) {
-    println!("Topic prepare:");
+fn print_build_report(report: &TopicBuildReport) {
+    println!("Topic build:");
     println!("  topic             : {}", report.topic_slug);
     println!("  path              : {}", report.topic_path);
     println!(
@@ -1747,7 +1750,7 @@ fn build_topic_tasks_report(
             source_command: format!("kb topic rank {slug}"),
             expected_output: vec![
                 format!("A usable `topics/{slug}/literature.md` table with paper, role, status, and notes."),
-                format!("Then run `kb topic prepare {slug}`."),
+                format!("Then run `kb topic build {slug}`."),
             ],
             review_rule: "A human or Manager LLM should reject papers that do not match scope.md before running importance review.".to_string(),
         });
@@ -1768,7 +1771,7 @@ fn build_topic_tasks_report(
             goal: "Generate topic-local importance candidates from the curated literature table."
                 .to_string(),
             requirements: vec![
-                format!("Run `kb topic rank {slug}` or `kb topic prepare {slug}`."),
+                format!("Run `kb topic rank {slug}` or `kb topic build {slug}`."),
                 "Treat generated scores as candidates only.".to_string(),
                 "Do not use ranking output as final scholarly authority.".to_string(),
             ],
@@ -1839,7 +1842,7 @@ fn build_topic_tasks_report(
             source_command: format!("kb topic relations {slug}"),
             expected_output: vec![
                 format!("Evidence-backed rows in `topics/{slug}/relations/*.md`."),
-                format!("Then run `kb topic prepare {slug}` and inspect `kb view --relations --topic {slug}`."),
+                format!("Then run `kb topic build {slug}` and inspect `kb view --relations --topic {slug}`."),
             ],
             review_rule: "Worker output remains candidate-level until reviewed; confirmed relations require explicit acceptance.".to_string(),
         });
@@ -1877,7 +1880,7 @@ fn build_topic_tasks_report(
             target_agent: "Manager LLM / deterministic CLI operator".to_string(),
             goal: "Compile the topic graph artifacts so the Manager LLM and human reviewer can inspect the relation structure visually.".to_string(),
             requirements: vec![
-                format!("Run `kb topic relations {slug}` or `kb topic prepare {slug}`."),
+                format!("Run `kb topic relations {slug}` or `kb topic build {slug}`."),
                 format!("Inspect the result with `kb view --relations --topic {slug}`."),
                 "Treat dashed/candidate edges as unresolved review items.".to_string(),
             ],
@@ -1890,7 +1893,7 @@ fn build_topic_tasks_report(
                 graph_json.exists(),
                 graph_md.exists()
             )],
-            source_command: format!("kb topic prepare {slug}"),
+            source_command: format!("kb topic build {slug}"),
             expected_output: vec![
                 format!("`topics/{slug}/graph/topic_graph.json`."),
                 format!("`topics/{slug}/graph/topic_graph.md`."),
@@ -1944,7 +1947,7 @@ fn build_topic_tasks_report(
     let next_steps = if returned_tasks.is_empty() {
         vec![
             format!("No topic-specific handoff tasks detected for `{slug}`."),
-            format!("Run `kb topic prepare {slug}` and `kb view --relations --topic {slug}` when topic materials change."),
+            format!("Run `kb topic build {slug}` and `kb view --relations --topic {slug}` when topic materials change."),
         ]
     } else {
         vec![
@@ -2244,7 +2247,7 @@ fn render_topic_task_index(report: &TopicTasksReport) -> String {
     out.push_str("```text\n");
     out.push_str("scope.md + literature.md\n");
     out.push_str("        ↓\n");
-    out.push_str("kb topic prepare <topic>\n");
+    out.push_str("kb topic build <topic>\n");
     out.push_str("        ↓\n");
     out.push_str("kb topic tasks <topic>\n");
     out.push_str("        ↓\n");

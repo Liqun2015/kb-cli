@@ -103,7 +103,7 @@ cargo test
 cargo check
 cargo build --release
 kb --help
-kb prepare --help
+kb build --help
 ```
 
 If a check cannot be run because a tool is not installed, say so explicitly in the release notes instead of pretending it passed.

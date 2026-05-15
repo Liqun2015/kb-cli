@@ -815,7 +815,6 @@ fn render_task_index(
     report_snapshot: Option<&Path>,
 ) -> Result<String> {
     let topic_queues = collect_topic_review_queues(kb_path)?;
-    let prepare_prompts = collect_prepare_prompts(kb_path)?;
     let task_reports = collect_existing_task_reports(kb_path)?;
 
     let mut out = String::new();
@@ -881,23 +880,6 @@ fn render_task_index(
                 table_cell(&queue.topic),
                 table_cell(&queue.queue_path),
                 table_cell(queue.summary_path.as_deref().unwrap_or("missing"))
-            ));
-        }
-        out.push_str("\n");
-    }
-
-    out.push_str("## Prepare Agent Prompts\n\n");
-    if prepare_prompts.is_empty() {
-        out.push_str(
-            "No prepare agent prompts were found. Generate them with `kb prepare --new`.\n\n",
-        );
-    } else {
-        out.push_str("| prompt_file | purpose |\n");
-        out.push_str("|---|---|\n");
-        for path in &prepare_prompts {
-            out.push_str(&format!(
-                "| `{}` | Paper / source-to-Wiki handoff prompt for a Worker LLM |\n",
-                table_cell(path)
             ));
         }
         out.push_str("\n");
@@ -973,30 +955,6 @@ fn collect_topic_review_queues(kb_path: &Path) -> Result<Vec<TopicReviewQueueRef
     }
     queues.sort_by(|a, b| a.topic.cmp(&b.topic));
     Ok(queues)
-}
-
-fn collect_prepare_prompts(kb_path: &Path) -> Result<Vec<String>> {
-    let proposals_dir = kb_path.join("processing/proposals");
-    let mut prompts = Vec::new();
-    if !proposals_dir.exists() {
-        return Ok(prompts);
-    }
-
-    for entry in fs::read_dir(proposals_dir)? {
-        let entry = entry?;
-        if !entry.file_type()?.is_file() {
-            continue;
-        }
-        let path = entry.path();
-        let Some(name) = path.file_name().and_then(|s| s.to_str()) else {
-            continue;
-        };
-        if name.starts_with("prepare_agent_prompt_") && name.ends_with(".md") {
-            prompts.push(relative_path_string(kb_path, &path));
-        }
-    }
-    prompts.sort();
-    Ok(prompts)
 }
 
 fn collect_existing_task_reports(kb_path: &Path) -> Result<Vec<String>> {

@@ -182,7 +182,7 @@ pub fn execute_topic_handoff(
 
     let agents = selected_agents(agent, all_agents);
     let mut report = HandoffReport {
-        schema_version: "handoff.v0.7.15".to_string(),
+        schema_version: "handoff.v0.7.17".to_string(),
         generated_by: "kb-cli topic handoff".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         kb_path: kb_path.display().to_string(),
@@ -229,7 +229,7 @@ fn build_project_report(
     }
 
     Ok(HandoffReport {
-        schema_version: "handoff.v0.7.15".to_string(),
+        schema_version: "handoff.v0.7.17".to_string(),
         generated_by: "kb-cli handoff".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         kb_path: kb_path.display().to_string(),
@@ -1147,7 +1147,7 @@ Agent-specific adapters may describe tool habits, but the generic evidence and r
 fn render_global_handoff_json(kb_path: &Path, agents: &[AgentTarget]) -> String {
     let topics = collect_topic_slugs(kb_path).unwrap_or_default();
     let value = serde_json::json!({
-        "schema_version": "handoff.v0.7.15",
+        "schema_version": "handoff.v0.7.17",
         "level": "project",
         "kb_path": kb_path.display().to_string(),
         "agents": agent_names(agents),
@@ -1318,7 +1318,7 @@ The topic boundary is controlled by `scope.md`. Do not expand the topic merely b
 ```bash
 kb topic status {slug}
 kb topic tasks {slug}
-kb topic prepare {slug}
+kb topic build {slug}
 kb topic review {slug}
 kb topic relations {slug}
 kb view --relations --topic {slug} --no-open
@@ -1486,7 +1486,7 @@ fn render_topic_handoff_json(
     agents: &[AgentTarget],
 ) -> String {
     let value = serde_json::json!({
-        "schema_version": "handoff.v0.7.15",
+        "schema_version": "handoff.v0.7.17",
         "level": "topic",
         "kb_path": kb_path.display().to_string(),
         "topic_slug": slug,

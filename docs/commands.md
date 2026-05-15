@@ -10,10 +10,10 @@ The guiding rule is simple:
 
 | Category | Commands | Default LLM behavior | Purpose |
 |---|---|---:|---|
-| Deterministic core | `init`, `ingest`, `setup`, `status`, `sync-wiki`, `lint-static`, `build-wiki` | No LLM | Maintain the file structure, manifest, wiki skeleton, and static checks. |
+| Deterministic core | `init`, `ingest`, `setup`, `build`, `status`, `sync-wiki`, `lint-static`, `build-wiki` | No LLM | Maintain the file structure, manifest, wiki skeleton, topic preparation pipeline, and static checks. |
 | Search / inspection | `query`, `grep`, `links` | No LLM | Locate pages, lines, and WikiLink relations for later review. |
 | Text / reference processing | `extract-text`, `extract-sections`, `refs`, `refs-index`, `refs-graph`, `keywords`, `extract-metadata` | No LLM | Convert source traces into searchable text, section-level evidence, bibliographic relation candidates, and keyword/topic relation evidence. |
-| Handoff / memory | `prepare`, `tasks`, `handoff`, `memory` | No LLM | Prepare reviewable work items, generic agent handoff files, and completed-work records. |
+| Handoff / memory | `tasks`, `handoff`, `memory` | No LLM | Prepare reviewable work items, generic agent handoff files, and completed-work records. |
 | Health / reporting | `health` | No LLM | Summarize relationship-network completeness, review backlog, and pipeline health. |
 | Proof audit | `audit-wiki` | Explicit LLM handoff | Check whether the folder has become a reviewable LLM Wiki and write an LLM audit prompt. |
 | Static viewing | `view` | No LLM | Generate a local read-only HTML dashboard from Markdown/JSON outputs. |
@@ -55,13 +55,33 @@ The guiding rule is simple:
 - **Deferred work:** semantic synthesis, citation reconciliation, OCR/layout repair, and relationship judgment remain explicit LLM/human review tasks.
 - **Compatibility:** `kb bootstrap` remains available as an older alias, but documentation should prefer `kb setup`.
 
+
+### `kb build <topic>`
+
+- **Ability:** run the post-setup deterministic preparation pipeline for one topic.
+- **Equivalent stages:** `extract-text -> extract-sections -> refs -> refs-index -> refs-graph -> topic build <topic> -> topic review <topic> -> topic tasks <topic> -> handoff --all-agents -> topic handoff <topic> --all-agents`.
+- **Primary input:** an initialized or setup LLM Wiki workspace with source materials under `raw/`.
+- **Primary output:** `processing/text/`, `processing/sections/`, `processing/refs/`, `topics/<topic>/importance/`, `topics/<topic>/review/`, `topics/<topic>/tasks/`, `AGENTS.md`, `obsidian_main.md`, `LLM/handoff/`, and topic-local handoff files.
+- **Allows LLM:** no. This is a convenience pipeline, not an embedded LLM runner.
+- **Deferred work:** scholarly confirmation, semantic synthesis, paper-card drafting, concept-page writing, and OCR/layout repair remain explicit external-agent or human tasks.
+- **Useful options:** `--dry-run`, `--force`, `--skip-extract`, `--skip-refs`, `--skip-review`, `--skip-tasks`, `--skip-handoff`, `--limit`, `--title`, `--no-init`.
+- **Alias:** `kb assemble <topic>`.
+
+Example:
+
+```bash
+kb build thermal-metamaterials
+kb build thermal-metamaterials --force
+kb build thermal-metamaterials --dry-run
+```
+
 ### `kb status`
 
 - **Ability:** inspect `raw/` and manifest status.
 - **Primary input:** `raw/`, `processing/manifest.json`.
 - **Primary output:** terminal summary or JSON.
 - **Allows LLM:** no.
-- **Deferred work:** unprocessed raw files can later be turned into `prepare` or `tasks` items.
+- **Deferred work:** unprocessed raw files can later be turned into explicit `tasks` or topic task items.
 
 ### `kb build-wiki`
 
@@ -174,18 +194,10 @@ The guiding rule is simple:
 
 ## Handoff and memory commands
 
-### `kb prepare`
-
-- **Ability:** generate reviewable task materials for wiki work without calling an LLM.
-- **Primary input:** `raw/`, `processing/manifest.json`.
-- **Primary output:** `processing/prepare_queue.json`, `processing/proposals/prepare_plan_*.md`, and `processing/proposals/prepare_agent_prompt_*.md`.
-- **Allows LLM:** no. It prepares materials for external review or later LLM use.
-- **Deferred work:** writing scientific summaries and concept pages remains a human/LLM task under Git review.
-
 ### `kb tasks`
 
 - **Ability:** consolidate deterministic findings into Manager/Worker handoff lists and refresh the Manager LLM task dashboard.
-- **Primary input:** `raw/`, `processing/text/`, `processing/sections/`, `processing/refs/`, `wiki/`, `topics/*/review/`, `processing/proposals/`, static checks.
+- **Primary input:** `raw/`, `processing/text/`, `processing/sections/`, `processing/refs/`, `wiki/`, `topics/*/review/`, static checks.
 - **Primary output:** `LLM/tasks/index.md`, `LLM/tasks/items/<task_id>.md`, and `LLM/tasks/llm_tasks_*.md`.
 - **Allows LLM:** no. It prepares tasks for future human/LLM execution.
 - **Deferred work:** all generated task groups should include target agent, goal, requirements, file list, and evidence. The Manager LLM starts from `LLM/tasks/index.md`; Worker LLMs receive bounded files under `LLM/tasks/items/`.
@@ -284,11 +296,11 @@ Future commands such as `kb topic`, `kb relation-review`, or topic graph exporte
 ## `kb topic`
 
 - **Category:** topic-specific relationship workspace command.
-- **Current subcommands:** `kb topic init <topic>`, `kb topic list`, `kb topic status <topic>`, `kb topic rank <topic>`, `kb topic relations <topic>`, `kb topic prepare <topic>`, `kb topic review <topic>`, `kb topic tasks <topic>`, and `kb topic handoff <topic>`.
+- **Current subcommands:** `kb topic init <topic>`, `kb topic list`, `kb topic status <topic>`, `kb topic rank <topic>`, `kb topic relations <topic>`, `kb topic build <topic>`, `kb topic review <topic>`, `kb topic tasks <topic>`, and `kb topic handoff <topic>`.
 - **Primary input:** topic name or slug.
 - **Primary output:** `topics/<topic>/` workspace files, topic-local reports under `topics/<topic>/importance/`, topic graph artifacts under `topics/<topic>/graph/`, review queues under `topics/<topic>/review/`, and topic task files under `topics/<topic>/tasks/` and topic handoff files under `topics/<topic>/handoff/`.
 - **LLM allowed:** no. This command only creates deterministic scaffolding.
-- **Deferred work:** Manager LLM / Worker LLM / human reviewers fill and review topic-local importance and relation records later. `kb topic rank` produces importance candidates, `kb topic relations` compiles directed relation records into graph artifacts, `kb topic prepare` runs both, `kb topic review` turns candidates into a queue, `kb topic tasks` writes bounded topic-local task files, and `kb topic handoff` writes generic external-agent entry files plus optional adapters. None of these commands decides final scholarly claims.
+- **Deferred work:** Manager LLM / Worker LLM / human reviewers fill and review topic-local importance and relation records later. `kb topic rank` produces importance candidates, `kb topic relations` compiles directed relation records into graph artifacts, `kb topic build` runs both, `kb topic review` turns candidates into a queue, `kb topic tasks` writes bounded topic-local task files, and `kb topic handoff` writes generic external-agent entry files plus optional adapters. None of these commands decides final scholarly claims.
 
 Example:
 
@@ -299,7 +311,7 @@ kb topic list
 kb topic status thermal-metamaterials
 kb topic rank thermal-metamaterials --dry-run
 kb topic relations thermal-metamaterials --dry-run
-kb topic prepare thermal-metamaterials --dry-run
+kb topic build thermal-metamaterials --dry-run
 kb topic review thermal-metamaterials --dry-run
 kb topic tasks thermal-metamaterials --dry-run
 kb topic handoff thermal-metamaterials --dry-run
@@ -330,9 +342,9 @@ kb topic relations thermal-metamaterials --dry-run
 kb topic relations thermal-metamaterials --json
 ```
 
-### `kb topic prepare <topic>`
+### `kb topic build <topic>`
 
-- **Ability:** run `kb topic rank <topic>` and `kb topic relations <topic>` as one topic-preparation command.
+- **Ability:** run `kb topic rank <topic>` and `kb topic relations <topic>` as one topic-build command.
 - **Primary input:** the topic workspace under `topics/<topic>/`.
 - **Primary output:** importance candidate reports plus topic graph artifacts.
 - **Allows LLM:** no.
@@ -341,10 +353,10 @@ kb topic relations thermal-metamaterials --json
 Example:
 
 ```bash
-kb topic prepare thermal-metamaterials
-kb topic prepare thermal-metamaterials --limit 25
-kb topic prepare thermal-metamaterials --dry-run
-kb topic prepare thermal-metamaterials --json
+kb topic build thermal-metamaterials
+kb topic build thermal-metamaterials --limit 25
+kb topic build thermal-metamaterials --dry-run
+kb topic build thermal-metamaterials --json
 kb view --relations --topic thermal-metamaterials
 ```
 

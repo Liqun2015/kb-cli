@@ -16,7 +16,7 @@ Before `v0.7.3`, task material was useful but scattered:
 
 ```text
 LLM/tasks/*.md
-processing/proposals/prepare_agent_prompt_*.md
+topics/<topic>/tasks/items/*.md
 topics/<topic>/review/review_queue.md
 outputs/reports/*.md
 ```
@@ -32,7 +32,6 @@ The index answers:
 - What pending Worker task items exist?
 - Which task file should a Worker LLM open?
 - Which topic review queues need attention?
-- Which prepare prompts are available for source-to-Wiki work?
 - Which older task or audit reports exist?
 - What should the Manager LLM do next?
 
@@ -62,7 +61,6 @@ It includes:
 - current handoff snapshot path
 - pending Worker task table
 - topic review queue table
-- prepare agent prompt table
 - existing task/audit report table
 - Manager LLM operating rules
 - recommended Manager → Worker → human review loop

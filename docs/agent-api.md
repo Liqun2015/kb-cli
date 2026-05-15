@@ -12,7 +12,6 @@ This document records what `kb-cli v0.7.10` actually supports. It is intentional
 | `kb extract-metadata [--force]` | Extract PDF metadata from `raw/papers/`. |
 | `kb build-wiki` | Generate Markdown wiki pages and indexes. |
 | `kb status [--dry-run\|--preview] [--json] [--unprocessed]` | Refresh `processing/manifest.json`, print JSON summary, or list unprocessed raw files. |
-| `kb prepare [--new\|--file PATH] [--dry-run\|--preview]` | Generate prepare queue/proposal files for future LLM wiki maintenance without calling an LLM. |
 | `kb sync-wiki [--dry-run\|--preview] [--json]` | Link source front matter in `wiki/**/*.md` back to manifest entries. |
 | `kb lint-static [--dry-run\|--preview\|--no-report] [--json] [--strict]` | Check broken WikiLinks, orphan pages, missing source front matter, empty pages, and duplicate titles. |
 | `kb query <terms...> [--limit N] [--snippets N] [--json] [--title-only]` | Search `wiki/**/*.md` with deterministic local keyword matching. |
@@ -103,18 +102,6 @@ Current behavior:
 
 The manifest is not a stable external API yet; treat it as a local project file that future commands may evolve carefully.
 
-## Prepare planning
-
-`kb prepare` is implemented as a planning command only. It may write:
-
-```text
-processing/prepare_queue.json
-processing/proposals/prepare_plan_<timestamp>.md
-processing/proposals/prepare_agent_prompt_<timestamp>.md
-```
-
-It does not call an LLM, does not edit `wiki/`, and does not mark manifest entries as fully prepared. Treat the generated proposal as a review artifact for a human or future AI maintainer.
-
 ## Static wiki lint
 
 `kb lint-static` is implemented as a deterministic local Markdown health check. It does not call an LLM and does not rewrite `wiki/`.
@@ -186,7 +173,7 @@ Do not assume the following exist in `v0.5.10`:
 
 ```text
 global --format json
-autonomous prepare execution
+autonomous agent execution
 semantic LLM lint
 vector search
 full RAG

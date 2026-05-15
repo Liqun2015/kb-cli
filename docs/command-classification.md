@@ -86,17 +86,17 @@ These commands turn deterministic findings into reviewable work items for a huma
 Example:
 
 ```text
-kb prepare
+kb topic tasks thermal
+kb handoff --all-agents
 ```
 
 Future examples:
 
 ```text
-kb prepare --missing-sources
-kb prepare --broken-links
-kb prepare --orphans
-kb prepare --topic thermal
-kb prepare --needs-llm
+kb tasks --missing-sources
+kb tasks --broken-links
+kb tasks --orphans
+kb topic tasks thermal --needs-llm
 ```
 
 Rules:
@@ -137,7 +137,7 @@ Especially:
 - Search commands must not become semantic answer generators.
 - Shell mode must not become natural-language chat.
 - Extraction commands may reserve future agent paths, but OCR/LLM must be explicitly enabled.
-- `prepare` should generate task materials, not secretly execute them.
+- `tasks`, `topic tasks`, and `handoff` should generate task materials, not secretly execute them.
 
 
 ## Deferred skill markers

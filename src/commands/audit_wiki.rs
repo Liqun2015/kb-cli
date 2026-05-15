@@ -281,7 +281,7 @@ fn check_processing_layer(kb_path: &Path) -> AuditCheck {
         remediation: if score < 10 {
             vec![
                 "Run `kb extract-text` to create deterministic text inputs.".to_string(),
-                "Run `kb prepare --new` or `kb keywords` to create reviewable intermediate artifacts.".to_string(),
+                "Run `kb build <topic>` or `kb keywords` to create reviewable intermediate artifacts.".to_string(),
             ]
         } else {
             Vec::new()
@@ -1131,7 +1131,7 @@ mod tests {
         )?;
         fs::write(kb_path.join("processing/text/a.txt"), "text")?;
         fs::create_dir_all(kb_path.join("processing/proposals"))?;
-        fs::write(kb_path.join("processing/proposals/prepare_plan.md"), "plan")?;
+        fs::write(kb_path.join("processing/proposals/task_plan.md"), "plan")?;
         fs::create_dir_all(kb_path.join("wiki/papers"))?;
         for i in 0..5 {
             fs::write(
