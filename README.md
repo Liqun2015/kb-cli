@@ -18,7 +18,7 @@ kb --lib <A> view
 kb --lib <A> build <topic>
 ```
 
-`--lib` means “the target LLM Wiki library/database directory.”
+`--lib` means “the target directory of LLM Wiki library/database.”
 
 ### v0.7.23
 
