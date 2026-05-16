@@ -359,7 +359,7 @@ fn build_relationship_data(kb_path: &Path, args: &ViewArgs) -> Result<Relationsh
 
     Ok(RelationshipData {
         meta: RelationshipMeta {
-            version: "v0.7.29".to_string(),
+            version: "v0.7.30".to_string(),
             generated_by: "kb view --relations".to_string(),
             generated_at: Utc::now().to_rfc3339(),
             knowledge_base: kb_path.display().to_string(),
@@ -1020,7 +1020,7 @@ fn render_relationship_viewer(kb_path: &Path, data: &RelationshipData) -> Result
     html.push_str("<section class=\"panel\" id=\"worker-tasks\"><h2>LLM Worker Tasks</h2><div id=\"workerTasks\"></div></section>\n");
     html.push_str("<section class=\"panel\" id=\"nodes\"><h2>Nodes</h2><div id=\"nodesTable\"></div></section>\n");
     html.push_str("<section class=\"panel\" id=\"edges\"><h2>Edges</h2><div id=\"edgesTable\"></div></section>\n");
-    html.push_str("<section class=\"panel\" id=\"raw-json\"><h2>Raw JSON</h2><pre id=\"rawJson\"></pre></section>\n");
+    html.push_str("<section class=\"panel\" id=\"raw-json\"><h2>Raw JSON</h2><pre id=\"rawJson\" class=\"json-window\"></pre></section>\n");
     html.push_str("</main>\n</div>\n<script id=\"relationship-data\" type=\"application/json\">\n");
     html.push_str(&json);
     html.push_str("\n</script>\n<script>\n");
@@ -1040,7 +1040,8 @@ body { background: #f5f7fa; color: #243042; line-height: 1.6; }
 .meta-card { font-size: 0.86rem; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.85rem; word-break: break-word; }
 .sidebar-links { display: flex; flex-direction: column; gap: 0.45rem; }
 .sidebar-link { display: block; width: 100%; text-align: left; border: 1px solid #d9e2ec; background: #f7fafc; color: #245a91; padding: 0.58rem 0.75rem; border-radius: 7px; cursor: pointer; text-decoration: none; font-weight: 600; }
-.sidebar-link:hover, .sidebar-link.active { background: #e8f4f8; border-color: #4299e1; }
+.sidebar-link:hover { background: #e8f4f8; border-color: #4299e1; }
+.sidebar-link.active { background: #4299e1; border-color: #4299e1; color: white; }
 .legend { margin-top: auto; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.8rem; font-size: 0.85rem; }
 .line { display: inline-block; width: 42px; margin-right: 0.45rem; vertical-align: middle; border-top: 3px solid #2d3748; }
 .line.dashed { border-top-style: dashed; }
@@ -1075,6 +1076,7 @@ th { background: #f7fafc; }
 .badge.missing, .badge.unresolved { background: #fff5f5; }
 .task-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin: 0.8rem 0; background: #f8fafc; }
 pre { white-space: pre-wrap; overflow: auto; background: #1a202c; color: #edf2f7; padding: 1rem; border-radius: 8px; }
+.json-window { max-height: 560px; min-height: 300px; overflow: auto; white-space: pre; border: 1px solid #2d3748; }
 .empty { padding: 1rem; border: 1px dashed #cbd5e0; background: #f7fafc; color: #718096; border-radius: 8px; }
 @media (max-width: 860px) { .relation-shell { flex-direction: column; height: auto; min-height: 100vh; overflow: visible; } .relation-sidebar { width: 100%; height: auto; max-height: none; } .relation-main { height: auto; padding: 1rem; overflow: visible; } }
     "#;
@@ -1474,7 +1476,7 @@ fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
             html_escape(&section.title)
         ));
         sidebar_links.push_str(&format!(
-            "<button class=\"sidebar-link\" data-target=\"{}\">{}</button>\n",
+            "<button class=\"sidebar-link{active}\" data-target=\"{}\">{}</button>\n",
             html_escape(&section.id),
             html_escape(&section.title)
         ));
@@ -1540,6 +1542,7 @@ html, body { min-height: 100%; }
 .sidebar-link { text-align: left; border: 1px solid #e2e8f0; background: #f7fafc; color: #2b6cb0; padding: 0.55rem 0.7rem; border-radius: 6px; cursor: pointer; }
 .sidebar-anchor { display: block; text-decoration: none; font-weight: 600; }
 .sidebar-link:hover { background: #e8f4f8; }
+.sidebar-link.active { background: #4299e1; border-color: #4299e1; color: white; font-weight: 700; }
 .toggle-sidebar { position: absolute; top: 12px; left: 340px; z-index: 10; background: #2b6cb0; color: white; border: 0; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; transition: left 0.2s; }
 .toggle-sidebar.collapsed { left: 0; }
 .terminal { margin-top: auto; flex: 0 0 340px; min-height: 320px; border: 1px solid #cbd5e0; border-radius: 8px; overflow: hidden; background: #1a202c; color: #e2e8f0; display: flex; flex-direction: column; }
@@ -1582,6 +1585,7 @@ table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
 th, td { border: 1px solid #e2e8f0; padding: 0.55rem; text-align: left; }
 th { background: #f7fafc; }
 pre { white-space: pre-wrap; overflow-x: auto; background: #1a202c; color: #edf2f7; padding: 1rem; border-radius: 6px; margin: 0.8rem 0; }
+.json-window { max-height: 520px; min-height: 260px; overflow: auto; white-space: pre; border: 1px solid #2d3748; }
 code { background: #edf2f7; color: #2d3748; padding: 0.1rem 0.25rem; border-radius: 4px; }
 pre code { background: transparent; color: inherit; padding: 0; }
 .highlight, .suggestion-box { background: #e8f4f8; padding: 1rem; border-radius: 6px; margin: 1rem 0; border-left: 4px solid #4299e1; }
@@ -1609,6 +1613,8 @@ dd { min-width: 0; overflow-wrap: anywhere; }
 .empty { color: #718096; background: #f7fafc; border: 1px dashed #cbd5e0; padding: 1rem; border-radius: 6px; }
 details { margin: 0.8rem 0; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.7rem; }
 summary { cursor: pointer; color: #2b6cb0; font-weight: 600; }
+.compact-toggle summary { display: inline-flex; align-items: center; gap: 0.45rem; background: #e8f4f8; border: 1px solid #bee3f8; color: #2b6cb0; border-radius: 8px; padding: 0.55rem 0.8rem; }
+.compact-toggle[open] summary { background: #4299e1; border-color: #4299e1; color: white; }
 mark { background: #fefcbf; padding: 0 0.15rem; }
 "#;
 
@@ -1881,10 +1887,14 @@ fn render_refs_index(kb_path: &Path) -> Result<String> {
     ));
     out.push_str("<div class=\"highlight\"><strong>Readable review view:</strong> Relation candidates are rendered as review cards instead of a wide raw Markdown table.</div>");
     out.push_str(&markdown_to_html(&before));
-    out.push_str("<h2>Relation candidates</h2>");
+    out.push_str(&format!(
+        "<details class=\"compact-toggle\"><summary>Relation candidates / relation index <span class=\"badge\">{}</span></summary>",
+        candidate_rows.len()
+    ));
     out.push_str(&render_relation_candidate_cards(&candidate_rows));
+    out.push_str("</details>");
     if !after.trim().is_empty() {
-        out.push_str("<details open><summary>Deferred human / LLM task handoff</summary>");
+        out.push_str("<details class=\"compact-toggle\"><summary>Deferred human / LLM task handoff</summary>");
         out.push_str(&markdown_to_html(&after));
         out.push_str("</details>");
     }
@@ -2002,7 +2012,7 @@ fn render_refs_graph(kb_path: &Path) -> Result<String> {
         out.push_str("<p class=\"empty\">The latest refs graph JSON could not be parsed. The raw file is still available below for debugging.</p>");
     }
 
-    out.push_str("<details><summary>Raw graph JSON</summary><pre>");
+    out.push_str("<details><summary>Raw graph JSON</summary><pre class=\"json-window\">");
     out.push_str(&html_escape(&content));
     out.push_str("</pre></details>");
 
@@ -2368,6 +2378,8 @@ fn card_from_file(kb_path: &Path, path: &Path) -> Result<SourceCard> {
     let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
     let html = if ext.eq_ignore_ascii_case("md") {
         markdown_to_html(&content)
+    } else if ext.eq_ignore_ascii_case("json") {
+        format!("<pre class=\"json-window\">{}</pre>", html_escape(&content))
     } else {
         format!("<pre>{}</pre>", html_escape(&content))
     };

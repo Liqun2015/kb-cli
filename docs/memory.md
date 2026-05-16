@@ -1,6 +1,6 @@
 # `kb memory`
 
-Current version: `v0.7.29`
+Current version: `v0.7.30`
 
 `kb memory` records completed task outcomes under the LLM workbench:
 

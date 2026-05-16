@@ -6,7 +6,11 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.29`
+Current version: `v0.7.30`
+
+### v0.7.30
+
+`kb view` compactness and readability polish: long JSON blocks now render in fixed-height scroll windows, `Refs Index` keeps relation candidates and Deferred human / LLM task handoff behind click-to-open panels, and sidebar active buttons now match the blue active state of the main tab bar.
 
 ### v0.7.29
 

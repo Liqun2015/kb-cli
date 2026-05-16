@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.7.30
+
+`v0.7.30` tightens the generated `kb view` dashboard without changing the underlying deterministic data.
+
+### Changed
+
+- Show long JSON files inside fixed-height scroll windows instead of letting them stretch the whole page.
+- Collapse the `Refs Index` relation candidate list and `Deferred human / LLM task handoff` section behind click-to-open panels for a more compact review page.
+- Keep sidebar titles aligned with the main tab titles and render the active sidebar button in the same blue style as the active main tab.
+
 ## v0.7.29
 
 `v0.7.29` is a compile hotfix for the `kb view` relationship viewer generation path.
