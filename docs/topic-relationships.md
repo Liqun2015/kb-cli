@@ -1,6 +1,6 @@
 # Topic Relationship Overlay Roadmap
 
-Current version: `v0.7.28`
+Current version: `v0.7.29`
 
 This document defines the first practical V2 step for LLM Wiki: keep global bibliographic index relations global, and store topic-specific interpretive relationships under `topics/<topic>/`.
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.7.29
+
+`v0.7.29` is a compile hotfix for the `kb view` relationship viewer generation path.
+
+### Fixed
+
+- Borrow the resolved knowledge-base `PathBuf` as `&Path` when calling `build_relationship_data` and `render_relationship_viewer`.
+- Keeps the v0.7.28 HTML readability behavior unchanged.
+
 ## v0.7.28
 
 `v0.7.28` improves the human-readable graph and relation review experience inside `kb view`.

@@ -127,7 +127,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
     fs::create_dir_all(&output_root)?;
     fs::write(&output_path, html)?;
 
-    let relationship_data = build_relationship_data(kb_path, args)?;
+    let relationship_data = build_relationship_data(&kb_path, args)?;
     let relationship_data_path = output_root.join("relationship_data.json");
     let relationship_html_path = output_root.join("relationship_viewer.html");
     fs::write(
@@ -136,7 +136,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
     )?;
     fs::write(
         &relationship_html_path,
-        render_relationship_viewer(kb_path, &relationship_data)?,
+        render_relationship_viewer(&kb_path, &relationship_data)?,
     )?;
 
     println!("Static HTML viewer generated:");
@@ -359,7 +359,7 @@ fn build_relationship_data(kb_path: &Path, args: &ViewArgs) -> Result<Relationsh
 
     Ok(RelationshipData {
         meta: RelationshipMeta {
-            version: "v0.7.28".to_string(),
+            version: "v0.7.29".to_string(),
             generated_by: "kb view --relations".to_string(),
             generated_at: Utc::now().to_rfc3339(),
             knowledge_base: kb_path.display().to_string(),
