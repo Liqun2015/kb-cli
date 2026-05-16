@@ -146,7 +146,7 @@ index.html
 
 ## LLM launch panel
 
-The regular dashboard includes a visible **启动 LLM** button. It opens the `llm-launch` tab inside `interfaces/html/index.html`.
+The regular dashboard includes a visible **About launching LLM** tab. It opens the `llm-launch` tab inside `interfaces/html/index.html`; the tab is placed immediately to the left of **LLM Tasks** in the dashboard navigation.
 
 This panel is a safe handoff aid only. It provides copyable:
 

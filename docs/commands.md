@@ -261,7 +261,7 @@ kb build thermal-metamaterials --dry-run
 - **Single-topic graph mode:** `kb view --relations --topic <topic>` writes a filtered relation graph for only the requested topic. It does not keep unrelated global/topic data in the JSON.
 - **Data-only export:** `kb view --relations --data-only` writes only `relationship_data.json`.
 - **Primary input:** regular dashboard reads `wiki/`, `processing/refs/`, `processing/keywords/`, `interfaces/reports/`, `LLM/tasks/`, and `LLM/memory/`; relation mode reads `topics/` and, when `--topic` is provided, the selected topic workspace.
-- **Allows LLM:** no hidden call. The regular dashboard includes a safe **启动 LLM** launch panel with copyable external-agent commands/prompts, but the viewer itself never starts an LLM, executes shell commands, or modifies files.
+- **Allows LLM:** no hidden call. The regular dashboard includes a safe **About launching LLM** launch panel with copyable external-agent commands/prompts, but the viewer itself never starts an LLM, executes shell commands, or modifies files.
 - **Deferred work:** relationship edges marked candidate, ambiguous, missing, or `needs_llm_review` are review inputs for Manager/Worker LLM workflows. The viewer itself is display-only and must not execute local commands or interpret natural language.
 - **Boundary:** do not add a separate `kb view-relations` command; topic relationship viewing belongs under `kb view --relations`.
 

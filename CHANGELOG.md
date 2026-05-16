@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.7.25
+
+`v0.7.25` polishes the HTML dashboard LLM launch navigation.
+
+### Changed
+
+- Renamed the launch tab from **启动 LLM** to **About launching LLM**.
+- Moved the launch tab immediately to the left of **LLM Tasks** in the dashboard navigation.
+- Removed the separate header launch button so the launch guidance appears in one predictable place before the task queue.
+
 ## v0.7.24
 
 `v0.7.24` standardizes the global library selector as `--lib` so all commands use the same library vocabulary as `kb create --lib <A> --from <B> --about <topic>`.
@@ -15,7 +25,7 @@
 
 `v0.7.23` adds a safe LLM launch panel to the regular HTML dashboard.
 
-- Added a visible **启动 LLM** button to `interfaces/html/index.html`.
+- Added a visible **About launching LLM** tab to `interfaces/html/index.html`.
 - The button opens a static launch section with copyable Claude Code / Codex terminal commands, a Manager startup prompt, and a Worker task prompt.
 - The HTML viewer still does not execute shell commands, call an LLM, or modify knowledge files. It only helps the operator hand off work to an external LLM agent.
 - Added the launch section as a normal dashboard tab so it is reachable by sidebar, header button, and `kb-view> open llm-launch`.

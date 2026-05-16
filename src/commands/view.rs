@@ -1331,14 +1331,6 @@ fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
     });
 
     sections.push(ViewerSection {
-        id: "llm-launch".to_string(),
-        title: "启动 LLM".to_string(),
-        subtitle: "Copy safe launch commands and Manager prompts for external LLM agents"
-            .to_string(),
-        html: render_llm_launch(kb_path)?,
-    });
-
-    sections.push(ViewerSection {
         id: "wiki".to_string(),
         title: "Wiki".to_string(),
         subtitle: "Wiki home or project README".to_string(),
@@ -1383,6 +1375,14 @@ fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
             latest_matching_file(kb_path, "interfaces/reports", "health_", "md")?,
             "No health report found. Run `kb health` first.",
         ),
+    });
+
+    sections.push(ViewerSection {
+        id: "llm-launch".to_string(),
+        title: "About launching LLM".to_string(),
+        subtitle: "Copy safe launch commands and Manager prompts for external LLM agents"
+            .to_string(),
+        html: render_llm_launch(kb_path)?,
     });
 
     sections.push(ViewerSection {
@@ -1475,7 +1475,7 @@ fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
     );
     html.push_str("<main class=\"main\">\n<header><h1>");
     html.push_str(&kb_name);
-    html.push_str("</h1><p class=\"subtitle\">LLM Wiki of your knowledge base for the purpose of swift and high quality research</p><div class=\"header-actions\"><button class=\"primary-action\" data-target=\"llm-launch\">启动 LLM</button><a class=\"secondary-action\" href=\"relationship_viewer.html\">查看关系图</a></div><div class=\"artifact-notice\"><strong>Interface artifact:</strong> this HTML file is generated under <code>interfaces/</code> for human review and agent communication only. Do not treat it as the knowledge source; write accepted decisions back to Markdown/JSON/TOML outside <code>interfaces/</code>.</div></header>\n");
+    html.push_str("</h1><p class=\"subtitle\">LLM Wiki of your knowledge base for the purpose of swift and high quality research</p><div class=\"header-actions\"><a class=\"secondary-action\" href=\"relationship_viewer.html\">查看关系图</a></div><div class=\"artifact-notice\"><strong>Interface artifact:</strong> this HTML file is generated under <code>interfaces/</code> for human review and agent communication only. Do not treat it as the knowledge source; write accepted decisions back to Markdown/JSON/TOML outside <code>interfaces/</code>.</div></header>\n");
     html.push_str("<nav class=\"nav-tabs\">\n");
     html.push_str(&nav_buttons);
     html.push_str("</nav>\n");
@@ -1750,7 +1750,7 @@ fn render_llm_launch(kb_path: &Path) -> Result<String> {
         html_escape(&worker_prompt)
     ));
 
-    out.push_str("<div class=\"suggestion-box\"><strong>推荐流程：</strong><br><code>kb build &lt;topic&gt;</code> → <code>kb view</code> → 点击 <strong>启动 LLM</strong> → 复制命令与 Manager Prompt → Agent 读取任务 → 人工审查回写。</div>");
+    out.push_str("<div class=\"suggestion-box\"><strong>推荐流程：</strong><br><code>kb build &lt;topic&gt;</code> → <code>kb view</code> → 打开 <strong>About launching LLM</strong> → 复制命令与 Manager Prompt → Agent 读取任务 → 人工审查回写。</div>");
     Ok(out)
 }
 

@@ -6,7 +6,11 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.24`
+Current version: `v0.7.25`
+
+### v0.7.25
+
+HTML navigation polish release. The launch panel tab is renamed to **About launching LLM** and is placed immediately to the left of **LLM Tasks** in the dashboard navigation, making it clear that operators should read the launch guidance before handing work to external agents.
 
 ### v0.7.24
 
@@ -18,11 +22,11 @@ kb --lib <A> view
 kb --lib <A> build <topic>
 ```
 
-`--lib` means “the target directory of LLM Wiki library/database.”
+`--lib` means “the target LLM Wiki library/database directory.”
 
 ### v0.7.23
 
-LLM Launch Panel release. `kb view` now adds a safe **启动 LLM** button to `interfaces/html/index.html`. It opens a static panel with copyable Claude Code / Codex launch commands and bounded Manager/Worker prompts. The HTML still does not execute shell commands or call an LLM; it only helps the operator start an external agent deliberately.
+LLM Launch Panel release. `kb view` now adds a safe **About launching LLM** tab to `interfaces/html/index.html`. It opens a static panel with copyable Claude Code / Codex launch commands and bounded Manager/Worker prompts. The HTML still does not execute shell commands or call an LLM; it only helps the operator start an external agent deliberately.
 
 ### v0.7.22
 
