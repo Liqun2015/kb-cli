@@ -3,7 +3,7 @@ use chrono::Utc;
 use clap::Args;
 use serde::Serialize;
 use serde_json::Value;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -115,6 +115,10 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
         println!("  knowledge base : {}", kb_path.display());
         println!("  output         : {}", output_path.display());
         println!("  sections       : {}", sections.len());
+        println!(
+            "  relation page  : {}",
+            output_root.join("relationship_viewer.html").display()
+        );
         println!("  open browser   : {}", args.should_open());
         println!("  no files written");
         return Ok(());
@@ -123,8 +127,24 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
     fs::create_dir_all(&output_root)?;
     fs::write(&output_path, html)?;
 
+    let relationship_data = build_relationship_data(kb_path, args)?;
+    let relationship_data_path = output_root.join("relationship_data.json");
+    let relationship_html_path = output_root.join("relationship_viewer.html");
+    fs::write(
+        &relationship_data_path,
+        serde_json::to_string_pretty(&relationship_data)?,
+    )?;
+    fs::write(
+        &relationship_html_path,
+        render_relationship_viewer(kb_path, &relationship_data)?,
+    )?;
+
     println!("Static HTML viewer generated:");
     println!("  {}", output_path.display());
+    println!("Relationship graph viewer generated:");
+    println!("  {}", relationship_html_path.display());
+    println!("Relationship graph data generated:");
+    println!("  {}", relationship_data_path.display());
     println!();
     if args.should_open() {
         open_in_default_browser(&output_path)?;
@@ -289,7 +309,27 @@ fn build_relationship_data(kb_path: &Path, args: &ViewArgs) -> Result<Relationsh
     let mut warnings = Vec::new();
     let mut nodes_by_id: BTreeMap<String, RelationshipNode> = BTreeMap::new();
     let mut edges: Vec<RelationshipEdge> = Vec::new();
-    let source_refs_graph = None;
+    let mut source_refs_graph = None;
+
+    if args.topic.is_none() {
+        if let Some(path) = latest_matching_path(kb_path, "processing/refs", "refs_graph_", "json")?
+        {
+            let rel = relative_path_string(kb_path, &path);
+            source_refs_graph = Some(rel.clone());
+            match fs::read_to_string(&path)
+                .ok()
+                .and_then(|content| serde_json::from_str::<Value>(&content).ok())
+            {
+                Some(value) => {
+                    import_refs_graph_json(kb_path, &value, &mut nodes_by_id, &mut edges)
+                }
+                None => warnings.push(format!(
+                    "Latest refs graph JSON could not be parsed: {}",
+                    rel
+                )),
+            }
+        }
+    }
 
     let topics = add_topic_relationships(
         kb_path,
@@ -319,7 +359,7 @@ fn build_relationship_data(kb_path: &Path, args: &ViewArgs) -> Result<Relationsh
 
     Ok(RelationshipData {
         meta: RelationshipMeta {
-            version: "v0.7.10".to_string(),
+            version: "v0.7.28".to_string(),
             generated_by: "kb view --relations".to_string(),
             generated_at: Utc::now().to_rfc3339(),
             knowledge_base: kb_path.display().to_string(),
@@ -1344,10 +1384,7 @@ fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
         id: "refs-index".to_string(),
         title: "Refs Index".to_string(),
         subtitle: "Latest bibliographic index relation candidate report".to_string(),
-        html: render_source_card_or_empty(
-            latest_matching_file(kb_path, "processing/refs", "refs_index_", "md")?,
-            "No refs-index report found. Run `kb refs-index` first.",
-        ),
+        html: render_refs_index(kb_path)?,
     });
 
     sections.push(ViewerSection {
@@ -1549,6 +1586,26 @@ code { background: #edf2f7; color: #2d3748; padding: 0.1rem 0.25rem; border-radi
 pre code { background: transparent; color: inherit; padding: 0; }
 .highlight, .suggestion-box { background: #e8f4f8; padding: 1rem; border-radius: 6px; margin: 1rem 0; border-left: 4px solid #4299e1; }
 .source-card, .topic-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
+.relation-candidate-list { display: grid; gap: 0.85rem; margin: 1rem 0; }
+.relation-candidate-card { border: 1px solid #d9e2ec; border-radius: 10px; padding: 0.95rem; background: #fbfdff; }
+.candidate-card-head { display: flex; flex-wrap: wrap; gap: 0.55rem; align-items: center; margin-bottom: 0.65rem; }
+.badge { display: inline-block; border-radius: 999px; padding: 0.15rem 0.55rem; background: #edf2f7; font-size: 0.78rem; font-weight: 700; }
+.badge.confirmed, .badge.accepted { background: #e6fffa; color: #234e52; }
+.badge.candidate { background: #ebf8ff; color: #2b6cb0; }
+.badge.ambiguous { background: #fffaf0; color: #744210; }
+.badge.missing, .badge.unresolved { background: #fff5f5; color: #742a2a; }
+dl { display: grid; grid-template-columns: minmax(90px, 130px) 1fr; gap: 0.45rem 0.75rem; }
+dt { color: #4a5568; font-weight: 700; }
+dd { min-width: 0; overflow-wrap: anywhere; }
+.refs-graph-wrap { width: 100%; overflow: auto; border: 1px solid #d9e2ec; border-radius: 10px; background: #fbfdff; margin: 1rem 0; }
+.refs-graph-svg { width: 100%; min-width: 900px; height: 680px; }
+.refs-edge { stroke: #4a5568; stroke-width: 1.7; fill: none; opacity: 0.82; }
+.refs-edge-candidate, .refs-edge-ambiguous, .refs-edge-needs-human { stroke-dasharray: 7 5; }
+.refs-edge-missing, .refs-edge-unresolved { stroke-dasharray: 2 5; }
+.refs-node circle { fill: #fff; stroke: #2b6cb0; stroke-width: 2; }
+.refs-node-unresolved-reference circle, .refs-node-status-missing circle { fill: #fff; stroke-dasharray: 5 4; }
+.refs-node text { font-size: 12px; fill: #1f2937; pointer-events: none; }
+.refs-graph-summary { margin-top: 1rem; }
 .empty { color: #718096; background: #f7fafc; border: 1px dashed #cbd5e0; padding: 1rem; border-radius: 6px; }
 details { margin: 0.8rem 0; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.7rem; }
 summary { cursor: pointer; color: #2b6cb0; font-weight: 600; }
@@ -1802,29 +1859,391 @@ fn render_overview(kb_path: &Path) -> String {
     out
 }
 
-fn render_refs_graph(kb_path: &Path) -> Result<String> {
-    let mut cards = Vec::new();
-    for ext in ["json", "mmd", "dot"] {
-        if let Some(card) = latest_matching_file(kb_path, "processing/refs", "refs_graph_", ext)? {
-            cards.push(card);
+fn render_refs_index(kb_path: &Path) -> Result<String> {
+    let Some(path) = latest_matching_path(kb_path, "processing/refs", "refs_index_", "md")? else {
+        return Ok("<p class=\"empty\">No refs-index report found. Run <code>kb refs-index</code> first.</p>".to_string());
+    };
+
+    let rel = relative_path_string(kb_path, &path);
+    let title = path
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("refs_index.md")
+        .to_string();
+    let content = fs::read_to_string(&path).unwrap_or_default();
+    let (before, candidate_rows, after) = split_refs_index_candidate_section(&content);
+
+    let mut out = String::new();
+    out.push_str(&format!(
+        "<article class=\"source-card\"><h3>{}</h3><p class=\"path\">{}</p>",
+        html_escape(&title),
+        html_escape(&rel)
+    ));
+    out.push_str("<div class=\"highlight\"><strong>Readable review view:</strong> Relation candidates are rendered as review cards instead of a wide raw Markdown table.</div>");
+    out.push_str(&markdown_to_html(&before));
+    out.push_str("<h2>Relation candidates</h2>");
+    out.push_str(&render_relation_candidate_cards(&candidate_rows));
+    if !after.trim().is_empty() {
+        out.push_str("<details open><summary>Deferred human / LLM task handoff</summary>");
+        out.push_str(&markdown_to_html(&after));
+        out.push_str("</details>");
+    }
+    out.push_str("</article>");
+    Ok(out)
+}
+
+fn split_refs_index_candidate_section(markdown: &str) -> (String, Vec<Vec<String>>, String) {
+    enum Mode {
+        Before,
+        Candidates,
+        After,
+    }
+
+    let mut mode = Mode::Before;
+    let mut before = String::new();
+    let mut after = String::new();
+    let mut rows = Vec::new();
+
+    for line in markdown.lines() {
+        let trimmed = line.trim();
+        if trimmed == "## Relation candidates" {
+            mode = Mode::Candidates;
+            continue;
+        }
+        if matches!(mode, Mode::Candidates) && trimmed.starts_with("## ") {
+            mode = Mode::After;
+        }
+
+        match mode {
+            Mode::Before => {
+                before.push_str(line);
+                before.push('\n');
+            }
+            Mode::Candidates => {
+                let cells = markdown_table_cells(line);
+                if cells.len() >= 6
+                    && !is_markdown_header_row(&cells)
+                    && !cells[0].eq_ignore_ascii_case("status")
+                {
+                    rows.push(cells);
+                } else if !trimmed.is_empty() && !trimmed.starts_with('|') {
+                    after.push_str(line);
+                    after.push('\n');
+                }
+            }
+            Mode::After => {
+                after.push_str(line);
+                after.push('\n');
+            }
         }
     }
 
-    if cards.is_empty() {
-        return Ok("<p class=\"empty\">No refs graph export found. Run <code>kb refs-graph --json</code>, <code>--mermaid</code>, or <code>--dot</code> first.</p>".to_string());
+    (before, rows, after)
+}
+
+fn render_relation_candidate_cards(rows: &[Vec<String>]) -> String {
+    if rows.is_empty() {
+        return "<p class=\"empty\">No relation candidates returned.</p>".to_string();
     }
 
     let mut out = String::new();
-    out.push_str("<div class=\"highlight\"><strong>Visual protocol:</strong> solid arrows = confirmed relations; dashed arrows = candidate/ambiguous relations; hollow nodes = missing/unresolved references; node size = literature importance.</div>");
-    for card in cards {
+    out.push_str("<div class=\"relation-candidate-list\">");
+    for (idx, row) in rows.iter().enumerate() {
+        let status = row.get(0).cloned().unwrap_or_else(|| "unknown".to_string());
+        let source = row.get(1).cloned().unwrap_or_default();
+        let target = row.get(2).cloned().unwrap_or_default();
+        let score = row.get(3).cloned().unwrap_or_default();
+        let review = row.get(4).cloned().unwrap_or_default();
+        let evidence = row.get(5).cloned().unwrap_or_default();
         out.push_str(&format!(
-            "<article class=\"source-card\"><h3>{}</h3><p class=\"path\">{}</p>{}</article>",
-            html_escape(&card.title),
-            html_escape(&card.path),
-            card.html
+            "<article class=\"relation-candidate-card\"><div class=\"candidate-card-head\"><span class=\"badge {}\">{}</span><strong>Candidate #{}</strong><span>score {}</span><span>review {}</span></div><dl><dt>Source</dt><dd><code>{}</code></dd><dt>Target</dt><dd><code>{}</code></dd><dt>Evidence</dt><dd>{}</dd></dl></article>",
+            html_class_token(&status),
+            html_escape(&status),
+            idx + 1,
+            html_escape(&score),
+            html_escape(&review),
+            html_escape(&source),
+            html_escape(&target),
+            html_escape(&evidence)
         ));
     }
+    out.push_str("</div>");
+    out
+}
+
+fn render_refs_graph(kb_path: &Path) -> Result<String> {
+    let Some(json_path) = latest_matching_path(kb_path, "processing/refs", "refs_graph_", "json")?
+    else {
+        return Ok("<p class=\"empty\">No refs graph JSON export found. Run <code>kb refs-graph</code> first.</p>".to_string());
+    };
+
+    let rel = relative_path_string(kb_path, &json_path);
+    let title = json_path
+        .file_name()
+        .and_then(|s| s.to_str())
+        .unwrap_or("refs_graph.json")
+        .to_string();
+    let content = fs::read_to_string(&json_path).unwrap_or_default();
+    let parsed = serde_json::from_str::<Value>(&content).ok();
+
+    let mut out = String::new();
+    out.push_str(&format!(
+        "<article class=\"source-card\"><h3>{}</h3><p class=\"path\">{}</p>",
+        html_escape(&title),
+        html_escape(&rel)
+    ));
+    out.push_str("<div class=\"highlight\"><strong>Visual protocol:</strong> circles = literature/reference nodes; solid lines = confirmed/accepted relations; dashed lines = candidate/ambiguous relations; dotted lines = missing/unresolved references.</div>");
+    out.push_str("<p><a class=\"secondary-action\" href=\"relationship_viewer.html\">打开完整关系图页面</a></p>");
+
+    if let Some(value) = parsed.as_ref() {
+        out.push_str(&render_refs_graph_svg(value));
+        out.push_str(&render_refs_graph_summary(value));
+    } else {
+        out.push_str("<p class=\"empty\">The latest refs graph JSON could not be parsed. The raw file is still available below for debugging.</p>");
+    }
+
+    out.push_str("<details><summary>Raw graph JSON</summary><pre>");
+    out.push_str(&html_escape(&content));
+    out.push_str("</pre></details>");
+
+    let mut extras = Vec::new();
+    for ext in ["mmd", "dot"] {
+        if let Some(card) = latest_matching_file(kb_path, "processing/refs", "refs_graph_", ext)? {
+            extras.push(card);
+        }
+    }
+    if !extras.is_empty() {
+        out.push_str("<details><summary>Mermaid / DOT exports</summary>");
+        for card in extras {
+            out.push_str(&format!(
+                "<article class=\"source-card\"><h4>{}</h4><p class=\"path\">{}</p>{}</article>",
+                html_escape(&card.title),
+                html_escape(&card.path),
+                card.html
+            ));
+        }
+        out.push_str("</details>");
+    }
+
+    out.push_str("</article>");
     Ok(out)
+}
+
+fn render_refs_graph_svg(value: &Value) -> String {
+    let mut nodes = value
+        .get("nodes")
+        .and_then(|v| v.as_array())
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(|node| {
+                    let id = json_string(node, "id")?;
+                    let label = json_string(node, "label").unwrap_or_else(|| id.clone());
+                    let node_type = json_string(node, "node_type")
+                        .or_else(|| json_string(node, "kind"))
+                        .unwrap_or_else(|| "paper".to_string());
+                    let status =
+                        json_string(node, "status").unwrap_or_else(|| "indexed".to_string());
+                    Some((id, label, node_type, status))
+                })
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+
+    let all_edges = value
+        .get("edges")
+        .and_then(|v| v.as_array())
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(|edge| {
+                    let source = json_string(edge, "source")?;
+                    let target = json_string(edge, "target")?;
+                    let status =
+                        json_string(edge, "status").unwrap_or_else(|| "candidate".to_string());
+                    let relation = json_string(edge, "relation_label")
+                        .or_else(|| json_string(edge, "relation_type"))
+                        .or_else(|| json_string(edge, "kind"))
+                        .unwrap_or_else(|| "relation".to_string());
+                    let evidence = json_string_array(edge, "evidence").join("\n");
+                    Some((source, target, status, relation, evidence))
+                })
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+
+    if nodes.is_empty() && !all_edges.is_empty() {
+        let mut ids = BTreeSet::new();
+        for (source, target, _, _, _) in &all_edges {
+            ids.insert(source.clone());
+            ids.insert(target.clone());
+        }
+        nodes = ids
+            .into_iter()
+            .map(|id| {
+                (
+                    id.clone(),
+                    id,
+                    "reference".to_string(),
+                    "indexed".to_string(),
+                )
+            })
+            .collect();
+    }
+
+    if nodes.is_empty() {
+        return "<p class=\"empty\">No graph nodes found in the latest refs graph JSON.</p>"
+            .to_string();
+    }
+
+    let node_limit = 90usize;
+    let edge_limit = 180usize;
+    let visible_nodes = nodes.into_iter().take(node_limit).collect::<Vec<_>>();
+    let visible_ids = visible_nodes
+        .iter()
+        .map(|(id, _, _, _)| id.clone())
+        .collect::<BTreeSet<_>>();
+    let visible_edges = all_edges
+        .into_iter()
+        .filter(|(source, target, _, _, _)| {
+            visible_ids.contains(source) && visible_ids.contains(target)
+        })
+        .take(edge_limit)
+        .collect::<Vec<_>>();
+
+    let cx = 550.0f64;
+    let cy = 330.0f64;
+    let radius = (110.0 + visible_nodes.len() as f64 * 4.0).min(270.0);
+    let mut positions = BTreeMap::new();
+    for (idx, (id, _, _, _)) in visible_nodes.iter().enumerate() {
+        let angle = std::f64::consts::PI * 2.0 * idx as f64 / visible_nodes.len().max(1) as f64
+            - std::f64::consts::PI / 2.0;
+        positions.insert(
+            id.clone(),
+            (cx + radius * angle.cos(), cy + radius * angle.sin()),
+        );
+    }
+
+    let mut svg = String::new();
+    svg.push_str("<div class=\"refs-graph-wrap\"><svg class=\"refs-graph-svg\" viewBox=\"0 0 1100 680\" role=\"img\" aria-label=\"Refs relationship graph\">");
+    svg.push_str("<g class=\"refs-edge-layer\">");
+    for (source, target, status, relation, evidence) in &visible_edges {
+        let Some((x1, y1)) = positions.get(source) else {
+            continue;
+        };
+        let Some((x2, y2)) = positions.get(target) else {
+            continue;
+        };
+        svg.push_str(&format!(
+            "<line class=\"refs-edge refs-edge-{}\" x1=\"{:.1}\" y1=\"{:.1}\" x2=\"{:.1}\" y2=\"{:.1}\"><title>{}</title></line>",
+            html_class_token(status),
+            x1,
+            y1,
+            x2,
+            y2,
+            html_escape(&format!("{}: {}\n{} → {}\n{}", relation, status, source, target, evidence))
+        ));
+    }
+    svg.push_str("</g><g class=\"refs-node-layer\">");
+    for (id, label, node_type, status) in &visible_nodes {
+        let Some((x, y)) = positions.get(id) else {
+            continue;
+        };
+        let short = shorten_label(label, 34);
+        let r = if node_type == "unresolved_reference" || status == "missing" {
+            15
+        } else {
+            13
+        };
+        svg.push_str(&format!(
+            "<g class=\"refs-node refs-node-{} refs-node-status-{}\"><circle cx=\"{:.1}\" cy=\"{:.1}\" r=\"{}\"></circle><text x=\"{:.1}\" y=\"{:.1}\">{}</text><title>{}\n{}\nstatus: {}</title></g>",
+            html_class_token(node_type),
+            html_class_token(status),
+            x,
+            y,
+            r,
+            x + 16.0,
+            y + 4.0,
+            html_escape(&short),
+            html_escape(node_type),
+            html_escape(label),
+            html_escape(status)
+        ));
+    }
+    svg.push_str("</g></svg></div>");
+
+    let hidden_nodes = value
+        .get("node_count")
+        .and_then(|v| v.as_u64())
+        .map(|count| count.saturating_sub(visible_nodes.len() as u64))
+        .unwrap_or(0);
+    let hidden_edges = value
+        .get("edge_count")
+        .and_then(|v| v.as_u64())
+        .map(|count| count.saturating_sub(visible_edges.len() as u64))
+        .unwrap_or(0);
+    if hidden_nodes > 0 || hidden_edges > 0 {
+        svg.push_str(&format!(
+            "<p class=\"hint\">Showing a readable preview of {} nodes and {} edges. Hidden for readability: {} nodes, {} edges. Open the full relation page or raw JSON for complete data.</p>",
+            visible_nodes.len(),
+            visible_edges.len(),
+            hidden_nodes,
+            hidden_edges
+        ));
+    }
+    svg
+}
+
+fn render_refs_graph_summary(value: &Value) -> String {
+    let node_count = value
+        .get("node_count")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0);
+    let edge_count = value
+        .get("edge_count")
+        .and_then(|v| v.as_u64())
+        .unwrap_or(0);
+    let graph_kind = value
+        .get("graph_kind")
+        .and_then(|v| v.as_str())
+        .unwrap_or("refs_graph");
+    let layer = value
+        .get("relation_layer")
+        .and_then(|v| v.as_str())
+        .unwrap_or("bibliographic_index");
+    let generated_at = value
+        .get("generated_at")
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown");
+    format!(
+        "<div class=\"metric-grid refs-graph-summary\"><div class=\"metric\"><strong>{}</strong>Nodes</div><div class=\"metric\"><strong>{}</strong>Edges</div><div class=\"metric\"><strong>{}</strong>Graph kind</div><div class=\"metric\"><strong>{}</strong>Layer</div></div><p class=\"path\">Generated at: {}</p>",
+        node_count,
+        edge_count,
+        html_escape(graph_kind),
+        html_escape(layer),
+        html_escape(generated_at)
+    )
+}
+
+fn shorten_label(label: &str, max_chars: usize) -> String {
+    let mut out = String::new();
+    for (idx, ch) in label.chars().enumerate() {
+        if idx >= max_chars {
+            out.push('…');
+            return out;
+        }
+        out.push(ch);
+    }
+    out
+}
+
+fn html_class_token(value: &str) -> String {
+    let slug = slugify(value);
+    if slug.is_empty() {
+        "unknown".to_string()
+    } else {
+        slug
+    }
 }
 
 fn render_topics(kb_path: &Path) -> Result<String> {

@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.7.28
+
+`v0.7.28` improves the human-readable graph and relation review experience inside `kb view`.
+
+### Changed
+
+- Render refs-index relation candidates as readable review cards instead of a wide raw Markdown table.
+- Render the latest refs-graph JSON as an inline SVG relationship graph with circular nodes and solid/dashed/dotted edges.
+- Generate `relationship_data.json` and `relationship_viewer.html` during normal `kb view`, so the dashboard **查看关系图** / Topic Relations links work without running `kb view --relations` first.
+
 ## v0.7.27
 
 `v0.7.27` decouples the generated HTML sidebar from the main content scroll area.

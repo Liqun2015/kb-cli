@@ -1,6 +1,6 @@
 # kb view
 
-Current version: `v0.7.27`
+Current version: `v0.7.28`
 
 `kb view` generates static local HTML viewers for the current LLM Wiki.
 
@@ -218,3 +218,21 @@ On Windows, `kb view` opens generated HTML through `rundll32.exe url.dll,FilePro
 ## Disposable HTML Artifacts
 
 `kb view` writes HTML under `interfaces/html/`. These files are human review artifacts, not Wiki source files. Delete and regenerate them when needed. Accepted review decisions must be written back to Markdown/JSON/TOML source files outside `interfaces/`.
+
+## v0.7.28 HTML readability updates
+
+Regular `kb view` now also writes the companion relationship artifacts under the same output directory:
+
+```text
+interfaces/html/relationship_data.json
+interfaces/html/relationship_viewer.html
+```
+
+This keeps the dashboard **查看关系图** and sidebar **Topic Relations** links usable immediately after a normal `kb view` run.
+
+The dashboard also renders:
+
+- `Refs Index` relation candidates as review cards instead of a hard-to-read wide Markdown table.
+- `Refs Graph` JSON as an inline SVG graph preview with circular nodes and solid/dashed/dotted relationship lines.
+
+The raw JSON / Mermaid / DOT artifacts remain available in collapsed `<details>` blocks for debugging and third-party visualizers.

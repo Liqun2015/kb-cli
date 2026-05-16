@@ -6,7 +6,11 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.27`
+Current version: `v0.7.28`
+
+### v0.7.28
+
+`v0.7.28` improves `kb view` readability: refs-index relation candidates are rendered as review cards, refs-graph JSON is rendered as an inline SVG graph, and regular `kb view` now also generates `relationship_viewer.html` so the **查看关系图** link works immediately.
 
 ### v0.7.27
 
