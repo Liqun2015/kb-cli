@@ -6,7 +6,19 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.30`
+Current version: `v0.7.34`
+
+### v0.7.34
+
+`v0.7.34` styles compact `Refs Index` disclosure sections as separate lightweight cards with browser-native triangle markers, matching the topic file list style while keeping the page compact.
+
+### v0.7.33
+
+`v0.7.33` restores the browser-native disclosure triangle for compact `Refs Index` sections and removes custom `+` / `−` indicators.
+
+### v0.7.31
+
+`v0.7.31` fixes sidebar active-state cleanup in the generated `kb view` dashboard.
 
 ### v0.7.30
 

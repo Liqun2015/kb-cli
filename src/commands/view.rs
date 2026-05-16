@@ -359,7 +359,7 @@ fn build_relationship_data(kb_path: &Path, args: &ViewArgs) -> Result<Relationsh
 
     Ok(RelationshipData {
         meta: RelationshipMeta {
-            version: "v0.7.30".to_string(),
+            version: "v0.7.34".to_string(),
             generated_by: "kb view --relations".to_string(),
             generated_at: Utc::now().to_rfc3339(),
             knowledge_base: kb_path.display().to_string(),
@@ -1613,8 +1613,13 @@ dd { min-width: 0; overflow-wrap: anywhere; }
 .empty { color: #718096; background: #f7fafc; border: 1px dashed #cbd5e0; padding: 1rem; border-radius: 6px; }
 details { margin: 0.8rem 0; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.7rem; }
 summary { cursor: pointer; color: #2b6cb0; font-weight: 600; }
-.compact-toggle summary { display: inline-flex; align-items: center; gap: 0.45rem; background: #e8f4f8; border: 1px solid #bee3f8; color: #2b6cb0; border-radius: 8px; padding: 0.55rem 0.8rem; }
-.compact-toggle[open] summary { background: #4299e1; border-color: #4299e1; color: white; }
+.compact-toggle { margin: 0.8rem 0; border: 1px solid #d9e2ec; border-radius: 6px; padding: 0; background: white; overflow: hidden; }
+.compact-toggle summary { cursor: pointer; color: #2b6cb0; font-weight: 700; padding: 0.75rem 0.9rem; background: white; list-style-position: inside; }
+.compact-toggle summary::marker { color: #2b6cb0; font-size: 0.9rem; }
+.compact-toggle summary:hover { background: #f7fafc; }
+.compact-toggle[open] summary { border-bottom: 1px solid #e2e8f0; background: #f7fafc; }
+.compact-toggle > :not(summary) { margin-left: 1rem; margin-right: 1rem; }
+.compact-toggle > :last-child { margin-bottom: 1rem; }
 mark { background: #fefcbf; padding: 0 0.15rem; }
 "#;
 
@@ -1628,7 +1633,7 @@ const commandButton = document.getElementById('runViewCommand');
 function switchTab(id) {
   const target = document.getElementById(id);
   if (!target) return false;
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab, .sidebar-link, .primary-action').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.content-section').forEach(c => c.classList.remove('active'));
   document.querySelectorAll(`[data-target="${id}"]`).forEach(t => t.classList.add('active'));
   target.classList.add('active');

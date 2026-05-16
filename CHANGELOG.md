@@ -1,4 +1,23 @@
+## v0.7.34
+
+`v0.7.34` updates compact `Refs Index` disclosure sections to use the same card-like native-triangle style as topic file lists, keeping relation candidates and deferred handoff blocks readable but compact.
+
 # Changelog
+
+## v0.7.33
+
+`v0.7.33` restores browser-native disclosure triangles for compact `Refs Index` sections, removing the custom `+` / `−` indicators.
+
+- Adds a `+` indicator to closed compact review sections.
+- Switches the indicator to `−` when the section is open.
+- Keeps the existing compact button styling and page layout unchanged.
+
+## v0.7.31
+
+`v0.7.31` fixes sidebar active-state cleanup in the generated `kb view` dashboard.
+
+- Clears active styling from previous sidebar buttons when a new tab is selected.
+- Keeps sidebar and main tab highlighting synchronized.
 
 ## v0.7.30
 
