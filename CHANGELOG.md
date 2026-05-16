@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.7.27
+
+`v0.7.27` decouples the generated HTML sidebar from the main content scroll area.
+
+- Keeps the existing `kb view` visual style and navigation structure.
+- Makes the dashboard sidebar an independent full-height panel while the main content scrolls separately.
+- Applies the same independent-scroll behavior to the topic relationship viewer.
+- Preserves responsive/mobile behavior by returning to a single-column flow on narrow screens.
+
 ## v0.7.26
 
 `v0.7.26` cleans up command-argument ownership and release-package hygiene.

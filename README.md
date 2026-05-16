@@ -6,7 +6,11 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.26`
+Current version: `v0.7.27`
+
+### v0.7.27
+
+`v0.7.27` keeps `kb view` as the unified human-facing inspection interface and improves the generated HTML layout by decoupling sidebar scrolling from main-content scrolling. The sidebar keeps the same visual style but remains available while the right-side content moves independently.
 
 ### v0.7.26
 
