@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.7.26
+
+`v0.7.26` cleans up command-argument ownership and release-package hygiene.
+
+### Changed
+
+- Removed the duplicate local `--lib` field from `kb create`; `create` now uses the global `--lib` selector defined at the top-level CLI.
+- Kept the preferred user-facing command unchanged: `kb create --lib <A> --from <B> --about <topic>`.
+- Synchronized documentation `Current version` headers to `v0.7.26`.
+- Excluded the local runtime `.model_config.json` from the release package; keep `.model_config.example.json` as the shareable template.
+
 ## v0.7.25
 
 `v0.7.25` polishes the HTML dashboard LLM launch navigation.

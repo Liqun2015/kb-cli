@@ -8,13 +8,6 @@ use crate::commands;
 #[derive(Debug, Clone, Args)]
 pub struct CreateArgs {
     #[arg(
-        long = "lib",
-        value_name = "A",
-        help = "Target LLM Wiki knowledge-base directory to create/build. This is the preferred create target."
-    )]
-    pub lib: Option<PathBuf>,
-
-    #[arg(
         long = "from",
         value_name = "B",
         help = "Existing literature/source-material folder to convert into the LLM Wiki."
@@ -75,7 +68,6 @@ pub fn execute(
     args: &CreateArgs,
 ) -> Result<()> {
     let kb_path = resolve_create_lib(
-        args.lib.as_deref(),
         custom_kb,
         args.legacy_name.as_deref(),
         args.from.as_deref(),
@@ -196,47 +188,33 @@ pub fn execute(
 }
 
 fn resolve_create_lib(
-    arg_lib: Option<&Path>,
     global_kb: Option<&Path>,
     legacy_name: Option<&str>,
     arg_from: Option<&Path>,
     global_source: Option<&Path>,
     legacy_source: Option<&Path>,
 ) -> Result<PathBuf> {
-    match (arg_lib, global_kb) {
-        (Some(arg_lib), Some(global_kb)) => {
-            let arg_lib = commands::init::resolve_user_path(arg_lib);
-            let global_kb = commands::init::resolve_user_path(global_kb);
-            if arg_lib != global_kb {
-                return Err(anyhow!(
-                    "use either `kb create --lib <A>` or global `--lib <A>`, not both with different paths: --lib={} global --lib={}",
-                    arg_lib.display(),
-                    global_kb.display()
-                ));
-            }
-            Ok(arg_lib)
-        }
-        (Some(arg_lib), None) => Ok(commands::init::resolve_user_path(arg_lib)),
-        (None, Some(global_kb)) => Ok(commands::init::resolve_user_path(global_kb)),
-        (None, None) => {
-            // v0.7.21 compatibility: `kb create <literature-folder> --topic <topic>`
-            // created `<literature-folder>/knowledgebase` unless a custom library path was supplied.
-            let source_for_legacy = arg_from.or(global_source).or(legacy_source);
-            if let Some(source) = source_for_legacy {
-                let source = commands::init::resolve_user_path(source);
-                let name = legacy_name
-                    .unwrap_or(commands::init::DEFAULT_WORKSPACE_DIR)
-                    .trim();
-                if name.is_empty() {
-                    return Err(anyhow!("legacy workspace name cannot be empty"));
-                }
-                return Ok(source.join(name));
-            }
-            Err(anyhow!(
-                "kb create requires a target library. Use `kb create --lib <A> --from <B> --about <topic>`."
-            ))
-        }
+    if let Some(global_kb) = global_kb {
+        return Ok(commands::init::resolve_user_path(global_kb));
     }
+
+    // v0.7.21 compatibility: `kb create <literature-folder> --topic <topic>`
+    // created `<literature-folder>/knowledgebase` unless a custom library path was supplied.
+    let source_for_legacy = arg_from.or(global_source).or(legacy_source);
+    if let Some(source) = source_for_legacy {
+        let source = commands::init::resolve_user_path(source);
+        let name = legacy_name
+            .unwrap_or(commands::init::DEFAULT_WORKSPACE_DIR)
+            .trim();
+        if name.is_empty() {
+            return Err(anyhow!("legacy workspace name cannot be empty"));
+        }
+        return Ok(source.join(name));
+    }
+
+    Err(anyhow!(
+        "kb create requires a target library. Use `kb create --lib <A> --from <B> --about <topic>`."
+    ))
 }
 
 fn resolve_create_from(

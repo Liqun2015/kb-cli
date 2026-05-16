@@ -6,7 +6,11 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.25`
+Current version: `v0.7.26`
+
+### v0.7.26
+
+Parameter Consistency release. `kb create` now relies on the global `--lib` selector instead of defining a second local `--lib` option inside the `create` subcommand. This keeps the public command form unchanged while avoiding duplicate Clap argument definitions. The release package also omits the local `.model_config.json` runtime file and keeps only `.model_config.example.json`.
 
 ### v0.7.25
 
