@@ -229,7 +229,7 @@ fn main() -> anyhow::Result<()> {
             println!(
                 "  topic handoff <topic> [--agent AGENT|--all-agents] [--json] [--dry-run] [--force]  Generate topic-local generic/agent-adapter handoff files"
             );
-            println!("  view [--relations] [--topic TOPIC] [--data-only] [--no-open]  Generate static HTML viewers");
+            println!("  view [--wiki|--relations] [--topic TOPIC] [--data-only] [--no-open]  Generate dashboard, Wiki reader, or relationship HTML viewers");
             println!(
                 "  shell                         Enter deterministic interactive command shell"
             );

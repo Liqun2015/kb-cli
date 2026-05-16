@@ -1,6 +1,6 @@
 # LLM Hierarchy
 
-Current version: `v0.7.34`
+Current version: `v0.7.35`
 
 This project separates LLM roles by level.
 

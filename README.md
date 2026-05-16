@@ -6,7 +6,11 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.34`
+Current version: `v0.7.35`
+
+### v0.7.35
+
+`v0.7.35` adds `kb view --wiki`, a human-readable Wiki reader that renders `wiki/` Markdown pages as topic-oriented knowledge articles with sidebar navigation, search, WikiLink resolution, Markdown links, tables, and inline images. Regular `kb view` also generates `interfaces/html/wiki.html` and links to it as “阅读 Wiki”.
 
 ### v0.7.34
 

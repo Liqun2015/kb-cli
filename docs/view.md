@@ -1,6 +1,6 @@
 # kb view
 
-Current version: `v0.7.34`
+Current version: `v0.7.35`
 
 `kb view` generates static local HTML viewers for the current LLM Wiki.
 
@@ -236,3 +236,8 @@ The dashboard also renders:
 - `Refs Graph` JSON as an inline SVG graph preview with circular nodes and solid/dashed/dotted relationship lines.
 
 The raw JSON / Mermaid / DOT artifacts remain available in collapsed `<details>` blocks for debugging and third-party visualizers.
+
+
+## Wiki reader
+
+`kb view --wiki` generates `interfaces/html/wiki.html`, a human-readable Wiki surface for pages under `wiki/`. It is intended for topic-oriented reading rather than inspecting low-level task, JSON, and interface artifacts.

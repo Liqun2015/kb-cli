@@ -1,6 +1,6 @@
 # Topic Graph Schema for Third-Party Skills
 
-Current version: `v0.7.34`
+Current version: `v0.7.35`
 
 This document extends the global relation graph protocol with topic-specific overlays.
 

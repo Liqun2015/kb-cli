@@ -40,6 +40,12 @@ pub struct ViewArgs {
 
     #[arg(
         long,
+        help = "Generate a human-readable Wiki reader page with topic navigation, WikiLinks, and images"
+    )]
+    pub wiki: bool,
+
+    #[arg(
+        long,
         value_name = "TOPIC",
         help = "Filter --relations mode to one concrete topic graph"
     )]
@@ -93,6 +99,10 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
         return execute_relationship_view(&kb_path, args);
     }
 
+    if args.wiki {
+        return execute_wiki_view(&kb_path, args);
+    }
+
     if args.topic.is_some() {
         eprintln!("Warning: --topic is only used with --relations; ignoring it for the regular dashboard.");
     }
@@ -119,6 +129,10 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
             "  relation page  : {}",
             output_root.join("relationship_viewer.html").display()
         );
+        println!(
+            "  wiki reader    : {}",
+            output_root.join("wiki.html").display()
+        );
         println!("  open browser   : {}", args.should_open());
         println!("  no files written");
         return Ok(());
@@ -138,6 +152,8 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
         &relationship_html_path,
         render_relationship_viewer(&kb_path, &relationship_data)?,
     )?;
+    let wiki_html_path = output_root.join("wiki.html");
+    fs::write(&wiki_html_path, render_wiki_reader(&kb_path, &output_root)?)?;
 
     println!("Static HTML viewer generated:");
     println!("  {}", output_path.display());
@@ -145,6 +161,8 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
     println!("  {}", relationship_html_path.display());
     println!("Relationship graph data generated:");
     println!("  {}", relationship_data_path.display());
+    println!("Wiki reader generated:");
+    println!("  {}", wiki_html_path.display());
     println!();
     if args.should_open() {
         open_in_default_browser(&output_path)?;
@@ -158,6 +176,61 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
         "  it can navigate tabs and search visible content, but it cannot execute kb commands."
     );
 
+    Ok(())
+}
+
+#[derive(Debug, Clone)]
+struct WikiPageSource {
+    id: String,
+    title: String,
+    rel_path: String,
+    abs_path: PathBuf,
+    folder: String,
+    content: String,
+    summary: String,
+}
+
+fn execute_wiki_view(kb_path: &Path, args: &ViewArgs) -> Result<()> {
+    if args.topic.is_some() {
+        eprintln!("Warning: --topic is only used with --relations; ignoring it for --wiki.");
+    }
+    if args.data_only {
+        eprintln!("Warning: --data-only is only used with --relations; ignoring it for --wiki.");
+    }
+
+    let output_dir = args
+        .output_dir
+        .clone()
+        .unwrap_or_else(|| PathBuf::from("interfaces/html"));
+    let output_root = resolve_under_kb(kb_path, &output_dir);
+    let output_path = output_root.join("wiki.html");
+    let pages = collect_wiki_page_sources(kb_path)?;
+
+    if args.is_dry_run() {
+        println!("kb view --wiki preview:");
+        println!("  knowledge base : {}", kb_path.display());
+        println!("  output         : {}", output_path.display());
+        println!("  wiki pages     : {}", pages.len());
+        println!("  open browser   : {}", args.should_open());
+        println!("  no files written");
+        return Ok(());
+    }
+
+    fs::create_dir_all(&output_root)?;
+    fs::write(
+        &output_path,
+        render_wiki_reader_from_pages(kb_path, &output_root, &pages)?,
+    )?;
+
+    println!("Wiki reader generated:");
+    println!("  {}", output_path.display());
+    if args.should_open() {
+        open_in_default_browser(&output_path)?;
+        println!("Opened in the system default browser.");
+    } else {
+        println!("HTML generated without opening a browser because --no-open was set.");
+        println!("Open this file manually in a browser when needed.");
+    }
     Ok(())
 }
 
@@ -359,7 +432,7 @@ fn build_relationship_data(kb_path: &Path, args: &ViewArgs) -> Result<Relationsh
 
     Ok(RelationshipData {
         meta: RelationshipMeta {
-            version: "v0.7.34".to_string(),
+            version: "v0.7.35".to_string(),
             generated_by: "kb view --relations".to_string(),
             generated_at: Utc::now().to_rfc3339(),
             knowledge_base: kb_path.display().to_string(),
@@ -1514,7 +1587,7 @@ fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
     );
     html.push_str("<main class=\"main\">\n<header><h1>");
     html.push_str(&kb_name);
-    html.push_str("</h1><p class=\"subtitle\">LLM Wiki of your knowledge base for the purpose of swift and high quality research</p><div class=\"header-actions\"><a class=\"secondary-action\" href=\"relationship_viewer.html\">查看关系图</a></div><div class=\"artifact-notice\"><strong>Interface artifact:</strong> this HTML file is generated under <code>interfaces/</code> for human review and agent communication only. Do not treat it as the knowledge source; write accepted decisions back to Markdown/JSON/TOML outside <code>interfaces/</code>.</div></header>\n");
+    html.push_str("</h1><p class=\"subtitle\">LLM Wiki of your knowledge base for the purpose of swift and high quality research</p><div class=\"header-actions\"><a class=\"secondary-action\" href=\"wiki.html\">阅读 Wiki</a><a class=\"secondary-action\" href=\"relationship_viewer.html\">查看关系图</a></div><div class=\"artifact-notice\"><strong>Interface artifact:</strong> this HTML file is generated under <code>interfaces/</code> for human review and agent communication only. Do not treat it as the knowledge source; write accepted decisions back to Markdown/JSON/TOML outside <code>interfaces/</code>.</div></header>\n");
     html.push_str("<nav class=\"nav-tabs\">\n");
     html.push_str(&nav_buttons);
     html.push_str("</nav>\n");
@@ -1724,6 +1797,842 @@ commandButton.addEventListener('click', runViewCommand);
 commandInput.addEventListener('keydown', e => {
   if (e.key === 'Enter') runViewCommand();
 });
+"#;
+
+fn render_wiki_reader(kb_path: &Path, output_root: &Path) -> Result<String> {
+    let pages = collect_wiki_page_sources(kb_path)?;
+    render_wiki_reader_from_pages(kb_path, output_root, &pages)
+}
+
+fn collect_wiki_page_sources(kb_path: &Path) -> Result<Vec<WikiPageSource>> {
+    let wiki_root = kb_path.join("wiki");
+    if !wiki_root.exists() {
+        return Ok(Vec::new());
+    }
+
+    let mut paths = collect_markdown_files(&wiki_root);
+    paths.sort();
+
+    let mut pages = Vec::new();
+    let mut used_ids = BTreeSet::new();
+    for (idx, path) in paths.into_iter().enumerate() {
+        let content = fs::read_to_string(&path).unwrap_or_default();
+        let rel_path = relative_path_string(kb_path, &path);
+        let rel_without_ext = rel_path
+            .strip_suffix(".md")
+            .unwrap_or(&rel_path)
+            .to_string();
+        let mut id = slugify(&rel_without_ext);
+        if id.is_empty() {
+            id = format!("wiki-page-{}", idx + 1);
+        }
+        let base_id = id.clone();
+        let mut suffix = 2;
+        while used_ids.contains(&id) {
+            id = format!("{}-{}", base_id, suffix);
+            suffix += 1;
+        }
+        used_ids.insert(id.clone());
+
+        let title = wiki_page_title(&content, &path);
+        let summary = wiki_page_summary(&content);
+        let folder = path
+            .parent()
+            .and_then(|parent| parent.strip_prefix(&wiki_root).ok())
+            .map(|p| p.to_string_lossy().replace('\\', "/"))
+            .filter(|s| !s.is_empty())
+            .unwrap_or_else(|| "Home".to_string());
+
+        pages.push(WikiPageSource {
+            id,
+            title,
+            rel_path,
+            abs_path: path,
+            folder,
+            content,
+            summary,
+        });
+    }
+    Ok(pages)
+}
+
+fn render_wiki_reader_from_pages(
+    kb_path: &Path,
+    output_root: &Path,
+    pages: &[WikiPageSource],
+) -> Result<String> {
+    let generated_at = html_escape(&Utc::now().to_rfc3339());
+    let kb_display = html_escape(&kb_path.display().to_string());
+    let kb_name_raw = kb_path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .filter(|name| !name.trim().is_empty())
+        .unwrap_or("LLM Wiki");
+    let kb_name = html_escape(kb_name_raw);
+    let link_index = build_wiki_link_index(pages);
+
+    let mut folder_map: BTreeMap<String, Vec<usize>> = BTreeMap::new();
+    for (idx, page) in pages.iter().enumerate() {
+        folder_map.entry(page.folder.clone()).or_default().push(idx);
+    }
+
+    let mut sidebar = String::new();
+    if pages.is_empty() {
+        sidebar.push_str("<p class=\"wiki-empty-small\">No wiki pages yet.</p>");
+    } else {
+        for (folder, indexes) in &folder_map {
+            sidebar.push_str(&format!(
+                "<details class=\"wiki-folder\" open><summary>{}</summary>",
+                html_escape(folder)
+            ));
+            for idx in indexes {
+                let page = &pages[*idx];
+                sidebar.push_str(&format!(
+                    "<a class=\"wiki-nav-link\" href=\"#{}\" data-page=\"{}\"><span>{}</span><small>{}</small></a>",
+                    html_escape(&page.id),
+                    html_escape(&page.id),
+                    html_escape(&page.title),
+                    html_escape(&page.rel_path)
+                ));
+            }
+            sidebar.push_str("</details>");
+        }
+    }
+
+    let mut cards = String::new();
+    if pages.is_empty() {
+        cards.push_str("<article class=\"wiki-empty\"><h2>还没有可阅读的 Wiki 页面</h2><p>请先运行 <code>kb build-wiki</code> 或由 Worker LLM 在 <code>wiki/</code> 下生成 Markdown 页面。这里将显示围绕主题组织的知识页、超链接和图片。</p></article>");
+    } else {
+        for page in pages {
+            let body = markdown_to_wiki_html(
+                &page.content,
+                kb_path,
+                output_root,
+                &page.abs_path,
+                &link_index,
+            );
+            cards.push_str(&format!(
+                "<article class=\"wiki-page\" id=\"{}\" data-title=\"{}\" data-path=\"{}\"><div class=\"wiki-page-head\"><p class=\"wiki-page-path\">{}</p><h2>{}</h2><p class=\"wiki-page-summary\">{}</p></div><div class=\"wiki-page-body\">{}</div></article>",
+                html_escape(&page.id),
+                html_escape(&page.title.to_lowercase()),
+                html_escape(&page.rel_path.to_lowercase()),
+                html_escape(&page.rel_path),
+                html_escape(&page.title),
+                html_escape(&page.summary),
+                body
+            ));
+        }
+    }
+
+    let mut html = String::new();
+    html.push_str("<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
+    html.push_str(&format!("<title>{} Wiki Reader</title>", kb_name));
+    html.push_str("<style>");
+    html.push_str(WIKI_READER_CSS);
+    html.push_str("</style></head><body>");
+    html.push_str("<div class=\"wiki-shell\">");
+    html.push_str("<aside class=\"wiki-reader-sidebar\"><div class=\"wiki-brand\"><strong>");
+    html.push_str(&kb_name);
+    html.push_str("</strong><span>Wiki Reader</span></div><input id=\"wikiSearch\" class=\"wiki-search\" placeholder=\"搜索页面、标题、路径…\"><nav class=\"wiki-nav\">");
+    html.push_str(&sidebar);
+    html.push_str("</nav><div class=\"wiki-side-note\">This page renders <code>wiki/</code> as a human-readable knowledge layer. It is a generated interface, not the source of truth.</div></aside>");
+    html.push_str("<main class=\"wiki-reader-main\"><header class=\"wiki-reader-header\"><div><p class=\"eyebrow\">LLM Wiki knowledge reader</p><h1>");
+    html.push_str(&kb_name);
+    html.push_str("</h1><p>围绕主题阅读知识页、WikiLinks、图片与文献页面；底层任务、JSON 和审查面板仍在 <a href=\"index.html\">kb view dashboard</a> 中。</p></div><div class=\"wiki-meta\"><span>");
+    html.push_str(&format!("{} pages", pages.len()));
+    html.push_str("</span><span>");
+    html.push_str(&generated_at);
+    html.push_str("</span><span>");
+    html.push_str(&kb_display);
+    html.push_str("</span></div></header><section class=\"wiki-page-list\">");
+    html.push_str(&cards);
+    html.push_str("</section></main></div>");
+    html.push_str("<script>");
+    html.push_str(WIKI_READER_JS);
+    html.push_str("</script></body></html>");
+    Ok(html)
+}
+
+fn build_wiki_link_index(pages: &[WikiPageSource]) -> BTreeMap<String, String> {
+    let mut index = BTreeMap::new();
+    for page in pages {
+        for key in wiki_link_keys(page) {
+            index.entry(key).or_insert_with(|| page.id.clone());
+        }
+    }
+    index
+}
+
+fn wiki_link_keys(page: &WikiPageSource) -> Vec<String> {
+    let rel_no_ext = page.rel_path.strip_suffix(".md").unwrap_or(&page.rel_path);
+    let stem = Path::new(&page.rel_path)
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or(rel_no_ext);
+    vec![
+        normalize_wiki_link_key(&page.title),
+        normalize_wiki_link_key(stem),
+        normalize_wiki_link_key(rel_no_ext),
+        normalize_wiki_link_key(&page.rel_path),
+        normalize_wiki_link_key(&rel_no_ext.replace('/', " ")),
+    ]
+    .into_iter()
+    .filter(|s| !s.is_empty())
+    .collect()
+}
+
+fn normalize_wiki_link_key(raw: &str) -> String {
+    raw.trim()
+        .trim_matches('[')
+        .trim_matches(']')
+        .trim_end_matches(".md")
+        .replace('\\', "/")
+        .to_ascii_lowercase()
+}
+
+fn wiki_page_title(content: &str, path: &Path) -> String {
+    for line in strip_yaml_front_matter(content).lines() {
+        if let Some((_, title)) = markdown_heading(line.trim()) {
+            let clean = title.trim();
+            if !clean.is_empty() {
+                return clean.to_string();
+            }
+        }
+    }
+    path.file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("Untitled")
+        .replace('-', " ")
+        .replace('_', " ")
+}
+
+fn wiki_page_summary(content: &str) -> String {
+    for line in strip_yaml_front_matter(content).lines() {
+        let t = line.trim();
+        if t.is_empty()
+            || t.starts_with('#')
+            || t.starts_with('|')
+            || t.starts_with('-')
+            || t.starts_with('*')
+            || t.starts_with("```")
+        {
+            continue;
+        }
+        let plain = t.replace("[[", "").replace("]]", "").replace('`', "");
+        return shorten_label(&plain, 180);
+    }
+    "No summary yet.".to_string()
+}
+
+fn strip_yaml_front_matter(content: &str) -> &str {
+    let trimmed = content.strip_prefix('\u{feff}').unwrap_or(content);
+    if !trimmed.starts_with("---") {
+        return trimmed;
+    }
+    let mut lines = trimmed.lines();
+    if lines.next() != Some("---") {
+        return trimmed;
+    }
+    let mut offset = 4usize;
+    for line in lines {
+        if line.trim() == "---" {
+            offset += line.len() + 1;
+            return trimmed.get(offset..).unwrap_or("");
+        }
+        offset += line.len() + 1;
+    }
+    trimmed
+}
+
+fn markdown_to_wiki_html(
+    markdown: &str,
+    kb_path: &Path,
+    output_root: &Path,
+    page_path: &Path,
+    link_index: &BTreeMap<String, String>,
+) -> String {
+    let markdown = strip_yaml_front_matter(markdown);
+    let lines: Vec<&str> = markdown.lines().collect();
+    let mut out = String::new();
+    let mut in_ul = false;
+    let mut in_code = false;
+    let mut paragraph = String::new();
+    let mut i = 0usize;
+
+    while i < lines.len() {
+        let trimmed = lines[i].trim_end();
+        let t = trimmed.trim();
+        if t.starts_with("```") {
+            flush_wiki_paragraph(
+                &mut out,
+                &mut paragraph,
+                kb_path,
+                output_root,
+                page_path,
+                link_index,
+            );
+            if in_ul {
+                out.push_str("</ul>");
+                in_ul = false;
+            }
+            if in_code {
+                out.push_str("</code></pre>");
+                in_code = false;
+            } else {
+                out.push_str("<pre><code>");
+                in_code = true;
+            }
+            i += 1;
+            continue;
+        }
+        if in_code {
+            out.push_str(&html_escape(trimmed));
+            out.push('\n');
+            i += 1;
+            continue;
+        }
+        if t.is_empty() {
+            flush_wiki_paragraph(
+                &mut out,
+                &mut paragraph,
+                kb_path,
+                output_root,
+                page_path,
+                link_index,
+            );
+            if in_ul {
+                out.push_str("</ul>");
+                in_ul = false;
+            }
+            i += 1;
+            continue;
+        }
+        if looks_like_markdown_table(&lines, i) {
+            flush_wiki_paragraph(
+                &mut out,
+                &mut paragraph,
+                kb_path,
+                output_root,
+                page_path,
+                link_index,
+            );
+            if in_ul {
+                out.push_str("</ul>");
+                in_ul = false;
+            }
+            let (table_html, next_i) =
+                render_wiki_table(&lines, i, kb_path, output_root, page_path, link_index);
+            out.push_str(&table_html);
+            i = next_i;
+            continue;
+        }
+        if let Some((level, text)) = markdown_heading(t) {
+            flush_wiki_paragraph(
+                &mut out,
+                &mut paragraph,
+                kb_path,
+                output_root,
+                page_path,
+                link_index,
+            );
+            if in_ul {
+                out.push_str("</ul>");
+                in_ul = false;
+            }
+            out.push_str(&format!(
+                "<h{level}>{}</h{level}>",
+                inline_wiki_markdown(text, kb_path, output_root, page_path, link_index)
+            ));
+        } else if let Some(item) = t.strip_prefix("- ").or_else(|| t.strip_prefix("* ")) {
+            flush_wiki_paragraph(
+                &mut out,
+                &mut paragraph,
+                kb_path,
+                output_root,
+                page_path,
+                link_index,
+            );
+            if !in_ul {
+                out.push_str("<ul>");
+                in_ul = true;
+            }
+            out.push_str(&format!(
+                "<li>{}</li>",
+                inline_wiki_markdown(item, kb_path, output_root, page_path, link_index)
+            ));
+        } else if let Some(quote) = t.strip_prefix("> ") {
+            flush_wiki_paragraph(
+                &mut out,
+                &mut paragraph,
+                kb_path,
+                output_root,
+                page_path,
+                link_index,
+            );
+            if in_ul {
+                out.push_str("</ul>");
+                in_ul = false;
+            }
+            out.push_str(&format!(
+                "<blockquote>{}</blockquote>",
+                inline_wiki_markdown(quote, kb_path, output_root, page_path, link_index)
+            ));
+        } else {
+            if !paragraph.is_empty() {
+                paragraph.push(' ');
+            }
+            paragraph.push_str(t);
+        }
+        i += 1;
+    }
+
+    flush_wiki_paragraph(
+        &mut out,
+        &mut paragraph,
+        kb_path,
+        output_root,
+        page_path,
+        link_index,
+    );
+    if in_ul {
+        out.push_str("</ul>");
+    }
+    if in_code {
+        out.push_str("</code></pre>");
+    }
+    out
+}
+
+fn flush_wiki_paragraph(
+    out: &mut String,
+    paragraph: &mut String,
+    kb_path: &Path,
+    output_root: &Path,
+    page_path: &Path,
+    link_index: &BTreeMap<String, String>,
+) {
+    if !paragraph.trim().is_empty() {
+        out.push_str(&format!(
+            "<p>{}</p>",
+            inline_wiki_markdown(
+                paragraph.trim(),
+                kb_path,
+                output_root,
+                page_path,
+                link_index
+            )
+        ));
+    }
+    paragraph.clear();
+}
+
+fn looks_like_markdown_table(lines: &[&str], index: usize) -> bool {
+    if index + 1 >= lines.len() {
+        return false;
+    }
+    let first = lines[index].trim();
+    let second = lines[index + 1].trim();
+    first.starts_with('|')
+        && first.ends_with('|')
+        && second.starts_with('|')
+        && second.contains("---")
+}
+
+fn render_wiki_table(
+    lines: &[&str],
+    start: usize,
+    kb_path: &Path,
+    output_root: &Path,
+    page_path: &Path,
+    link_index: &BTreeMap<String, String>,
+) -> (String, usize) {
+    let mut rows: Vec<Vec<String>> = Vec::new();
+    let mut i = start;
+    while i < lines.len() {
+        let t = lines[i].trim();
+        if !(t.starts_with('|') && t.ends_with('|')) {
+            break;
+        }
+        rows.push(split_markdown_table_row(t));
+        i += 1;
+    }
+    let mut out = String::new();
+    out.push_str("<div class=\"wiki-table-wrap\"><table>");
+    if !rows.is_empty() {
+        let mut body_start = 1usize;
+        out.push_str("<thead><tr>");
+        for cell in &rows[0] {
+            out.push_str(&format!(
+                "<th>{}</th>",
+                inline_wiki_markdown(cell, kb_path, output_root, page_path, link_index)
+            ));
+        }
+        out.push_str("</tr></thead>");
+        if rows.len() > 1 && is_table_separator_row(&rows[1]) {
+            body_start = 2;
+        }
+        out.push_str("<tbody>");
+        for row in rows.iter().skip(body_start) {
+            out.push_str("<tr>");
+            for cell in row {
+                out.push_str(&format!(
+                    "<td>{}</td>",
+                    inline_wiki_markdown(cell, kb_path, output_root, page_path, link_index)
+                ));
+            }
+            out.push_str("</tr>");
+        }
+        out.push_str("</tbody>");
+    }
+    out.push_str("</table></div>");
+    (out, i)
+}
+
+fn split_markdown_table_row(line: &str) -> Vec<String> {
+    line.trim()
+        .trim_matches('|')
+        .split('|')
+        .map(|cell| cell.trim().to_string())
+        .collect()
+}
+
+fn is_table_separator_row(row: &[String]) -> bool {
+    row.iter().all(|cell| {
+        !cell.is_empty()
+            && cell
+                .chars()
+                .all(|ch| ch == '-' || ch == ':' || ch.is_whitespace())
+    })
+}
+
+fn inline_wiki_markdown(
+    text: &str,
+    kb_path: &Path,
+    output_root: &Path,
+    page_path: &Path,
+    link_index: &BTreeMap<String, String>,
+) -> String {
+    let chars: Vec<char> = text.chars().collect();
+    let mut out = String::new();
+    let mut i = 0usize;
+    while i < chars.len() {
+        if i + 1 < chars.len() && chars[i] == '!' && chars[i + 1] == '[' {
+            if let Some(close) = find_char(&chars, i + 2, ']') {
+                if close + 1 < chars.len() && chars[close + 1] == '(' {
+                    if let Some(end) = find_char(&chars, close + 2, ')') {
+                        let alt = chars_to_string(&chars[i + 2..close]);
+                        let target = chars_to_string(&chars[close + 2..end]);
+                        out.push_str(&render_wiki_image(
+                            kb_path,
+                            output_root,
+                            page_path,
+                            &alt,
+                            &target,
+                        ));
+                        i = end + 1;
+                        continue;
+                    }
+                }
+            }
+        }
+        if i + 1 < chars.len() && chars[i] == '[' && chars[i + 1] == '[' {
+            if let Some(end) = find_double_close(&chars, i + 2) {
+                let raw = chars_to_string(&chars[i + 2..end]);
+                out.push_str(&render_wiki_xref(&raw, link_index));
+                i = end + 2;
+                continue;
+            }
+        }
+        if chars[i] == '[' {
+            if let Some(close) = find_char(&chars, i + 1, ']') {
+                if close + 1 < chars.len() && chars[close + 1] == '(' {
+                    if let Some(end) = find_char(&chars, close + 2, ')') {
+                        let label = chars_to_string(&chars[i + 1..close]);
+                        let target = chars_to_string(&chars[close + 2..end]);
+                        out.push_str(&render_wiki_markdown_link(
+                            kb_path,
+                            output_root,
+                            page_path,
+                            &label,
+                            &target,
+                            link_index,
+                        ));
+                        i = end + 1;
+                        continue;
+                    }
+                }
+            }
+        }
+        if chars[i] == '`' {
+            if let Some(end) = find_char(&chars, i + 1, '`') {
+                let code = chars_to_string(&chars[i + 1..end]);
+                out.push_str(&format!("<code>{}</code>", html_escape(&code)));
+                i = end + 1;
+                continue;
+            }
+        }
+        if i + 1 < chars.len() && chars[i] == '*' && chars[i + 1] == '*' {
+            if let Some(end) = find_double_star(&chars, i + 2) {
+                let bold = chars_to_string(&chars[i + 2..end]);
+                out.push_str(&format!("<strong>{}</strong>", html_escape(&bold)));
+                i = end + 2;
+                continue;
+            }
+        }
+        out.push_str(&html_escape(&chars[i].to_string()));
+        i += 1;
+    }
+    out
+}
+
+fn render_wiki_xref(raw: &str, link_index: &BTreeMap<String, String>) -> String {
+    let mut parts = raw.splitn(2, '|');
+    let target = parts.next().unwrap_or("").trim();
+    let label = parts.next().unwrap_or(target).trim();
+    let key = normalize_wiki_link_key(target.split('#').next().unwrap_or(target));
+    if let Some(id) = link_index.get(&key) {
+        format!(
+            "<a class=\"wiki-xref\" href=\"#{}\">{}</a>",
+            html_escape(id),
+            html_escape(label)
+        )
+    } else {
+        format!(
+            "<span class=\"wiki-xref wiki-xref-missing\" title=\"unresolved WikiLink: {}\">{}</span>",
+            html_escape(target),
+            html_escape(label)
+        )
+    }
+}
+
+fn render_wiki_markdown_link(
+    kb_path: &Path,
+    output_root: &Path,
+    page_path: &Path,
+    label: &str,
+    target: &str,
+    link_index: &BTreeMap<String, String>,
+) -> String {
+    let trimmed = target.trim();
+    let label_html = html_escape(label);
+    if is_external_or_anchor(trimmed) {
+        return format!("<a href=\"{}\">{}</a>", html_escape(trimmed), label_html);
+    }
+    if trimmed.to_ascii_lowercase().ends_with(".md") {
+        let key = normalize_wiki_link_key(trimmed);
+        if let Some(id) = link_index.get(&key) {
+            return format!(
+                "<a class=\"wiki-xref\" href=\"#{}\">{}</a>",
+                html_escape(id),
+                label_html
+            );
+        }
+    }
+    let href = resolve_local_asset_href(kb_path, output_root, page_path, trimmed);
+    format!("<a href=\"{}\">{}</a>", html_escape(&href), label_html)
+}
+
+fn render_wiki_image(
+    kb_path: &Path,
+    output_root: &Path,
+    page_path: &Path,
+    alt: &str,
+    target: &str,
+) -> String {
+    let src = if is_external_or_anchor(target.trim()) {
+        target.trim().to_string()
+    } else {
+        resolve_local_asset_href(kb_path, output_root, page_path, target.trim())
+    };
+    let caption = if alt.trim().is_empty() {
+        "".to_string()
+    } else {
+        format!("<figcaption>{}</figcaption>", html_escape(alt.trim()))
+    };
+    format!(
+        "<figure class=\"wiki-figure\"><img src=\"{}\" alt=\"{}\">{}</figure>",
+        html_escape(&src),
+        html_escape(alt.trim()),
+        caption
+    )
+}
+
+fn is_external_or_anchor(target: &str) -> bool {
+    let lower = target.to_ascii_lowercase();
+    lower.starts_with("http://")
+        || lower.starts_with("https://")
+        || lower.starts_with("mailto:")
+        || lower.starts_with("data:")
+        || target.starts_with('#')
+}
+
+fn resolve_local_asset_href(
+    kb_path: &Path,
+    output_root: &Path,
+    page_path: &Path,
+    target: &str,
+) -> String {
+    let raw = target.split('#').next().unwrap_or(target);
+    let anchor = target
+        .find('#')
+        .map(|idx| target[idx..].to_string())
+        .unwrap_or_default();
+    let target_path = Path::new(raw);
+    let abs = if target_path.is_absolute() {
+        target_path.to_path_buf()
+    } else {
+        page_path.parent().unwrap_or(kb_path).join(target_path)
+    };
+    format!("{}{}", relative_url_between(output_root, &abs), anchor)
+}
+
+fn relative_url_between(from_dir: &Path, to_path: &Path) -> String {
+    let from_parts = path_component_strings(from_dir);
+    let to_parts = path_component_strings(to_path);
+    let mut common = 0usize;
+    while common < from_parts.len()
+        && common < to_parts.len()
+        && from_parts[common].eq_ignore_ascii_case(&to_parts[common])
+    {
+        common += 1;
+    }
+    if common == 0 && to_path.is_absolute() {
+        return format!("file:///{}", to_path.to_string_lossy().replace('\\', "/"));
+    }
+    let mut rel: Vec<String> = Vec::new();
+    for _ in common..from_parts.len() {
+        rel.push("..".to_string());
+    }
+    for part in to_parts.iter().skip(common) {
+        rel.push(part.clone());
+    }
+    if rel.is_empty() {
+        ".".to_string()
+    } else {
+        rel.join("/")
+    }
+}
+
+fn path_component_strings(path: &Path) -> Vec<String> {
+    path.components()
+        .filter_map(|component| match component {
+            std::path::Component::Prefix(prefix) => {
+                Some(prefix.as_os_str().to_string_lossy().to_string())
+            }
+            std::path::Component::RootDir => Some("".to_string()),
+            std::path::Component::Normal(value) => Some(value.to_string_lossy().to_string()),
+            _ => None,
+        })
+        .collect()
+}
+
+fn find_char(chars: &[char], start: usize, target: char) -> Option<usize> {
+    (start..chars.len()).find(|idx| chars[*idx] == target)
+}
+
+fn find_double_close(chars: &[char], start: usize) -> Option<usize> {
+    if chars.len() < 2 {
+        return None;
+    }
+    (start..chars.len().saturating_sub(1)).find(|idx| chars[*idx] == ']' && chars[*idx + 1] == ']')
+}
+
+fn find_double_star(chars: &[char], start: usize) -> Option<usize> {
+    if chars.len() < 2 {
+        return None;
+    }
+    (start..chars.len().saturating_sub(1)).find(|idx| chars[*idx] == '*' && chars[*idx + 1] == '*')
+}
+
+fn chars_to_string(chars: &[char]) -> String {
+    chars.iter().collect()
+}
+
+const WIKI_READER_CSS: &str = r#"
+* { box-sizing: border-box; }
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f8fb; color: #1a202c; }
+a { color: #2b6cb0; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wiki-shell { display: flex; height: 100vh; min-height: 100vh; overflow: hidden; }
+.wiki-reader-sidebar { width: 330px; height: 100vh; overflow-y: auto; padding: 1rem; border-right: 1px solid #d9e2ec; background: #ffffff; }
+.wiki-brand { display: flex; flex-direction: column; gap: 0.15rem; color: #2b6cb0; margin-bottom: 1rem; }
+.wiki-brand strong { font-size: 1.15rem; }
+.wiki-brand span { color: #718096; font-size: 0.85rem; }
+.wiki-search { width: 100%; border: 1px solid #cbd5e0; border-radius: 9px; padding: 0.7rem 0.8rem; margin-bottom: 1rem; outline: none; }
+.wiki-search:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,0.16); }
+.wiki-folder { border: 1px solid #e2e8f0; border-radius: 8px; margin: 0.65rem 0; background: white; padding: 0.2rem 0; }
+.wiki-folder summary { cursor: pointer; color: #2b6cb0; font-weight: 700; padding: 0.65rem 0.75rem; }
+.wiki-nav-link { display: block; border-top: 1px solid #edf2f7; padding: 0.65rem 0.8rem; color: #2b6cb0; }
+.wiki-nav-link span { display: block; font-weight: 650; overflow-wrap: anywhere; }
+.wiki-nav-link small { display: block; color: #718096; margin-top: 0.2rem; overflow-wrap: anywhere; }
+.wiki-nav-link.active { background: #ebf8ff; border-left: 4px solid #4299e1; padding-left: calc(0.8rem - 4px); }
+.wiki-side-note, .wiki-empty-small { color: #718096; font-size: 0.82rem; line-height: 1.45; margin-top: 1rem; }
+.wiki-reader-main { flex: 1; height: 100vh; overflow-y: auto; padding: 2rem; }
+.wiki-reader-header { max-width: 1040px; margin: 0 auto 1.2rem; background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 1.3rem 1.5rem; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+.eyebrow { margin: 0 0 0.35rem; text-transform: uppercase; letter-spacing: 0.08em; color: #718096; font-size: 0.75rem; font-weight: 800; }
+.wiki-reader-header h1 { margin: 0; color: #2b6cb0; font-size: 1.8rem; }
+.wiki-reader-header p { line-height: 1.55; }
+.wiki-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.85rem; }
+.wiki-meta span { background: #edf2f7; color: #4a5568; border-radius: 999px; padding: 0.22rem 0.6rem; font-size: 0.78rem; }
+.wiki-page-list { max-width: 1040px; margin: 0 auto; }
+.wiki-page { background: white; border: 1px solid #e2e8f0; border-radius: 14px; margin: 1rem 0; padding: 1.4rem 1.55rem; box-shadow: 0 1px 4px rgba(0,0,0,0.05); scroll-margin-top: 1rem; }
+.wiki-page-head { border-bottom: 1px solid #edf2f7; margin-bottom: 1rem; padding-bottom: 0.85rem; }
+.wiki-page-path { color: #718096; font-size: 0.83rem; margin: 0 0 0.25rem; }
+.wiki-page h2 { margin: 0.15rem 0; color: #1a365d; font-size: 1.45rem; border-left: 4px solid #4299e1; padding-left: 0.6rem; }
+.wiki-page-summary { color: #4a5568; margin-bottom: 0; }
+.wiki-page-body { line-height: 1.72; font-size: 1rem; }
+.wiki-page-body h1, .wiki-page-body h2, .wiki-page-body h3 { color: #2b6cb0; margin-top: 1.25rem; }
+.wiki-page-body h1 { font-size: 1.5rem; }
+.wiki-page-body h2 { font-size: 1.28rem; }
+.wiki-page-body h3 { font-size: 1.1rem; }
+.wiki-page-body ul { padding-left: 1.35rem; }
+.wiki-page-body blockquote { margin: 1rem 0; border-left: 4px solid #bee3f8; background: #f7fafc; padding: 0.7rem 1rem; color: #4a5568; }
+.wiki-page-body pre { overflow: auto; background: #1a202c; color: #edf2f7; padding: 1rem; border-radius: 8px; }
+.wiki-page-body code { background: #edf2f7; border-radius: 4px; padding: 0.08rem 0.24rem; }
+.wiki-page-body pre code { background: transparent; padding: 0; }
+.wiki-xref { background: #ebf8ff; border: 1px solid #bee3f8; border-radius: 999px; padding: 0.08rem 0.42rem; font-weight: 650; }
+.wiki-xref-missing { background: #fffaf0; border-color: #f6ad55; color: #744210; }
+.wiki-figure { margin: 1rem auto; border: 1px solid #e2e8f0; border-radius: 12px; padding: 0.7rem; background: #fbfdff; text-align: center; }
+.wiki-figure img { max-width: 100%; height: auto; border-radius: 8px; }
+.wiki-figure figcaption { color: #718096; font-size: 0.86rem; margin-top: 0.5rem; }
+.wiki-table-wrap { overflow: auto; margin: 1rem 0; border: 1px solid #e2e8f0; border-radius: 10px; }
+.wiki-table-wrap table { width: 100%; border-collapse: collapse; }
+.wiki-table-wrap th, .wiki-table-wrap td { border-bottom: 1px solid #edf2f7; padding: 0.6rem 0.7rem; text-align: left; vertical-align: top; }
+.wiki-table-wrap th { background: #f7fafc; color: #2d3748; }
+.wiki-empty { background: white; border: 1px dashed #cbd5e0; border-radius: 14px; padding: 2rem; }
+.hidden-by-search { display: none; }
+@media (max-width: 900px) { .wiki-shell { flex-direction: column; height: auto; overflow: visible; } .wiki-reader-sidebar { width: 100%; height: auto; max-height: none; } .wiki-reader-main { height: auto; padding: 1rem; overflow: visible; } }
+"#;
+
+const WIKI_READER_JS: &str = r#"
+const links = Array.from(document.querySelectorAll('.wiki-nav-link'));
+const pages = Array.from(document.querySelectorAll('.wiki-page'));
+const search = document.getElementById('wikiSearch');
+function setActive(id) {
+  links.forEach(link => link.classList.toggle('active', link.dataset.page === id));
+}
+links.forEach(link => {
+  link.addEventListener('click', () => setActive(link.dataset.page));
+});
+if (links.length) setActive(links[0].dataset.page);
+search?.addEventListener('input', () => {
+  const q = search.value.trim().toLowerCase();
+  pages.forEach(page => {
+    const hay = `${page.dataset.title || ''} ${page.dataset.path || ''} ${page.textContent || ''}`.toLowerCase();
+    const hit = !q || hay.includes(q);
+    page.classList.toggle('hidden-by-search', !hit);
+  });
+  links.forEach(link => {
+    const page = document.getElementById(link.dataset.page);
+    const hit = page && !page.classList.contains('hidden-by-search');
+    link.classList.toggle('hidden-by-search', !hit);
+  });
+});
+const observer = new IntersectionObserver(entries => {
+  const visible = entries.filter(e => e.isIntersecting).sort((a,b) => b.intersectionRatio - a.intersectionRatio)[0];
+  if (visible) setActive(visible.target.id);
+}, {root: document.querySelector('.wiki-reader-main'), threshold: [0.15, 0.35, 0.6]});
+pages.forEach(page => observer.observe(page));
 "#;
 
 fn render_llm_launch(kb_path: &Path) -> Result<String> {

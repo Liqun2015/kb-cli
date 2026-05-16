@@ -1,3 +1,7 @@
+## v0.7.35
+
+`v0.7.35` adds `kb view --wiki`, a dedicated human-readable Wiki reader for `wiki/` Markdown pages. It groups pages by folder, provides sidebar navigation and search, resolves `[[WikiLinks]]`, renders Markdown tables and local images, and is generated as `interfaces/html/wiki.html` both from `kb view --wiki` and regular `kb view`.
+
 ## v0.7.34
 
 `v0.7.34` updates compact `Refs Index` disclosure sections to use the same card-like native-triangle style as topic file lists, keeping relation candidates and deferred handoff blocks readable but compact.
