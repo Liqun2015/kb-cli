@@ -161,6 +161,7 @@ pub fn execute(
         dry_run: false,
         preview: false,
         skip_extract: false,
+        skip_wiki: false,
         skip_refs: false,
         skip_handoff: false,
         skip_review: false,

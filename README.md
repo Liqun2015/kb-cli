@@ -6,11 +6,15 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 
 ## Current Version
 
-Current version: `v0.7.35`
+Current version: `v0.7.37`
 
-### v0.7.35
+### v0.7.37
 
-`v0.7.35` adds `kb view --wiki`, a human-readable Wiki reader that renders `wiki/` Markdown pages as topic-oriented knowledge articles with sidebar navigation, search, WikiLink resolution, Markdown links, tables, and inline images. Regular `kb view` also generates `interfaces/html/wiki.html` and links to it as “阅读 Wiki”.
+`v0.7.37` is a build hotfix for v0.7.36. It fixes an invalid Rust escape sequence in `build_wiki.rs` table-cell escaping and removes one unused import warning. No workflow or HTML behavior is changed from v0.7.36.
+
+### v0.7.36
+
+`v0.7.36` makes the Wiki layer more genuinely topic-oriented: paper pages now expose key scholarly fields that deterministic Rust extraction can and cannot fill, missing title/author/journal/abstract/keywords/introduction fields are routed to Worker LLM tasks, topic pages are generated under `wiki/topics/`, and `kb build` now refreshes metadata + Wiki pages unless `--skip-wiki` is used.
 
 ### v0.7.34
 

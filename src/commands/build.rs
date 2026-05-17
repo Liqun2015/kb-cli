@@ -45,6 +45,9 @@ pub struct BuildArgs {
     #[arg(long, help = "Skip extract-text and extract-sections stages")]
     pub skip_extract: bool,
 
+    #[arg(long, help = "Skip extract-metadata and build-wiki stages")]
+    pub skip_wiki: bool,
+
     #[arg(long, help = "Skip refs, refs-index, and refs-graph stages")]
     pub skip_refs: bool,
 
@@ -98,6 +101,20 @@ pub fn execute(custom_kb: Option<&Path>, args: &BuildArgs) -> Result<()> {
         println!("    {}. {}  ({})", idx + 1, stage.name, stage.command);
     }
     println!();
+
+    if !args.skip_wiki {
+        if dry_run {
+            println!("\n=== extract-metadata ===");
+            println!(
+                "Would run `kb extract-metadata{}`.",
+                if args.force { " --force" } else { "" }
+            );
+        } else {
+            run_stage("extract-metadata", || {
+                commands::extract_metadata::execute(custom_kb, args.force)
+            })?;
+        }
+    }
 
     if !args.skip_extract {
         run_stage("extract-text", || {
@@ -180,6 +197,15 @@ pub fn execute(custom_kb: Option<&Path>, args: &BuildArgs) -> Result<()> {
         commands::topic::execute(custom_kb, &stage_args)
     })?;
 
+    if !args.skip_wiki {
+        if dry_run {
+            println!("\n=== build-wiki ===");
+            println!("Would run `kb build-wiki` to refresh wiki/papers and wiki/topics pages.");
+        } else {
+            run_stage("build-wiki", || commands::build_wiki::execute(custom_kb))?;
+        }
+    }
+
     if !args.skip_review {
         run_stage("topic review", || {
             let stage_args = commands::topic::TopicArgs {
@@ -258,6 +284,13 @@ fn planned_stages(args: &BuildArgs, topic: &str, dry_run: bool) -> Vec<Stage> {
     let flag = if dry_run { " --dry-run" } else { "" };
     let force = if args.force { " --force" } else { "" };
 
+    if !args.skip_wiki {
+        stages.push(Stage {
+            name: "extract metadata",
+            command: format!("kb extract-metadata{}", force),
+        });
+    }
+
     if !args.skip_extract {
         stages.push(Stage {
             name: "extract text",
@@ -288,6 +321,13 @@ fn planned_stages(args: &BuildArgs, topic: &str, dry_run: bool) -> Vec<Stage> {
         name: "topic build",
         command: format!("kb topic build {}{}", topic, flag),
     });
+
+    if !args.skip_wiki {
+        stages.push(Stage {
+            name: "build wiki",
+            command: "kb build-wiki".to_string(),
+        });
+    }
 
     if !args.skip_review {
         stages.push(Stage {

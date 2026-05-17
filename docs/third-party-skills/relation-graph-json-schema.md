@@ -1,6 +1,6 @@
 # Relation Graph JSON Schema Guidance
 
-Current version: `v0.7.35`
+Current version: `v0.7.37`
 
 This document defines a recommended JSON shape for third-party visualization skills and tools. It is a guidance schema, not yet a formal stable API.
 

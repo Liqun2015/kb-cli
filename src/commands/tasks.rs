@@ -6,6 +6,7 @@ use anyhow::{anyhow, Result};
 use clap::Args;
 use regex::Regex;
 use serde::Serialize;
+use serde_json::Value;
 use walkdir::WalkDir;
 
 #[derive(Debug, Clone, Args)]
@@ -121,6 +122,9 @@ fn run_task_scan(kb_path: &Path, args: &TasksArgs) -> Result<TasksReport> {
     if let Some(task) = scan_pdf_text_conversion_tasks(kb_path)? {
         tasks.push(task);
     }
+    if let Some(task) = scan_paper_key_info_extraction_tasks(kb_path)? {
+        tasks.push(task);
+    }
     if let Some(task) = scan_paper_section_extraction_tasks(kb_path)? {
         tasks.push(task);
     }
@@ -131,6 +135,9 @@ fn run_task_scan(kb_path: &Path, args: &TasksArgs) -> Result<TasksReport> {
         tasks.push(task);
     }
     if let Some(task) = scan_keyword_topic_relation_tasks(kb_path)? {
+        tasks.push(task);
+    }
+    if let Some(task) = scan_topic_story_narrative_tasks(kb_path)? {
         tasks.push(task);
     }
     if let Some(task) = scan_wiki_source_traceability_tasks(kb_path)? {
@@ -148,7 +155,7 @@ fn run_task_scan(kb_path: &Path, args: &TasksArgs) -> Result<TasksReport> {
     };
 
     Ok(TasksReport {
-        schema_version: "0.7.4".to_string(),
+        schema_version: "0.7.37".to_string(),
         generated_by: "kb-cli tasks".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         dry_run: args.dry_run || args.preview,
@@ -213,6 +220,104 @@ fn scan_pdf_text_conversion_tasks(kb_path: &Path) -> Result<Option<DeferredTask>
         files,
         evidence,
         source_command: "kb extract-text".to_string(),
+        priority: "high".to_string(),
+    }))
+}
+
+fn scan_paper_key_info_extraction_tasks(kb_path: &Path) -> Result<Option<DeferredTask>> {
+    let raw_papers = kb_path.join("raw/papers");
+    if !raw_papers.exists() {
+        return Ok(None);
+    }
+
+    let metadata_by_filename = load_paper_metadata_values(kb_path)?;
+    let text_dir = kb_path.join("processing/text");
+    let sections_dir = kb_path.join("processing/sections");
+    let profile_dir = kb_path.join("processing/paper_profiles");
+    let wiki_papers_dir = kb_path.join("wiki/papers");
+    let mut files = Vec::new();
+    let mut evidence = Vec::new();
+
+    for pdf in collect_files_with_extensions(&raw_papers, &["pdf"])? {
+        let filename = pdf
+            .file_name()
+            .and_then(|value| value.to_str())
+            .unwrap_or("")
+            .to_string();
+        let stem = pdf
+            .file_stem()
+            .and_then(|value| value.to_str())
+            .unwrap_or("paper");
+        let text_path = text_output_path_for(kb_path, &text_dir, &pdf);
+        let section_dir = section_output_dir_for(kb_path, &sections_dir, &text_path);
+        let intro_path = section_dir.join("introduction.txt");
+        let profile_path = profile_dir.join(format!("{}.md", sanitize_path_component(stem)));
+        let wiki_page = wiki_papers_dir.join(format!("{}.md", sanitize_path_component(stem)));
+
+        let meta = metadata_by_filename.get(&filename);
+        let mut missing = Vec::new();
+        if metadata_string(meta, "title").is_none() {
+            missing.push("title");
+        }
+        if metadata_string(meta, "author").is_none() {
+            missing.push("authors");
+        }
+        if metadata_string(meta, "journal").is_none() {
+            missing.push("journal");
+        }
+        if metadata_string(meta, "abstract_text").is_none() {
+            missing.push("abstract");
+        }
+        if metadata_keywords_empty(meta) {
+            missing.push("keywords");
+        }
+        let intro_missing_or_short = !intro_path.exists()
+            || intro_path
+                .metadata()
+                .map(|metadata| metadata.len() < 300)
+                .unwrap_or(true);
+        if intro_missing_or_short {
+            missing.push("introduction");
+        }
+
+        if missing.is_empty() && profile_path.exists() {
+            continue;
+        }
+
+        files.push(relative_path_string(kb_path, &pdf));
+        files.push(relative_path_string(kb_path, &text_path));
+        files.push(relative_path_string(kb_path, &intro_path));
+        files.push(relative_path_string(kb_path, &profile_path));
+        files.push(relative_path_string(kb_path, &wiki_page));
+        evidence.push(format!(
+            "{} missing/uncertain key info: {}",
+            relative_path_string(kb_path, &pdf),
+            missing.join(", ")
+        ));
+    }
+
+    files.sort();
+    files.dedup();
+
+    if evidence.is_empty() {
+        return Ok(None);
+    }
+
+    Ok(Some(DeferredTask {
+        id: "paper-key-info-extraction-001".to_string(),
+        category: "paper_key_information".to_string(),
+        target_agent: "Paper Key-Info Extraction Worker LLM".to_string(),
+        goal: "Extract each paper's title, authors, journal, abstract, keywords, and introduction, then write reviewable paper-profile notes and update the corresponding Wiki paper pages.".to_string(),
+        requirements: vec![
+            "Use the PDF, extracted text, and extracted sections as evidence; do not invent missing bibliographic fields.".to_string(),
+            "For each paper, write a structured profile under processing/paper_profiles/<paper>.md with title, authors, journal, abstract, keywords, introduction summary, and evidence snippets.".to_string(),
+            "Update wiki/papers/<paper>.md only with evidence-backed fields and preserve uncertainty explicitly.".to_string(),
+            "Do not treat PDF document-info metadata as equivalent to article abstract or journal unless the paper text confirms it.".to_string(),
+            "Keep links from paper pages to topic pages and from topic pages back to paper pages in WikiLink form where possible.".to_string(),
+        ],
+        files,
+        evidence,
+        source_command: "kb extract-metadata + kb extract-text + kb extract-sections + kb build-wiki".to_string(),
         priority: "high".to_string(),
     }))
 }
@@ -493,6 +598,79 @@ fn scan_keyword_topic_relation_tasks(kb_path: &Path) -> Result<Option<DeferredTa
     }))
 }
 
+fn scan_topic_story_narrative_tasks(kb_path: &Path) -> Result<Option<DeferredTask>> {
+    let topics_dir = kb_path.join("topics");
+    if !topics_dir.exists() {
+        return Ok(None);
+    }
+
+    let mut files = Vec::new();
+    let mut evidence = Vec::new();
+
+    for entry in fs::read_dir(&topics_dir)? {
+        let entry = entry?;
+        if !entry.file_type()?.is_dir() {
+            continue;
+        }
+        let slug = entry.file_name().to_string_lossy().to_string();
+        let topic_root = entry.path();
+        let literature = topic_root.join("literature.md");
+        let scope = topic_root.join("scope.md");
+        let topic_wiki_page = kb_path.join("wiki/topics").join(format!("{}.md", slug));
+        let graph = topic_root.join("graph/topic_graph.md");
+        let task_dir = topic_root.join("tasks");
+
+        let has_literature = literature
+            .metadata()
+            .map(|metadata| metadata.len() > 80)
+            .unwrap_or(false);
+        let narrative_missing = !topic_wiki_page.exists()
+            || fs::read_to_string(&topic_wiki_page)
+                .map(|content| {
+                    content.contains("To be drafted by a Manager/Worker LLM")
+                        || !content.contains("## Story Narrative")
+                })
+                .unwrap_or(true);
+
+        if has_literature && narrative_missing {
+            files.push(relative_path_string(kb_path, &literature));
+            files.push(relative_path_string(kb_path, &scope));
+            files.push(relative_path_string(kb_path, &graph));
+            files.push(relative_path_string(kb_path, &topic_wiki_page));
+            files.push(relative_path_string(kb_path, &task_dir));
+            evidence.push(format!(
+                "topic `{}` has topic-local literature but no completed Wiki story narrative",
+                slug
+            ));
+        }
+    }
+
+    files.sort();
+    files.dedup();
+
+    if evidence.is_empty() {
+        return Ok(None);
+    }
+
+    Ok(Some(DeferredTask {
+        id: "topic-story-narrative-001".to_string(),
+        category: "topic_story_narrative".to_string(),
+        target_agent: "Topic Story Manager/Worker LLM".to_string(),
+        goal: "Build concise topic Wiki narratives from topic-local literature, importance hints, and relation candidates, while preserving links back to supporting papers.".to_string(),
+        requirements: vec![
+            "Use topics/<topic>/literature.md as the starting bibliography and link every cited paper back to its wiki/papers page where possible.".to_string(),
+            "Explain the topic as a short story: background, key problem, method lineage, core papers, competing ideas, and open questions.".to_string(),
+            "Use topic relation files and graph outputs as hints, not final truth; mark uncertain edges as candidates.".to_string(),
+            "Keep the final narrative in wiki/topics/<topic>.md under `## Story Narrative`.".to_string(),
+            "Do not fabricate citations; unresolved papers should remain as unresolved WikiLinks or notes for human review.".to_string(),
+        ],
+        files,
+        evidence,
+        source_command: "kb topic build <topic> + kb build-wiki + kb view --wiki".to_string(),
+        priority: "high".to_string(),
+    }))
+}
+
 fn scan_wiki_source_traceability_tasks(kb_path: &Path) -> Result<Option<DeferredTask>> {
     let wiki_dir = kb_path.join("wiki");
     if !wiki_dir.exists() {
@@ -610,6 +788,65 @@ fn scan_wiki_link_repair_tasks(kb_path: &Path) -> Result<Option<DeferredTask>> {
         source_command: "kb lint-static".to_string(),
         priority: "medium".to_string(),
     }))
+}
+
+fn load_paper_metadata_values(kb_path: &Path) -> Result<BTreeMap<String, Value>> {
+    let path = paper_metadata_path(kb_path);
+    if !path.exists() {
+        return Ok(BTreeMap::new());
+    }
+    let content = fs::read_to_string(path)?;
+    let value: Value = serde_json::from_str(&content)?;
+    let mut map = BTreeMap::new();
+    if let Some(items) = value.as_array() {
+        for item in items {
+            let Some(filename) = item
+                .get("filename")
+                .and_then(|value| value.as_str())
+                .map(|value| value.to_string())
+            else {
+                continue;
+            };
+            map.insert(filename, item.clone());
+        }
+    }
+    Ok(map)
+}
+
+fn paper_metadata_path(kb_path: &Path) -> PathBuf {
+    let current = kb_path.join("interfaces/logs/papers_metadata.json");
+    if current.exists() {
+        return current;
+    }
+    let legacy = kb_path.join("logs/papers_metadata.json");
+    if legacy.exists() {
+        return legacy;
+    }
+    current
+}
+
+fn metadata_string(meta: Option<&Value>, key: &str) -> Option<String> {
+    meta.and_then(|value| value.get(key))
+        .and_then(|value| value.as_str())
+        .map(|value| value.trim())
+        .filter(|value| !value.is_empty())
+        .map(|value| value.to_string())
+}
+
+fn metadata_keywords_empty(meta: Option<&Value>) -> bool {
+    let Some(value) = meta.and_then(|value| value.get("keywords")) else {
+        return true;
+    };
+    if let Some(items) = value.as_array() {
+        return items
+            .iter()
+            .filter_map(|item| item.as_str())
+            .all(|item| item.trim().is_empty());
+    }
+    value
+        .as_str()
+        .map(|value| value.trim().is_empty())
+        .unwrap_or(true)
 }
 
 fn collect_files_with_extensions(root: &Path, exts: &[&str]) -> Result<Vec<PathBuf>> {

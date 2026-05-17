@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use clap::Args;
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 #[derive(Debug, Clone, Args)]
 pub struct AuditWikiArgs {

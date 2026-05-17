@@ -1,6 +1,10 @@
-## v0.7.35
+## v0.7.37
 
-`v0.7.35` adds `kb view --wiki`, a dedicated human-readable Wiki reader for `wiki/` Markdown pages. It groups pages by folder, provides sidebar navigation and search, resolves `[[WikiLinks]]`, renders Markdown tables and local images, and is generated as `interfaces/html/wiki.html` both from `kb view --wiki` and regular `kb view`.
+`v0.7.37` is a hotfix release for `kb build-wiki`: it fixes Rust string/character escaping in Markdown table-cell rendering and removes one unused import warning. No workflow or HTML behavior is changed from v0.7.36.
+
+## v0.7.36
+
+`v0.7.36` strengthens the LLM Wiki handoff layer. Paper pages now surface title, authors, journal, abstract, keywords, introduction, references, missing fields, and Worker LLM profile targets. `kb tasks` now generates explicit tasks for paper key-information extraction and topic story narrative drafting. `kb build-wiki` creates initial topic story pages under `wiki/topics/` from topic workspaces, and `kb build` now runs metadata/wiki refresh stages unless `--skip-wiki` is used.
 
 ## v0.7.34
 

@@ -16,6 +16,16 @@ pub struct PaperMetadata {
     pub pages: usize,
     pub file_size: u64,
     pub doi: Option<String>,
+
+    /// Deterministic extraction can only read PDF document info reliably.
+    /// These research-profile fields are intentionally explicit so Worker LLMs
+    /// know exactly which scholarly metadata still needs semantic extraction.
+    pub journal: Option<String>,
+    pub abstract_text: Option<String>,
+    pub keywords: Vec<String>,
+    pub missing_key_info: Vec<String>,
+    pub needs_llm_key_info: bool,
+    pub llm_task_hint: String,
 }
 
 pub fn execute(custom_kb: Option<&Path>, force: bool) -> Result<()> {
@@ -104,9 +114,33 @@ fn extract_pdf_metadata(path: &Path) -> Result<PaperMetadata> {
     let author = extract_info_value(&doc, b"Author");
     let subject = extract_info_value(&doc, b"Subject");
     let creator = extract_info_value(&doc, b"Creator");
+    let keywords = extract_info_value(&doc, b"Keywords")
+        .map(|value| split_keywords(&value))
+        .unwrap_or_default();
 
     // Try to extract DOI from filename
     let doi = extract_doi_from_filename(&filename);
+
+    let mut missing_key_info = Vec::new();
+    if title.as_ref().map(|v| v.trim().is_empty()).unwrap_or(true) {
+        missing_key_info.push("title".to_string());
+    }
+    if author.as_ref().map(|v| v.trim().is_empty()).unwrap_or(true) {
+        missing_key_info.push("authors".to_string());
+    }
+    missing_key_info.push("journal".to_string());
+    missing_key_info.push("abstract".to_string());
+    if keywords.is_empty() {
+        missing_key_info.push("keywords".to_string());
+    }
+    missing_key_info.push("introduction".to_string());
+
+    let needs_llm_key_info = !missing_key_info.is_empty();
+    let llm_task_hint = if needs_llm_key_info {
+        "Assign to a Worker LLM to extract title, authors, journal, abstract, keywords, and introduction from the paper text/PDF; do not guess missing fields.".to_string()
+    } else {
+        "No missing scholarly key-info fields detected by deterministic metadata scan.".to_string()
+    };
 
     Ok(PaperMetadata {
         filename,
@@ -117,6 +151,12 @@ fn extract_pdf_metadata(path: &Path) -> Result<PaperMetadata> {
         pages,
         file_size,
         doi,
+        journal: None,
+        abstract_text: None,
+        keywords,
+        missing_key_info,
+        needs_llm_key_info,
+        llm_task_hint,
     })
 }
 
@@ -160,6 +200,15 @@ fn extract_string_from_object(obj: &Object) -> Option<String> {
 
 fn clean_string(s: String) -> String {
     s.trim().to_string()
+}
+
+fn split_keywords(value: &str) -> Vec<String> {
+    value
+        .split(|ch| matches!(ch, ';' | ',' | '\n' | '\r'))
+        .map(|item| item.trim())
+        .filter(|item| !item.is_empty())
+        .map(|item| item.to_string())
+        .collect()
 }
 
 fn extract_doi_from_filename(filename: &str) -> Option<String> {

@@ -14,6 +14,16 @@ struct PaperMetadata {
     subject: Option<String>,
     pages: usize,
     doi: Option<String>,
+    #[serde(default)]
+    journal: Option<String>,
+    #[serde(default)]
+    abstract_text: Option<String>,
+    #[serde(default)]
+    keywords: Vec<String>,
+    #[serde(default)]
+    missing_key_info: Vec<String>,
+    #[serde(default)]
+    needs_llm_key_info: bool,
 }
 
 pub fn execute(custom_kb: Option<&Path>) -> Result<()> {
@@ -45,9 +55,10 @@ pub fn execute(custom_kb: Option<&Path>) -> Result<()> {
 
     // 1. Build paper pages from metadata.
     let metadata_path = paper_metadata_path(&kb_path);
+    let mut papers: Vec<PaperMetadata> = Vec::new();
     if metadata_path.exists() {
         let metadata_content = fs::read_to_string(&metadata_path)?;
-        let papers: Vec<PaperMetadata> = serde_json::from_str(&metadata_content)?;
+        papers = serde_json::from_str(&metadata_content)?;
 
         println!("\nGenerating paper pages...");
         for paper in &papers {
@@ -63,7 +74,10 @@ pub fn execute(custom_kb: Option<&Path>) -> Result<()> {
     // 2. Build note pages from raw/notes.
     build_note_pages(&kb_path, &manifest_lookup)?;
 
-    // 3. Generate indexes.
+    // 3. Build topic pages from topics/<topic>/ workspaces.
+    generate_topic_pages(&kb_path, &papers)?;
+
+    // 4. Generate indexes.
     generate_concepts_index(&kb_path)?;
     generate_notes_index(&kb_path)?;
     generate_topics_index(&kb_path)?;
@@ -118,6 +132,75 @@ fn generate_paper_page(
         manifest_lookup.get(&source_path).map(|s| s.as_str()),
     );
 
+    let journal = paper
+        .journal
+        .as_ref()
+        .map(|v| v.trim())
+        .filter(|v| !v.is_empty())
+        .unwrap_or("*Needs LLM extraction*");
+    let abstract_text = paper
+        .abstract_text
+        .as_ref()
+        .map(|v| v.trim())
+        .filter(|v| !v.is_empty())
+        .unwrap_or("*Needs LLM extraction from the paper.*");
+    let keywords = if paper.keywords.is_empty() {
+        "*Needs LLM extraction*".to_string()
+    } else {
+        paper
+            .keywords
+            .iter()
+            .map(|kw| format!("`{}`", kw))
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
+    let section_dir = section_dir_for_paper(kb_path, paper.filename.as_str());
+    let introduction_path = section_dir.join("introduction.txt");
+    let references_path = section_dir.join("references.txt");
+    let introduction_link = if introduction_path.exists() {
+        format!(
+            "[extracted introduction](../../{})",
+            relative_path_string(kb_path, &introduction_path)
+        )
+    } else {
+        "*Needs LLM/OCR extraction or `kb extract-sections` repair*".to_string()
+    };
+    let references_link = if references_path.exists() {
+        format!(
+            "[extracted references](../../{})",
+            relative_path_string(kb_path, &references_path)
+        )
+    } else {
+        "*Needs LLM/OCR extraction or `kb extract-sections` repair*".to_string()
+    };
+
+    let mut missing_fields = paper.missing_key_info.clone();
+    if journal.contains("Needs LLM") && !missing_fields.iter().any(|v| v == "journal") {
+        missing_fields.push("journal".to_string());
+    }
+    if abstract_text.contains("Needs LLM") && !missing_fields.iter().any(|v| v == "abstract") {
+        missing_fields.push("abstract".to_string());
+    }
+    if paper.keywords.is_empty() && !missing_fields.iter().any(|v| v == "keywords") {
+        missing_fields.push("keywords".to_string());
+    }
+    if !introduction_path.exists() && !missing_fields.iter().any(|v| v == "introduction") {
+        missing_fields.push("introduction".to_string());
+    }
+    let missing_display = if missing_fields.is_empty() && !paper.needs_llm_key_info {
+        "none detected".to_string()
+    } else {
+        missing_fields
+            .iter()
+            .map(|v| format!("`{}`", v))
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
+    let paper_profile_target = format!(
+        "processing/paper_profiles/{}.md",
+        sanitize_filename(filename_stem(paper.filename.as_str()))
+    );
+
     let content = format!(
         r#"{front_matter}# {title}
 
@@ -127,21 +210,42 @@ fn generate_paper_page(
 |-------|-------|
 | File | [{filename}](../../raw/papers/{filename}) |
 | Authors | {authors} |
+| Journal | {journal} |
 | Subject | {subject} |
 | Pages | {pages} |
 | DOI | {doi} |
+| Keywords | {keywords} |
 
 ## Abstract
 
-*To be filled from the paper or user notes.*
+{abstract_text}
+
+## Extracted Sections
+
+| Section | Status |
+|---|---|
+| Introduction | {introduction_link} |
+| References | {references_link} |
+
+## LLM Extraction Status
+
+Missing or uncertain scholarly fields: {missing_display}.
+
+Worker LLM target profile file:
+
+```text
+{paper_profile_target}
+```
+
+The Worker LLM should extract paper key information from the PDF/text, preserve uncertainty, and then update this page with evidence-backed fields.
 
 ## Key Points
 
-- *To be filled*
+- *To be filled after the paper has been reviewed.*
 
-## Related Concepts
+## Related Topics and Concepts
 
-Add links to concrete concept pages after the paper has been reviewed.
+- Link this paper to topic pages such as `[[Topics Index]]` after the topic narrative is built.
 
 ## Reading Notes
 
@@ -151,9 +255,16 @@ Add links to concrete concept pages after the paper has been reviewed.
         title = title,
         filename = paper.filename.as_str(),
         authors = authors,
+        journal = journal,
         subject = subject,
         pages = pages,
         doi = doi,
+        keywords = keywords,
+        abstract_text = abstract_text,
+        introduction_link = introduction_link,
+        references_link = references_link,
+        missing_display = missing_display,
+        paper_profile_target = paper_profile_target,
     );
 
     let output_path = kb_path.join(format!("wiki/papers/{}.md", page_stem));
@@ -234,6 +345,278 @@ fn build_note_pages(kb_path: &Path, manifest_lookup: &BTreeMap<String, String>) 
 
     println!("Generated {} note pages", note_count);
     Ok(())
+}
+
+#[derive(Debug, Clone)]
+struct TopicLiteratureRow {
+    paper: String,
+    role: String,
+    status: String,
+}
+
+fn generate_topic_pages(kb_path: &Path, papers: &[PaperMetadata]) -> Result<()> {
+    let topics_root = kb_path.join("topics");
+    if !topics_root.exists() {
+        println!(
+            "
+topics directory not found, skipping topic pages..."
+        );
+        return Ok(());
+    }
+
+    println!(
+        "
+Generating topic pages..."
+    );
+    let wiki_topics_dir = kb_path.join("wiki/topics");
+    fs::create_dir_all(&wiki_topics_dir)?;
+    let paper_link_map = build_paper_link_map(papers);
+    let mut topic_count = 0usize;
+
+    for entry in fs::read_dir(&topics_root)? {
+        let entry = entry?;
+        if !entry.file_type()?.is_dir() {
+            continue;
+        }
+        let topic_root = entry.path();
+        let slug = entry.file_name().to_string_lossy().to_string();
+        let output_path = wiki_topics_dir.join(format!("{}.md", sanitize_filename(&slug)));
+        if output_path.exists() {
+            continue;
+        }
+
+        let title = read_topic_title(&topic_root).unwrap_or_else(|| slug.replace('-', " "));
+        let literature_rows = read_topic_literature_rows(&topic_root.join("literature.md"))?;
+        let source_path = format!("topics/{}/", slug);
+        let front_matter = source_front_matter("topic", &source_path, None);
+        let mut content = String::new();
+        content.push_str(&front_matter);
+        content.push_str(&format!(
+            "# {}
+
+",
+            title
+        ));
+        content.push_str(
+            "## Story Narrative
+
+",
+        );
+        content.push_str("*To be drafted by a Manager/Worker LLM from the linked literature. The narrative should explain the topic background, key problem, method lineage, major papers, and unresolved questions, with explicit Wiki links to supporting paper pages.*
+
+");
+        content.push_str(
+            "## Linked Literature
+
+",
+        );
+        if literature_rows.is_empty() {
+            content.push_str("No topic-local literature rows were found yet. Add papers to `topics/<topic>/literature.md` and rerun `kb build-wiki`.
+
+");
+        } else {
+            content.push_str(
+                "| paper | role | status | wiki link |
+",
+            );
+            content.push_str(
+                "|---|---|---|---|
+",
+            );
+            for row in &literature_rows {
+                let link = resolve_paper_wikilink(&row.paper, &paper_link_map);
+                content.push_str(&format!(
+                    "| {} | {} | {} | {} |
+",
+                    escape_table_cell(&row.paper),
+                    escape_table_cell(&row.role),
+                    escape_table_cell(&row.status),
+                    escape_table_cell(&link)
+                ));
+            }
+            content.push_str(
+                "
+",
+            );
+        }
+        content.push_str(
+            "## Suggested LLM Work
+
+",
+        );
+        content.push_str(
+            "1. Extract paper key information for each linked paper if missing.
+",
+        );
+        content.push_str(
+            "2. Build a concise topic story with citations and Wiki links.
+",
+        );
+        content.push_str(
+            "3. Keep uncertain relationships as candidates until reviewed by a human.
+
+",
+        );
+        content.push_str(
+            "## Relationship Views
+
+",
+        );
+        content.push_str(&format!(
+            "- Topic workbench: `topics/{}/`
+",
+            slug
+        ));
+        content.push_str(&format!(
+            "- Topic graph: `topics/{}/graph/topic_graph.md`
+",
+            slug
+        ));
+        content.push_str(&format!(
+            "- Topic tasks: `topics/{}/tasks/`
+",
+            slug
+        ));
+
+        fs::write(&output_path, content)?;
+        topic_count += 1;
+    }
+
+    println!("Generated {} new topic pages", topic_count);
+    Ok(())
+}
+
+fn build_paper_link_map(papers: &[PaperMetadata]) -> BTreeMap<String, String> {
+    let mut map = BTreeMap::new();
+    for paper in papers {
+        let page_stem = paper_page_stem(paper);
+        let title = paper
+            .title
+            .as_ref()
+            .map(|value| value.trim())
+            .filter(|value| !value.is_empty())
+            .unwrap_or_else(|| filename_stem(&paper.filename));
+        let link = format!("[[{}|{}]]", page_stem, title);
+        for key in [
+            paper.filename.as_str(),
+            filename_stem(&paper.filename),
+            title,
+            page_stem.as_str(),
+        ] {
+            map.insert(normalize_lookup_key(key), link.clone());
+        }
+    }
+    map
+}
+
+fn resolve_paper_wikilink(raw: &str, paper_link_map: &BTreeMap<String, String>) -> String {
+    let cleaned = raw.trim().trim_matches('`');
+    if cleaned.is_empty() || cleaned == "TODO" || cleaned == "_none_" {
+        return "_unresolved_".to_string();
+    }
+    let key = normalize_lookup_key(cleaned);
+    if let Some(link) = paper_link_map.get(&key) {
+        return link.clone();
+    }
+    let stem = filename_stem(cleaned);
+    if let Some(link) = paper_link_map.get(&normalize_lookup_key(stem)) {
+        return link.clone();
+    }
+    format!("[[{}]]", cleaned)
+}
+
+fn normalize_lookup_key(value: &str) -> String {
+    value
+        .trim()
+        .trim_end_matches(".md")
+        .trim_end_matches(".pdf")
+        .replace('\\', "/")
+        .to_ascii_lowercase()
+}
+
+fn read_topic_title(topic_root: &Path) -> Option<String> {
+    for name in ["README.md", "index.md", "scope.md"] {
+        let path = topic_root.join(name);
+        let Ok(content) = fs::read_to_string(path) else {
+            continue;
+        };
+        for line in content.lines() {
+            let trimmed = line.trim();
+            if let Some(title) = trimmed.strip_prefix("# ") {
+                let title = title.trim();
+                if !title.is_empty() {
+                    return Some(title.to_string());
+                }
+            }
+        }
+    }
+    None
+}
+
+fn read_topic_literature_rows(path: &Path) -> Result<Vec<TopicLiteratureRow>> {
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+    let content = fs::read_to_string(path)?;
+    let mut rows = Vec::new();
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if !trimmed.starts_with('|') || trimmed.contains("|---") {
+            continue;
+        }
+        let cells = trimmed
+            .trim_matches('|')
+            .split('|')
+            .map(|cell| cell.trim().trim_matches('`'))
+            .collect::<Vec<_>>();
+        if cells.is_empty() {
+            continue;
+        }
+        let paper = cells[0].trim();
+        if paper.is_empty()
+            || paper.eq_ignore_ascii_case("paper")
+            || paper.eq_ignore_ascii_case("TODO")
+        {
+            continue;
+        }
+        rows.push(TopicLiteratureRow {
+            paper: paper.to_string(),
+            role: cells.get(1).copied().unwrap_or("candidate").to_string(),
+            status: cells.get(2).copied().unwrap_or("candidate").to_string(),
+        });
+    }
+    Ok(rows)
+}
+
+fn section_dir_for_paper(kb_path: &Path, filename: &str) -> std::path::PathBuf {
+    let text_filename = format!(
+        "raw__papers__{}",
+        sanitize_section_component(filename_stem(filename))
+    );
+    kb_path.join("processing/sections").join(text_filename)
+}
+
+fn sanitize_section_component(value: &str) -> String {
+    let cleaned = value
+        .chars()
+        .map(|ch| {
+            if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' || ch == '.' {
+                ch
+            } else {
+                '_'
+            }
+        })
+        .collect::<String>();
+    let trimmed = cleaned.trim_matches('_');
+    if trimmed.is_empty() {
+        "source".to_string()
+    } else {
+        trimmed.to_string()
+    }
+}
+
+fn escape_table_cell(value: &str) -> String {
+    value.replace('|', "\\|").replace('\n', " ")
 }
 
 fn generate_papers_index(kb_path: &Path, papers: &[PaperMetadata]) -> Result<()> {
@@ -330,24 +713,41 @@ fn generate_notes_index(kb_path: &Path) -> Result<()> {
 }
 
 fn generate_topics_index(kb_path: &Path) -> Result<()> {
-    let content = r#"# Topics Index
+    let topics_dir = kb_path.join("wiki/topics");
+    let mut topic_names = Vec::new();
 
-Topics are higher-level collections that group papers, notes, and concepts.
+    if let Ok(entries) = fs::read_dir(&topics_dir) {
+        for entry in entries.filter_map(|entry| entry.ok()) {
+            let path = entry.path();
+            if path.extension().and_then(|s| s.to_str()) == Some("md") {
+                if let Some(stem) = path.file_stem().and_then(|s| s.to_str()) {
+                    topic_names.push(stem.to_string());
+                }
+            }
+        }
+    }
+    topic_names.sort();
 
-## Candidate Topics
-
-No concrete topic pages have been linked yet.
-
-## Suggested Workflow
-
-1. Create a topic page only after several source materials point to the same theme.
-2. Link the topic page to related papers, notes, and concepts.
-3. Keep open questions and next actions on the topic page.
-
----
-
-*Topics will be expanded based on the user's materials and research needs.*
-"#;
+    let mut content = String::from("# Topics Index\n\n");
+    content.push_str("Topics are higher-level story pages that link source papers, methods, concepts, and open questions.\n\n");
+    content.push_str(&format!("Total topics: {}\n\n", topic_names.len()));
+    content.push_str("## Topic Pages\n\n");
+    if topic_names.is_empty() {
+        content.push_str("No concrete topic pages have been generated yet. Run `kb topic init <topic>`, add rows to `topics/<topic>/literature.md`, then run `kb build-wiki`.\n\n");
+    } else {
+        for name in topic_names {
+            content.push_str(&format!("- [[{}]]\n", name));
+        }
+        content.push_str("\n");
+    }
+    content.push_str("## LLM Narrative Contract\n\n");
+    content.push_str("For each topic, the Manager/Worker LLM should build a short evidence-backed story: background, core problem, key papers, method lineage, open questions, and links back to paper pages.\n\n");
+    content.push_str("## Suggested Workflow\n\n");
+    content.push_str("1. Extract key information from every paper.\n");
+    content.push_str("2. Review topic-local literature importance and relation candidates.\n");
+    content.push_str("3. Draft the topic story in the matching `wiki/topics/<topic>.md` page.\n");
+    content.push_str("4. Keep uncertain links explicit until a human reviewer confirms them.\n\n");
+    content.push_str("---\n\n*This index is generated by `kb build-wiki` and can be edited manually after generation.*\n");
 
     let output_path = kb_path.join("wiki/indexes/topics_index.md");
     fs::write(&output_path, content)?;
@@ -666,6 +1066,11 @@ mod tests {
             subject: None,
             pages: 7,
             doi: None,
+            journal: None,
+            abstract_text: None,
+            keywords: Vec::new(),
+            missing_key_info: Vec::new(),
+            needs_llm_key_info: false,
         };
 
         let mut manifest_lookup = BTreeMap::new();

@@ -1,6 +1,6 @@
 # kb shell
 
-Current version: `v0.7.35`
+Current version: `v0.7.37`
 
 `kb shell` starts a deterministic interactive command shell:
 
