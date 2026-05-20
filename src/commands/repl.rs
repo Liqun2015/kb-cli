@@ -109,7 +109,7 @@ impl ShellState {
         let exe = std::env::current_exe()
             .map_err(|err| anyhow!("could not locate current executable: {err}"))?;
         let status = Command::new(exe)
-            .arg("--lib")
+            .arg("--wiki")
             .arg(&self.kb_path)
             .args(tokens)
             .status()
@@ -175,7 +175,7 @@ fn print_help() {
     println!("  exit              Leave shell mode");
     println!();
     println!("Batch command mapping:");
-    println!("  kb --lib PATH query thermal cloak");
+    println!("  kb --wiki PATH query thermal cloak");
     println!("  kb> use PATH");
     println!("  kb> query thermal cloak");
     println!();

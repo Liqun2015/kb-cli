@@ -4,13 +4,25 @@
 
 It is designed for researchers, developers, and human/AI collaborative workflows that need a local, reviewable, file-based knowledge system instead of a black-box note database.
 
+## Positioning
+
+`kb-cli` is not intended to become a heavy PDF understanding engine. Its main role is to create the deterministic worksite for LLM-assisted Wiki construction:
+
+- build the LLM Wiki folder skeleton;
+- index source materials and generated evidence;
+- create paper/topic scaffolds;
+- generate Manager/Worker/Human Review guides and checklists;
+- generate `kb view` and `kb view --wiki` as human-facing review and reading entrances.
+
+For fewer than 200 papers, `kb-cli` prepares a Karpathy-style LLM Wiki workflow. LLM Workers may process paper stubs and topic scaffolds directly in bounded batches. When the corpus reaches 200 papers or more, the workspace should be routed to a RAG-assisted workflow before topic narrative work.
+
 ## Current Version
 
-Current version: `v0.7.37`
+Current version: `v0.7.38`
 
-### v0.7.37
+### v0.7.38
 
-`v0.7.37` is a build hotfix for v0.7.36. It fixes an invalid Rust escape sequence in `build_wiki.rs` table-cell escaping and removes one unused import warning. No workflow or HTML behavior is changed from v0.7.36.
+`v0.7.38` repositions `kb-cli` as an LLM Wiki collaborative workflow generator rather than a PDF parsing tool. The canonical workflow is now `kb create --wiki <A> --from <B> --about <topic>`. For corpora below 200 papers, `kb create` / `kb build` generate Karpathy-style Manager, Worker, and Human Review guides under `LLM/`, `LLM/tasks/`, and `agents/shared/`, and `kb view` displays the current workflow mode. Large-corpus RAG mode is only routed and marked for a later implementation phase.
 
 ### v0.7.36
 
@@ -34,7 +46,7 @@ Current version: `v0.7.37`
 
 ### v0.7.29
 
-Compile hotfix for `kb view`: the resolved library path is now borrowed correctly when generating relationship data and `relationship_viewer.html`. This keeps the v0.7.28 readability changes intact while fixing the Rust `E0308` type mismatch.
+Compile hotfix for `kb view`: the resolved wiki path is now borrowed correctly when generating relationship data and `relationship_viewer.html`. This keeps the v0.7.28 readability changes intact while fixing the Rust `E0308` type mismatch.
 
 ### v0.7.28
 
@@ -46,7 +58,7 @@ Compile hotfix for `kb view`: the resolved library path is now borrowed correctl
 
 ### v0.7.26
 
-Parameter Consistency release. `kb create` now relies on the global `--lib` selector instead of defining a second local `--lib` option inside the `create` subcommand. This keeps the public command form unchanged while avoiding duplicate Clap argument definitions. The release package also omits the local `.model_config.json` runtime file and keeps only `.model_config.example.json`.
+Parameter Consistency release. `kb create` now relies on the global `--wiki` selector instead of defining a second local `--wiki` option inside the `create` subcommand. This keeps the public command form unchanged while avoiding duplicate Clap argument definitions. The release package also omits the local `.model_config.json` runtime file and keeps only `.model_config.example.json`.
 
 ### v0.7.25
 
@@ -54,15 +66,15 @@ HTML navigation polish release. The launch panel tab is renamed to **About launc
 
 ### v0.7.24
 
-Library Flag release. The global library selector is now `--lib` across the CLI. This aligns every command with the explicit create syntax:
+Wiki Flag release. The global wiki selector is now `--wiki` across the CLI. This aligns every command with the explicit create syntax:
 
 ```bash
-kb create --lib <A> --from <B> --about <topic>
-kb --lib <A> view
-kb --lib <A> build <topic>
+kb create --wiki <A> --from <B> --about <topic>
+kb --wiki <A> view
+kb --wiki <A> build <topic>
 ```
 
-`--lib` means “the target LLM Wiki library/database directory.”
+`--wiki` means “the target LLM Wiki workspace/database directory.”
 
 ### v0.7.23
 
@@ -73,14 +85,14 @@ LLM Launch Panel release. `kb view` now adds a safe **About launching LLM** tab 
 Create Command release. `kb create` is now the recommended one-command path for turning an existing literature folder into a named, agent-ready LLM Wiki database.
 
 ```bash
-kb create --lib <A> --from <B> --about <topic>
+kb create --wiki <A> --from <B> --about <topic>
 ```
 
 This is equivalent to:
 
 ```bash
-kb --lib <A> --source <B> setup --recursive --topic <topic>
-kb --lib <A> build <topic>
+kb --wiki <A> --source <B> setup --recursive --topic <topic>
+kb --wiki <A> build <topic>
 ```
 
 `setup` and `build` are still available when debugging or rerunning only part of the workflow.
@@ -106,14 +118,14 @@ one-command assembly       -> kb build <topic>
 The recommended user path is now:
 
 ```bash
-kb create --lib <A> --from <B> --about <topic>
+kb create --wiki <A> --from <B> --about <topic>
 ```
 
 Expanded form:
 
 ```bash
-kb --lib <A> --source <B> setup --recursive --topic <topic>
-kb --lib <A> build <topic>
+kb --wiki <A> --source <B> setup --recursive --topic <topic>
+kb --wiki <A> build <topic>
 ```
 
 ### v0.7.17
@@ -232,8 +244,8 @@ topics/<topic>/handoff/adapters/<agent>.md
 Build-time topic defaults remain explicit:
 
 - `kb --source <literature-dir> setup` defaults the topic to the source directory name when `--topic` is omitted.
-- `kb --lib <database-name> init` defaults the topic to the database directory name when `--topic` is omitted.
-- `kb init` without `--lib` exits with a prompt instead of silently creating `knowledgebase/`.
+- `kb --wiki <database-name> init` defaults the topic to the database directory name when `--topic` is omitted.
+- `kb init` without `--wiki` exits with a prompt instead of silently creating `knowledgebase/`.
 
 External agents should read `AGENTS.md`, process one bounded task at a time, and leave changes for human diff review.
 
@@ -307,7 +319,7 @@ The original literature folder remains the human source-material pile. The gener
 init -> ingest -> extract-metadata -> build-wiki
 ```
 
-Safe copy mode remains the default unless `--move` is explicitly provided. `kb bootstrap` remains available as a compatibility alias for `kb setup`. Advanced users can still use `--lib` to initialize or operate on a specific knowledge base directory.
+Safe copy mode remains the default unless `--move` is explicitly provided. `kb bootstrap` remains available as a compatibility alias for `kb setup`. Advanced users can still use `--wiki` to initialize or operate on a specific knowledge base directory.
 
 ## LLM Wiki Root Marker
 
@@ -502,26 +514,26 @@ kb
 Turn an existing literature folder into a local LLM Wiki without polluting the original folder:
 
 ```bash
-kb create --lib /path/to/your/llm-wiki --from /path/to/your/literature-folder --about <topic>
+kb create --wiki /path/to/your/llm-wiki --from /path/to/your/literature-folder --about <topic>
 ```
 
 Windows example:
 
 ```powershell
-kb create --lib "D:\github\LLM-wiki\quantum-kb" --from "D:\github\LLM-wiki\quantum" --about quantum
+kb create --wiki "D:\github\LLM-wiki\quantum-kb" --from "D:\github\LLM-wiki\quantum" --about quantum
 ```
 
 macOS/Linux example:
 
 ```bash
-kb create --lib "$HOME/github/LLM-wiki/quantum-kb" --from "$HOME/github/LLM-wiki/quantum" --about quantum
+kb create --wiki "$HOME/github/LLM-wiki/quantum-kb" --from "$HOME/github/LLM-wiki/quantum" --about quantum
 ```
 
 Expanded two-step form:
 
 ```bash
-kb --lib <A> --source <B> setup --recursive --topic <topic>
-kb --lib <A> build <topic>
+kb --wiki <A> --source <B> setup --recursive --topic <topic>
+kb --wiki <A> build <topic>
 ```
 
 This creates:
@@ -539,7 +551,7 @@ setup --recursive -> build <topic>
 Use preview mode first when working with a large or messy literature directory:
 
 ```bash
-kb create --lib /path/to/your/llm-wiki --from /path/to/your/literature-folder --about <topic> --dry-run
+kb create --wiki /path/to/your/llm-wiki --from /path/to/your/literature-folder --about <topic> --dry-run
 ```
 
 By default, `create` copies files into `<A>/raw/`. Use `--move` only when you explicitly want to move source files.
@@ -547,8 +559,8 @@ By default, `create` copies files into `<A>/raw/`. Use `--move` only when you ex
 Advanced/manual layout remains available:
 
 ```bash
-kb --lib /path/to/specific/knowledgebase init
-kb --source /path/to/literature-folder --lib /path/to/specific/knowledgebase ingest --recursive
+kb --wiki /path/to/specific/knowledgebase init
+kb --source /path/to/literature-folder --wiki /path/to/specific/knowledgebase ingest --recursive
 ```
 
 ## Core Workflow
@@ -556,8 +568,8 @@ kb --source /path/to/literature-folder --lib /path/to/specific/knowledgebase ing
 The expected workflow is:
 
 1. Keep source materials in the original literature folder
-2. Use `kb create --lib <A> --from <B> --about <topic>` to create the target LLM Wiki database, copy materials into `<A>/raw/`, and run the deterministic build pipeline
-3. Use `kb --lib <A> --source <B> setup --recursive --topic <topic>` and `kb --lib <A> build <topic>` separately only when debugging or rerunning partial stages
+2. Use `kb create --wiki <A> --from <B> --about <topic>` to create the target LLM Wiki database, copy materials into `<A>/raw/`, and run the deterministic build pipeline
+3. Use `kb --wiki <A> --source <B> setup --recursive --topic <topic>` and `kb --wiki <A> build <topic>` separately only when debugging or rerunning partial stages
 4. Use `LLM/tasks/index.md` as the Manager LLM task dashboard
 5. Build or update Markdown knowledge pages under `wiki/`
 6. Use topic commands to inspect topic-specific relationship workspaces

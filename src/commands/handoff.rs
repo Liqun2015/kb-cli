@@ -106,7 +106,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &HandoffArgs) -> Result<()> {
     let kb_path = crate::commands::init::get_kb_path(custom_kb);
     if !kb_path.exists() {
         return Err(anyhow!(
-            "knowledge base path does not exist: {}. Run `kb --lib <database-name> init` or `kb --source <literature-dir> setup` first.",
+            "knowledge base path does not exist: {}. Run `kb --wiki <database-name> init` or `kb --source <literature-dir> setup` first.",
             kb_path.display()
         ));
     }
@@ -161,7 +161,7 @@ pub fn execute_topic_handoff(
     let kb_path = crate::commands::init::get_kb_path(custom_kb);
     if !kb_path.exists() {
         return Err(anyhow!(
-            "knowledge base path does not exist: {}. Run `kb --lib <database-name> init` or `kb --source <literature-dir> setup` first.",
+            "knowledge base path does not exist: {}. Run `kb --wiki <database-name> init` or `kb --source <literature-dir> setup` first.",
             kb_path.display()
         ));
     }
@@ -1705,7 +1705,7 @@ Do not modify `raw/`. Do not silently convert candidate relations to confirmed. 
 
 fn print_handoff_report(report: &HandoffReport) {
     println!("Agent handoff:");
-    println!("  library path  : {}", report.kb_path);
+    println!("  wiki path  : {}", report.kb_path);
     println!("  dry run  : {}", report.dry_run);
     println!("  force    : {}", report.force);
     if !report.agents.is_empty() {

@@ -127,7 +127,7 @@ cloud sync
 - `init --force` may overwrite generated rule files, but it must not rewrite user source materials.
 - `ingest` must not default to destructive behavior.
 - `setup` must be safe by default. `bootstrap` is only a compatibility alias.
-- For existing literature folders, prefer `kb create --lib <A> --from <B> --about <topic>`; this creates an explicit target LLM Wiki database while keeping the original literature folder outside the managed workspace. Use `setup` separately only when debugging partial stages.
+- For existing literature folders, prefer `kb create --wiki <A> --from <B> --about <topic>`; this creates an explicit target LLM Wiki database while keeping the original literature folder outside the managed workspace. Use `setup` separately only when debugging partial stages.
 - `--copy` is the safe path.
 - `--move` is allowed only when explicitly provided.
 - `--dry-run` should remain available for inspection.

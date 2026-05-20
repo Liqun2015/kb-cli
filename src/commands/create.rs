@@ -32,7 +32,7 @@ pub struct CreateArgs {
     #[arg(
         long = "name",
         hide = true,
-        help = "Deprecated compatibility option from v0.7.21. Use --lib instead."
+        help = "Deprecated compatibility option from v0.7.21. Use --wiki instead."
     )]
     pub legacy_name: Option<String>,
 
@@ -97,7 +97,7 @@ pub fn execute(
     let dry_run = args.dry_run || args.preview;
 
     println!("LLM Wiki create pipeline");
-    println!("  lib: {}", kb_path.display());
+    println!("  wiki: {}", kb_path.display());
     println!("  from: {}", source_path.display());
     println!("  about: {}", topic);
     println!("  recursive: true");
@@ -109,7 +109,7 @@ pub fn execute(
     println!();
     println!("Equivalent expanded commands:");
     println!(
-        "  kb --lib \"{}\" --source \"{}\" setup --recursive --topic \"{}\"{}{}",
+        "  kb --wiki \"{}\" --source \"{}\" setup --recursive --topic \"{}\"{}{}",
         kb_path.display(),
         source_path.display(),
         topic,
@@ -121,7 +121,7 @@ pub fn execute(
         },
     );
     println!(
-        "  kb --lib \"{}\" build \"{}\"{}{}",
+        "  kb --wiki \"{}\" build \"{}\"{}{}",
         kb_path.display(),
         topic_slug,
         if args.force { " --force" } else { "" },
@@ -170,8 +170,23 @@ pub fn execute(
     };
     commands::build::execute(Some(&kb_path), &build_args)?;
 
+    println!("\n=== workflow guides ===");
+    let workflow_status = commands::workflow::refresh_workflow_guides(
+        &kb_path,
+        Some(&topic_slug),
+        Some(&topic),
+        args.force,
+    )?;
+    println!(
+        "Workflow mode: {} ({} papers; threshold {})",
+        workflow_status.mode_label, workflow_status.paper_count, workflow_status.rag_threshold
+    );
+    for guide in &workflow_status.generated_guides {
+        println!("  guide: {}", guide);
+    }
+
     println!("\nCreate pipeline complete.");
-    println!("Knowledge base: {}", kb_path.display());
+    println!("LLM Wiki workspace: {}", kb_path.display());
     println!(
         "Obsidian human entry: {}",
         kb_path.join("obsidian_main.md").display()
@@ -200,7 +215,7 @@ fn resolve_create_lib(
     }
 
     // v0.7.21 compatibility: `kb create <literature-folder> --topic <topic>`
-    // created `<literature-folder>/knowledgebase` unless a custom library path was supplied.
+    // created `<literature-folder>/knowledgebase` unless a custom workspace path was supplied.
     let source_for_legacy = arg_from.or(global_source).or(legacy_source);
     if let Some(source) = source_for_legacy {
         let source = commands::init::resolve_user_path(source);
@@ -214,7 +229,7 @@ fn resolve_create_lib(
     }
 
     Err(anyhow!(
-        "kb create requires a target library. Use `kb create --lib <A> --from <B> --about <topic>`."
+        "kb create requires a target LLM Wiki workspace. Use `kb create --wiki <A> --from <B> --about <topic>`."
     ))
 }
 
@@ -247,7 +262,7 @@ fn resolve_create_from(
     }
 
     selected.ok_or_else(|| {
-        anyhow!("kb create requires a source literature folder. Use `kb create --lib <A> --from <B> --about <topic>`.")
+        anyhow!("kb create requires a source literature folder. Use `kb create --wiki <A> --from <B> --about <topic>`.")
     })
 }
 
@@ -260,6 +275,6 @@ fn resolve_create_about(explicit_about: Option<&str>) -> Result<String> {
     }
 
     Err(anyhow!(
-        "kb create requires a topic. Use `kb create --lib <A> --from <B> --about <topic>`."
+        "kb create requires a topic. Use `kb create --wiki <A> --from <B> --about <topic>`."
     ))
 }

@@ -77,7 +77,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &BuildArgs) -> Result<()> {
     let kb_path = commands::init::get_kb_path(custom_kb);
     if !kb_path.exists() {
         return Err(anyhow!(
-            "knowledge base path does not exist: {}. Run `kb --lib <database-name> init` or `kb --source <literature-dir> setup` first.",
+            "knowledge base path does not exist: {}. Run `kb create --wiki <A> --from <B> --about <topic>` first.",
             kb_path.display()
         ));
     }
@@ -264,6 +264,36 @@ pub fn execute(custom_kb: Option<&Path>, args: &BuildArgs) -> Result<()> {
         })?;
     }
 
+    run_stage("workflow guides", || {
+        let topic_title = args.title.as_deref().unwrap_or(&args.topic);
+        if dry_run {
+            let paper_count = commands::workflow::count_raw_papers(&kb_path);
+            let mode_label = if paper_count < commands::workflow::RAG_THRESHOLD {
+                "Karpathy-style LLM Wiki workflow"
+            } else {
+                "RAG-assisted LLM Wiki workflow required"
+            };
+            println!(
+                "Would refresh workflow guides: {} ({} papers; threshold {})",
+                mode_label,
+                paper_count,
+                commands::workflow::RAG_THRESHOLD
+            );
+            return Ok(());
+        }
+        let status = commands::workflow::refresh_workflow_guides(
+            &kb_path,
+            Some(&topic),
+            Some(topic_title),
+            args.force,
+        )?;
+        println!(
+            "Workflow mode: {} ({} papers; threshold {})",
+            status.mode_label, status.paper_count, status.rag_threshold
+        );
+        Ok(())
+    })?;
+
     println!("\nBuild pipeline complete.");
     println!("Next human entry: obsidian_main.md");
     println!("Next agent entry: AGENTS.md / CLAUDE.md -> LLM/handoff/current.md");
@@ -353,6 +383,11 @@ fn planned_stages(args: &BuildArgs, topic: &str, dry_run: bool) -> Vec<Stage> {
             command: format!("kb topic handoff {} --all-agents{}{}", topic, flag, force),
         });
     }
+
+    stages.push(Stage {
+        name: "workflow guides",
+        command: "kb workflow refresh (internal create/build phase)".to_string(),
+    });
 
     stages
 }

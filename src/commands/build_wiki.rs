@@ -803,11 +803,11 @@ kb --source /path/to/literature-folder setup --recursive
 ### Manual workflow
 
 ```bash
-kb --lib /path/to/literature-folder/knowledgebase init
-kb --source /path/to/literature-folder --lib /path/to/literature-folder/knowledgebase ingest --copy --recursive
-kb --lib /path/to/literature-folder/knowledgebase extract-metadata
-kb --lib /path/to/literature-folder/knowledgebase build-wiki
-kb --lib /path/to/literature-folder/knowledgebase status
+kb --wiki /path/to/literature-folder/knowledgebase init
+kb --source /path/to/literature-folder --wiki /path/to/literature-folder/knowledgebase ingest --copy --recursive
+kb --wiki /path/to/literature-folder/knowledgebase extract-metadata
+kb --wiki /path/to/literature-folder/knowledgebase build-wiki
+kb --wiki /path/to/literature-folder/knowledgebase status
 ```
 
 ## Indexes

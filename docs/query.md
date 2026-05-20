@@ -37,7 +37,7 @@ It is a local, on-demand Markdown keyword search only.
 ```bash
 kb query thermal cloak
 kb query "thermal cloak"
-kb --lib /path/to/knowledgebase query thermal cloak
+kb --wiki /path/to/knowledgebase query thermal cloak
 ```
 
 Multiple terms use AND semantics. For example:

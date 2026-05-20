@@ -1,6 +1,6 @@
 # kb shell
 
-Current version: `v0.7.37`
+Current version: `v0.7.38`
 
 `kb shell` starts a deterministic interactive command shell:
 
@@ -11,7 +11,7 @@ kb shell
 With an explicit knowledge base path:
 
 ```bash
-kb --lib ./quantum shell
+kb --wiki ./quantum shell
 ```
 
 The prompt is:
@@ -27,7 +27,7 @@ kb>
 It is a repeated command interface for humans, Manager LLM sessions, and local maintenance workflows. Known knowledge-base commands entered in shell mode should keep the same meaning as their batch-mode equivalents. Unknown input is rejected safely.
 
 ```text
-kb --lib ./quantum query thermal cloak
+kb --wiki ./quantum query thermal cloak
 ```
 
 maps to:
@@ -51,7 +51,7 @@ exit         Leave shell mode
 
 ## Strict whitelist command delegation
 
-Only known `kb` batch commands are delegated to the same `kb` binary with the current `--lib` value.
+Only known `kb` batch commands are delegated to the same `kb` binary with the current `--wiki` value.
 
 Unknown input is a safe no-op. The shell must not guess intent, interpret natural language, or pass arbitrary text into an LLM-like fallback.
 

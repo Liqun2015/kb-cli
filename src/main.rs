@@ -11,13 +11,13 @@ mod intent;
 #[command(about = "A minimal CLI for local knowledge base management", long_about = None)]
 struct Cli {
     #[arg(
-        short = 'l',
-        long = "lib",
+        short = 'w',
+        long = "wiki",
         value_name = "PATH",
         global = true,
-        help = "LLM Wiki library directory path. For setup with --source, this overrides the default <source>/knowledgebase workspace."
+        help = "LLM Wiki workspace root path. For setup with --source, this overrides the default <source>/knowledgebase workspace."
     )]
-    lib: Option<PathBuf>,
+    wiki: Option<PathBuf>,
 
     #[arg(
         short = 's',
@@ -45,7 +45,7 @@ enum Commands {
     Setup(commands::ingest::SetupArgs),
     #[command(
         name = "create",
-        about = "Create a full LLM Wiki library from source materials: setup --recursive, then build <topic>"
+        about = "Create a full LLM Wiki workspace from source materials: setup --recursive, then build <topic>"
     )]
     Create(commands::create::CreateArgs),
     #[command(
@@ -133,47 +133,47 @@ fn main() -> anyhow::Result<()> {
     let cli = Cli::parse();
 
     match &cli.command {
-        Some(Commands::Init(args)) => commands::init::execute(cli.lib.as_deref(), args),
+        Some(Commands::Init(args)) => commands::init::execute(cli.wiki.as_deref(), args),
         Some(Commands::Ingest(args)) => {
-            commands::ingest::execute(cli.lib.as_deref(), cli.source.as_deref(), args)
+            commands::ingest::execute(cli.wiki.as_deref(), cli.source.as_deref(), args)
         }
         Some(Commands::Setup(args)) => {
-            commands::ingest::execute_setup(cli.lib.as_deref(), cli.source.as_deref(), args)
+            commands::ingest::execute_setup(cli.wiki.as_deref(), cli.source.as_deref(), args)
         }
         Some(Commands::Create(args)) => {
-            commands::create::execute(cli.lib.as_deref(), cli.source.as_deref(), args)
+            commands::create::execute(cli.wiki.as_deref(), cli.source.as_deref(), args)
         }
-        Some(Commands::Build(args)) => commands::build::execute(cli.lib.as_deref(), args),
-        Some(Commands::BuildWiki) => commands::build_wiki::execute(cli.lib.as_deref()),
-        Some(Commands::Query(args)) => commands::query::execute(cli.lib.as_deref(), args),
-        Some(Commands::Links(args)) => commands::links::execute(cli.lib.as_deref(), args),
-        Some(Commands::Keywords(args)) => commands::keywords::execute(cli.lib.as_deref(), args),
-        Some(Commands::Refs(args)) => commands::refs::execute(cli.lib.as_deref(), args),
-        Some(Commands::RefsIndex(args)) => commands::refs_index::execute(cli.lib.as_deref(), args),
-        Some(Commands::RefsGraph(args)) => commands::refs_graph::execute(cli.lib.as_deref(), args),
-        Some(Commands::Tasks(args)) => commands::tasks::execute(cli.lib.as_deref(), args),
-        Some(Commands::Handoff(args)) => commands::handoff::execute(cli.lib.as_deref(), args),
-        Some(Commands::Memory(args)) => commands::memory::execute(cli.lib.as_deref(), args),
-        Some(Commands::Grep(args)) => commands::grep::execute(cli.lib.as_deref(), args),
-        Some(Commands::Health(args)) => commands::health::execute(cli.lib.as_deref(), args),
-        Some(Commands::AuditWiki(args)) => commands::audit_wiki::execute(cli.lib.as_deref(), args),
-        Some(Commands::Topic(args)) => commands::topic::execute(cli.lib.as_deref(), args),
-        Some(Commands::View(args)) => commands::view::execute(cli.lib.as_deref(), args),
-        Some(Commands::SyncWiki(args)) => commands::sync_wiki::execute(cli.lib.as_deref(), args),
+        Some(Commands::Build(args)) => commands::build::execute(cli.wiki.as_deref(), args),
+        Some(Commands::BuildWiki) => commands::build_wiki::execute(cli.wiki.as_deref()),
+        Some(Commands::Query(args)) => commands::query::execute(cli.wiki.as_deref(), args),
+        Some(Commands::Links(args)) => commands::links::execute(cli.wiki.as_deref(), args),
+        Some(Commands::Keywords(args)) => commands::keywords::execute(cli.wiki.as_deref(), args),
+        Some(Commands::Refs(args)) => commands::refs::execute(cli.wiki.as_deref(), args),
+        Some(Commands::RefsIndex(args)) => commands::refs_index::execute(cli.wiki.as_deref(), args),
+        Some(Commands::RefsGraph(args)) => commands::refs_graph::execute(cli.wiki.as_deref(), args),
+        Some(Commands::Tasks(args)) => commands::tasks::execute(cli.wiki.as_deref(), args),
+        Some(Commands::Handoff(args)) => commands::handoff::execute(cli.wiki.as_deref(), args),
+        Some(Commands::Memory(args)) => commands::memory::execute(cli.wiki.as_deref(), args),
+        Some(Commands::Grep(args)) => commands::grep::execute(cli.wiki.as_deref(), args),
+        Some(Commands::Health(args)) => commands::health::execute(cli.wiki.as_deref(), args),
+        Some(Commands::AuditWiki(args)) => commands::audit_wiki::execute(cli.wiki.as_deref(), args),
+        Some(Commands::Topic(args)) => commands::topic::execute(cli.wiki.as_deref(), args),
+        Some(Commands::View(args)) => commands::view::execute(cli.wiki.as_deref(), args),
+        Some(Commands::SyncWiki(args)) => commands::sync_wiki::execute(cli.wiki.as_deref(), args),
         Some(Commands::LintStatic(args)) => {
-            commands::lint_static::execute(cli.lib.as_deref(), args)
+            commands::lint_static::execute(cli.wiki.as_deref(), args)
         }
-        Some(Commands::Status(args)) => commands::manifest::execute(cli.lib.as_deref(), args),
+        Some(Commands::Status(args)) => commands::manifest::execute(cli.wiki.as_deref(), args),
         Some(Commands::ExtractMetadata { force }) => {
-            commands::extract_metadata::execute(cli.lib.as_deref(), *force)
+            commands::extract_metadata::execute(cli.wiki.as_deref(), *force)
         }
         Some(Commands::ExtractText(args)) => {
-            commands::extract_text::execute(cli.lib.as_deref(), args)
+            commands::extract_text::execute(cli.wiki.as_deref(), args)
         }
         Some(Commands::ExtractSections(args)) => {
-            commands::extract_sections::execute(cli.lib.as_deref(), args)
+            commands::extract_sections::execute(cli.wiki.as_deref(), args)
         }
-        Some(Commands::Shell) => commands::repl::execute(cli.lib.as_deref()),
+        Some(Commands::Shell) => commands::repl::execute(cli.wiki.as_deref()),
         Some(Commands::ListModels) => commands::model::execute_list_models(),
         Some(Commands::ShowModel) => commands::model::execute_show_model(),
         Some(Commands::AddModel(args)) => commands::model::execute_add_model(args.clone()),
@@ -193,7 +193,7 @@ fn main() -> anyhow::Result<()> {
                 "       use --source PATH to create PATH/knowledgebase as the default workspace"
             );
             println!("  bootstrap                   Compatibility alias for setup");
-            println!("  create --lib <A> --from <B> --about <topic>  Create a library from a literature folder, then build it");
+            println!("  create --wiki <A> --from <B> --about <topic>  Create an LLM Wiki workspace from a literature folder, then issue LLM/Human task guides");
             println!("  extract-metadata [--force]  Extract PDF metadata");
             println!("  extract-text [--dry-run|--preview] [--force] [--json]  Extract text into processing/text");
             println!("  extract-sections [--dry-run|--preview] [--force] [--json]  Slice Introduction/References into processing/sections");

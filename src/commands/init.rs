@@ -72,7 +72,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &InitArgs) -> Result<()> {
         Some(path) => resolve_user_path(path),
         None => {
             return Err(anyhow!(
-                "initializing a blank LLM Wiki requires a database name/path. Use `kb --lib <database-name> init [--topic <topic>]`, or convert a literature folder with `kb --source <literature-dir> setup`."
+                "initializing a blank LLM Wiki requires a database name/path. Use `kb --wiki <database-name> init [--topic <topic>]`, or convert a literature folder with `kb --source <literature-dir> setup`."
             ));
         }
     };
@@ -94,7 +94,7 @@ pub fn execute_with_source(
     );
 
     if kb_path.exists() {
-        println!("LLM Wiki library path already exists. Ensuring directory structure...");
+        println!("LLM Wiki workspace path already exists. Ensuring directory structure...");
         println!("Current directories:");
         list_existing_dirs(&kb_path);
     }
@@ -131,6 +131,11 @@ pub fn execute_with_source(
         "LLM/handoff",
         "topics",
         "LLM/memory",
+        "agents",
+        "agents/shared",
+        "agents/openclaw",
+        "agents/claude-code",
+        "agents/codex",
         "topics",
         "interfaces/slides",
         "interfaces/figures",
@@ -546,15 +551,15 @@ rules/LINT_POLICY.md
 ## Commands
 
 ```bash
-# One-command cross-platform setup
-kb --source /path/to/literature-folder setup --recursive
+# Canonical workflow
+kb create --wiki /path/to/llm-wiki --from /path/to/literature-folder --about <topic>
 
-# Manual workflow
-kb --lib /path/to/literature-folder/knowledgebase init
-kb --source /path/to/literature-folder --lib /path/to/literature-folder/knowledgebase ingest --copy --recursive
-kb --lib /path/to/literature-folder/knowledgebase extract-metadata
-kb --lib /path/to/literature-folder/knowledgebase build-wiki
-kb --lib /path/to/literature-folder/knowledgebase status
+# Development/debug partial stages
+kb --wiki /path/to/llm-wiki init --topic <topic>
+kb --source /path/to/literature-folder --wiki /path/to/llm-wiki ingest --copy --recursive
+kb --wiki /path/to/llm-wiki build <topic>
+kb --wiki /path/to/llm-wiki view
+kb --wiki /path/to/llm-wiki view --wiki
 ```
 
 ## Root Marker

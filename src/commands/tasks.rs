@@ -155,7 +155,7 @@ fn run_task_scan(kb_path: &Path, args: &TasksArgs) -> Result<TasksReport> {
     };
 
     Ok(TasksReport {
-        schema_version: "0.7.37".to_string(),
+        schema_version: "0.7.38".to_string(),
         generated_by: "kb-cli tasks".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         dry_run: args.dry_run || args.preview,

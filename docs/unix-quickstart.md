@@ -2,7 +2,7 @@
 
 This guide is for macOS, Linux, and other Unix-like shells such as `bash` and `zsh`.
 
-Current version: `v0.7.37`
+Current version: `v0.7.38`
 
 ## 1. Install Rust once
 
@@ -73,14 +73,14 @@ knowledgebase/interfaces/logs/
 Use `--dry-run` or its alias `--preview`:
 
 ```bash
-kb --source "$HOME/github/LLM-wiki/quantum" --lib "$HOME/github/LLM-wiki/quantum/knowledgebase" ingest --copy --recursive --dry-run
-kb --source "$HOME/github/LLM-wiki/quantum" --lib "$HOME/github/LLM-wiki/quantum/knowledgebase" ingest --copy --recursive --preview
+kb --source "$HOME/github/LLM-wiki/quantum" --wiki "$HOME/github/LLM-wiki/quantum/knowledgebase" ingest --copy --recursive --dry-run
+kb --source "$HOME/github/LLM-wiki/quantum" --wiki "$HOME/github/LLM-wiki/quantum/knowledgebase" ingest --copy --recursive --preview
 ```
 
 For linting without writing a report, use:
 
 ```bash
-kb --lib "$HOME/github/LLM-wiki/quantum/knowledgebase" lint-static --no-report
+kb --wiki "$HOME/github/LLM-wiki/quantum/knowledgebase" lint-static --no-report
 ```
 
 ## 5. Build AI/human handoff artifacts
@@ -88,9 +88,9 @@ kb --lib "$HOME/github/LLM-wiki/quantum/knowledgebase" lint-static --no-report
 `kb build <topic>` creates reviewable planning, task, and handoff artifacts. It does not call an LLM and does not edit final scholarly claims.
 
 ```bash
-kb --lib "$HOME/github/LLM-wiki/quantum/knowledgebase" status
-kb --lib "$HOME/github/LLM-wiki/quantum/knowledgebase" build <topic> --dry-run
-kb --lib "$HOME/github/LLM-wiki/quantum/knowledgebase" build <topic>
+kb --wiki "$HOME/github/LLM-wiki/quantum/knowledgebase" status
+kb --wiki "$HOME/github/LLM-wiki/quantum/knowledgebase" build <topic> --dry-run
+kb --wiki "$HOME/github/LLM-wiki/quantum/knowledgebase" build <topic>
 ```
 
 Generated files:
@@ -136,11 +136,11 @@ For knowledge-base workflows, prefer explicit `kb ...` commands instead of broad
 After setup or after a human/AI edits `wiki/`, run:
 
 ```bash
-kb --lib "$HOME/github/LLM-wiki/quantum/knowledgebase" status
-kb --lib "$HOME/github/LLM-wiki/quantum/knowledgebase" sync-wiki --dry-run
-kb --lib "$HOME/github/LLM-wiki/quantum/knowledgebase" sync-wiki
-kb --lib "$HOME/github/LLM-wiki/quantum/knowledgebase" lint-static
-kb --lib "$HOME/github/LLM-wiki/quantum/knowledgebase" query thermal cloak
+kb --wiki "$HOME/github/LLM-wiki/quantum/knowledgebase" status
+kb --wiki "$HOME/github/LLM-wiki/quantum/knowledgebase" sync-wiki --dry-run
+kb --wiki "$HOME/github/LLM-wiki/quantum/knowledgebase" sync-wiki
+kb --wiki "$HOME/github/LLM-wiki/quantum/knowledgebase" lint-static
+kb --wiki "$HOME/github/LLM-wiki/quantum/knowledgebase" query thermal cloak
 ```
 
 Open the generated lint report under:

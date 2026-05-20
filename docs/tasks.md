@@ -25,8 +25,8 @@ kb tasks --no-index
 With an explicit knowledge-base path:
 
 ```bash
-kb --lib ./quantum tasks
-kb --lib "D:\\github\\llm-wiki\\quantum" tasks
+kb --wiki ./quantum tasks
+kb --wiki "D:\\github\\llm-wiki\\quantum" tasks
 ```
 
 

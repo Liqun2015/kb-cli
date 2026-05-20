@@ -291,7 +291,7 @@ When keyword/topic candidates are found, unresolved semantic interpretation shou
 - It is deterministic.
 - It is not an LLM chat interface.
 - It handles only session commands directly: `use`, `pwd`, `clear`, `help`, and `exit`.
-- Known knowledge-base commands should map to batch-mode commands with the current `--lib`.
+- Known knowledge-base commands should map to batch-mode commands with the current `--wiki`.
 - Unknown input must return safely without interpretation, LLM calls, shell escapes, or arbitrary execution.
 - It is suitable for Manager LLM sessions that need to repeatedly run structured commands before assigning bounded work to Worker LLMs.
 

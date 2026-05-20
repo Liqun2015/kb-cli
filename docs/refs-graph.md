@@ -1,6 +1,6 @@
 # `kb refs-graph`
 
-Current version: `v0.7.37`
+Current version: `v0.7.38`
 
 `kb refs-graph` exports bibliographic index relation candidates as graph data for third-party visualization skills and tools.
 
@@ -56,10 +56,10 @@ kb refs-graph --path processing/refs/refs_index_20260509_120000.md
 kb refs-graph --dry-run
 ```
 
-Use with a specific library path:
+Use with a specific wiki path:
 
 ```bash
-kb --lib "D:\\github\\llm-wiki\\quantum" refs-graph --json
+kb --wiki "D:\\github\\llm-wiki\\quantum" refs-graph --json
 ```
 
 ## Visual protocol

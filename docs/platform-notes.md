@@ -2,7 +2,7 @@
 
 `kb-cli` is designed so the Rust CLI stays cross-platform and the platform-specific differences stay in documentation and small wrapper scripts.
 
-Current version: `v0.7.37`
+Current version: `v0.7.38`
 
 ## Related architecture document
 
@@ -36,19 +36,19 @@ Do not add large platform-specific branches to the Rust core unless a real bug r
 Windows PowerShell:
 
 ```powershell
-kb --lib "D:\github\LLM-wiki\quantum" status
+kb --wiki "D:\github\LLM-wiki\quantum" status
 ```
 
 macOS/Linux:
 
 ```bash
-kb --lib "$HOME/github/LLM-wiki/quantum" status
+kb --wiki "$HOME/github/LLM-wiki/quantum" status
 ```
 
 Cross-platform relative path:
 
 ```bash
-kb --lib ./quantum status
+kb --wiki ./quantum status
 ```
 
 ## Wrapper scripts

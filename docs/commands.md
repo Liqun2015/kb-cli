@@ -60,21 +60,21 @@ The guiding rule is simple:
 - **Deferred work:** semantic synthesis, citation reconciliation, OCR/layout repair, and relationship judgment remain explicit LLM/human review tasks.
 - **Compatibility:** `kb bootstrap` remains available as an older alias, but documentation should prefer `kb setup`.
 
-### `kb create --lib <A> --from <B> --about <topic>`
+### `kb create --wiki <A> --from <B> --about <topic>`
 
 - **Ability:** turn an existing literature/source-material folder into a complete, named, agent-ready LLM Wiki database in one command.
-- **Equivalent stages:** `kb --lib <A> --source <B> setup --recursive --topic <topic> -> kb --lib <A> build <topic>`.
+- **Equivalent stages:** `kb --wiki <A> --source <B> setup --recursive --topic <topic> -> kb --wiki <A> build <topic>`.
 - **Primary input:** an existing literature folder supplied with `--from <B>`.
-- **Primary output:** the target LLM Wiki database supplied with `--lib <A>`, with source files organized under `raw/`, deterministic evidence under `processing/`, topic workbench files under `topics/<topic>/`, agent handoff files, and human/agent interface files under `interfaces/`.
+- **Primary output:** the target LLM Wiki database supplied with `--wiki <A>`, with source files organized under `raw/`, deterministic evidence under `processing/`, topic workbench files under `topics/<topic>/`, agent handoff files, and human/agent interface files under `interfaces/`.
 - **Allows LLM:** no. This command still only runs deterministic setup/build stages.
 - **Deferred work:** OCR repair, paper-card semantic completion, relation confirmation, concept-page writing, and synthesis remain external-agent or human-review tasks.
-- **Useful options:** `--lib`, `--from`, `--about`, `--move`, `--force`, `--dry-run`, `--limit`.
+- **Useful options:** `--wiki`, `--from`, `--about`, `--move`, `--force`, `--dry-run`, `--limit`.
 
 Examples:
 
 ```bash
-kb create --lib D:\LLM-wiki\thermal --from D:\Literatures\thermal-metamaterials --about thermal-metamaterials
-kb create --lib D:\LLM-wiki\thermal --from D:\Literatures\thermal-metamaterials --about thermal-metamaterials --dry-run
+kb create --wiki D:\LLM-wiki\thermal --from D:\Literatures\thermal-metamaterials --about thermal-metamaterials
+kb create --wiki D:\LLM-wiki\thermal --from D:\Literatures\thermal-metamaterials --about thermal-metamaterials --dry-run
 ```
 
 
@@ -508,7 +508,7 @@ If `--topic` is omitted, the source directory name becomes the default topic.
 When initializing a blank database:
 
 ```bash
-kb --lib MyKnowledgeBase init
+kb --wiki MyKnowledgeBase init
 ```
 
-If `--topic` is omitted, the database directory name becomes the default topic. Running `kb init` without `--lib` now exits with a prompt instead of silently creating `knowledgebase/`.
+If `--topic` is omitted, the database directory name becomes the default topic. Running `kb init` without `--wiki` now exits with a prompt instead of silently creating `knowledgebase/`.

@@ -252,7 +252,7 @@ review rules:
 `kb` batch commands and `kb shell` should share deterministic command semantics.
 
 ```text
-kb --lib ./quantum query thermal cloak
+kb --wiki ./quantum query thermal cloak
 ≈
 kb> use ./quantum
 kb> query thermal cloak

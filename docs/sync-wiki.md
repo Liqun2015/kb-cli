@@ -23,10 +23,10 @@ source_files:
 ## Usage
 
 ```bash
-kb --lib /path/to/literature-folder/knowledgebase sync-wiki --dry-run
-kb --lib /path/to/literature-folder/knowledgebase sync-wiki --preview
-kb --lib /path/to/literature-folder/knowledgebase sync-wiki
-kb --lib /path/to/literature-folder/knowledgebase sync-wiki --json
+kb --wiki /path/to/literature-folder/knowledgebase sync-wiki --dry-run
+kb --wiki /path/to/literature-folder/knowledgebase sync-wiki --preview
+kb --wiki /path/to/literature-folder/knowledgebase sync-wiki
+kb --wiki /path/to/literature-folder/knowledgebase sync-wiki --json
 ```
 
 ## Safety

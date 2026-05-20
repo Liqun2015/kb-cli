@@ -8,26 +8,26 @@ It does **not** call an LLM, does **not** modify `raw/`, and does **not** rewrit
 interfaces/reports/lint_static_<timestamp>.md
 ```
 
-Current version: `v0.7.37`
+Current version: `v0.7.38`
 
 ## Commands
 
 ```bash
 # Write a Markdown lint report
-kb --lib /path/to/literature-folder/knowledgebase lint-static
+kb --wiki /path/to/literature-folder/knowledgebase lint-static
 
 # Check without writing a report
-kb --lib /path/to/literature-folder/knowledgebase lint-static --no-report
+kb --wiki /path/to/literature-folder/knowledgebase lint-static --no-report
 
 # Equivalent inspection aliases
-kb --lib /path/to/literature-folder/knowledgebase lint-static --dry-run
-kb --lib /path/to/literature-folder/knowledgebase lint-static --preview
+kb --wiki /path/to/literature-folder/knowledgebase lint-static --dry-run
+kb --wiki /path/to/literature-folder/knowledgebase lint-static --preview
 
 # Machine-readable summary
-kb --lib /path/to/literature-folder/knowledgebase lint-static --json
+kb --wiki /path/to/literature-folder/knowledgebase lint-static --json
 
 # CI/script mode: fail when issues are found
-kb --lib /path/to/literature-folder/knowledgebase lint-static --strict
+kb --wiki /path/to/literature-folder/knowledgebase lint-static --strict
 ```
 
 `--dry-run` remains supported. `--preview` is a general inspection alias. For `lint-static`, `--no-report` is the clearest wording because the only skipped write is the Markdown report file.
@@ -155,13 +155,13 @@ This order keeps the work reviewable and avoids chasing cosmetic orphan-page war
 For scripts:
 
 ```bash
-kb --lib /path/to/literature-folder/knowledgebase lint-static --json
+kb --wiki /path/to/literature-folder/knowledgebase lint-static --json
 ```
 
 For CI-like checks:
 
 ```bash
-kb --lib /path/to/literature-folder/knowledgebase lint-static --strict
+kb --wiki /path/to/literature-folder/knowledgebase lint-static --strict
 ```
 
 `--strict` returns a non-zero exit code when any issue group is found. It is best used after the Wiki has passed a normal report review at least once.

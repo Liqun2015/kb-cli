@@ -27,3 +27,5 @@ pub mod sync_wiki;
 pub mod tasks;
 pub mod topic;
 pub mod view;
+
+pub mod workflow;

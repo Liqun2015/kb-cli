@@ -34,7 +34,7 @@ kb health --strict
 With an explicit knowledge base path:
 
 ```bash
-kb --lib "D:\github\llm-wiki\quantum" health
+kb --wiki "D:\github\llm-wiki\quantum" health
 ```
 
 ## Output

@@ -1,16 +1,23 @@
-## v0.7.37
-
-`v0.7.37` is a hotfix release for `kb build-wiki`: it fixes Rust string/character escaping in Markdown table-cell rendering and removes one unused import warning. No workflow or HTML behavior is changed from v0.7.36.
-
-## v0.7.36
-
-`v0.7.36` strengthens the LLM Wiki handoff layer. Paper pages now surface title, authors, journal, abstract, keywords, introduction, references, missing fields, and Worker LLM profile targets. `kb tasks` now generates explicit tasks for paper key-information extraction and topic story narrative drafting. `kb build-wiki` creates initial topic story pages under `wiki/topics/` from topic workspaces, and `kb build` now runs metadata/wiki refresh stages unless `--skip-wiki` is used.
-
-## v0.7.34
-
-`v0.7.34` updates compact `Refs Index` disclosure sections to use the same card-like native-triangle style as topic file lists, keeping relation candidates and deferred handoff blocks readable but compact.
-
 # Changelog
+
+## v0.7.38
+
+`v0.7.38` handles the small-corpus path first. It defines the canonical create command as `kb create --wiki <A> --from <B> --about <topic>` and generates Karpathy-style LLM Wiki workflow guides when the corpus has fewer than 200 papers.
+
+### Changed
+
+- Repositioned `kb-cli` as a deterministic LLM Wiki collaborative workflow generator, not a PDF parsing tool.
+- Replaced the public global selector wording from `--lib` to `--wiki`.
+- Added workflow routing status under `processing/workflow_status.json`.
+- Added `LLM/workflow.md`.
+- Added small-corpus Manager, Worker, and Human Review checklists under `LLM/tasks/`.
+- Added shared small-corpus protocol under `agents/shared/`.
+- `kb view` now displays corpus size, threshold, workflow mode, and recommended next step.
+
+### Scope
+
+- For `< 200` papers: generate Karpathy-style LLM Wiki task guides.
+- For `>= 200` papers: record that RAG-assisted workflow is required; full RAG implementation is deferred to a later version.
 
 ## v0.7.33
 
@@ -71,8 +78,8 @@
 
 ### Changed
 
-- Removed the duplicate local `--lib` field from `kb create`; `create` now uses the global `--lib` selector defined at the top-level CLI.
-- Kept the preferred user-facing command unchanged: `kb create --lib <A> --from <B> --about <topic>`.
+- Removed the duplicate local `--wiki` field from `kb create`; `create` now uses the global `--wiki` selector defined at the top-level CLI.
+- Kept the preferred user-facing command unchanged: `kb create --wiki <A> --from <B> --about <topic>`.
 - Synchronized documentation `Current version` headers to `v0.7.26`.
 - Excluded the local runtime `.model_config.json` from the release package; keep `.model_config.example.json` as the shareable template.
 
@@ -88,13 +95,13 @@
 
 ## v0.7.24
 
-`v0.7.24` standardizes the global library selector as `--lib` so all commands use the same library vocabulary as `kb create --lib <A> --from <B> --about <topic>`.
+`v0.7.24` standardizes the global wiki selector as `--wiki` so all commands use the same library vocabulary as `kb create --wiki <A> --from <B> --about <topic>`.
 
 ### Changed
 
-- Replaced the old global library-path parameter with `--lib`.
-- Updated shell delegation to call batch commands with `--lib`.
-- Updated generated prompts, launch-panel examples, docs, and command examples to use `--lib`.
+- Replaced the old global library-path parameter with `--wiki`.
+- Updated shell delegation to call batch commands with `--wiki`.
+- Updated generated prompts, launch-panel examples, docs, and command examples to use `--wiki`.
 - Kept internal Rust variable names such as `kb_path` only where they describe filesystem paths inside the implementation.
 
 ## v0.7.23
@@ -110,9 +117,9 @@
 
 `v0.7.22` adds `kb create` as the clean one-command path for turning an existing literature folder into an agent-ready LLM Wiki.
 
-- Added `kb create --lib <A> --from <B> --about <topic>`.
-- The preferred form is explicit: `--lib` names the target LLM Wiki database, `--from` names the source-material folder, and `--about` names the topic.
-- `kb create` is equivalent to `kb --lib <A> --source <B> setup --recursive --topic <topic>` followed by `kb --lib <A> build <topic>`.
+- Added `kb create --wiki <A> --from <B> --about <topic>`.
+- The preferred form is explicit: `--wiki` names the target LLM Wiki database, `--from` names the source-material folder, and `--about` names the topic.
+- `kb create` is equivalent to `kb --wiki <A> --source <B> setup --recursive --topic <topic>` followed by `kb --wiki <A> build <topic>`.
 - `setup` and `build` remain available as lower-level commands for debugging or partial reruns.
 
 ## v0.7.20
@@ -303,8 +310,8 @@ Main changes:
 - `setup` prints both the source directory and the knowledge base workspace before running.
 - `ingest` can now read from an external source directory while writing into a separate knowledge base workspace.
 - Recursive ingest skips the generated `knowledgebase/` workspace so it does not ingest its own outputs.
-- Added `setup --name <DIR>` to customize the child workspace name when `--lib` is not provided.
-- Kept `--lib` as the advanced/manual layout override and kept `bootstrap` as the compatibility alias for `setup`.
+- Added `setup --name <DIR>` to customize the child workspace name when `--wiki` is not provided.
+- Kept `--wiki` as the advanced/manual layout override and kept `bootstrap` as the compatibility alias for `setup`.
 - Updated documentation to recommend the source-folder-to-child-workspace layout.
 
 No hidden LLM call, semantic duplicate detection, or automatic scientific relationship inference is added.
@@ -831,9 +838,9 @@ Main changes:
 Useful prepare commands:
 
 ```bash
-kb --lib /path/to/kb prepare --new --dry-run
-kb --lib /path/to/kb prepare --new
-kb --lib /path/to/kb prepare --file raw/papers/example.pdf
+kb --wiki /path/to/kb prepare --new --dry-run
+kb --wiki /path/to/kb prepare --new
+kb --wiki /path/to/kb prepare --file raw/papers/example.pdf
 ```
 
 Generated files:
@@ -875,10 +882,10 @@ Main changes:
 Useful status modes:
 
 ```bash
-kb --lib /path/to/kb status
-kb --lib /path/to/kb status --json
-kb --lib /path/to/kb status --unprocessed
-kb --lib /path/to/kb status --dry-run
+kb --wiki /path/to/kb status
+kb --wiki /path/to/kb status --json
+kb --wiki /path/to/kb status --unprocessed
+kb --wiki /path/to/kb status --dry-run
 ```
 
 ## v0.2.0

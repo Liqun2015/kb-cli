@@ -7,7 +7,7 @@ This document records what `kb-cli v0.7.10` actually supports. It is intentional
 | Command | Purpose |
 |---|---|
 | `kb init [--force]` | Create the local LLM Wiki directory structure and generated `rules/` layer. |
-| `kb [--source PATH] [--lib PATH] ingest [--copy\|--move] [--recursive] [--dry-run\|--preview]` | Organize source files from the source directory into `raw/` subfolders. |
+| `kb [--source PATH] [--wiki PATH] ingest [--copy\|--move] [--recursive] [--dry-run\|--preview]` | Organize source files from the source directory into `raw/` subfolders. |
 | `kb --source <folder> setup [--recursive] [--copy\|--move] [--dry-run\|--preview]` | Create `<folder>/knowledgebase` by default, then run `init + ingest + extract-metadata + build-wiki`. `kb bootstrap` is a compatibility alias. |
 | `kb extract-metadata [--force]` | Extract PDF metadata from `raw/papers/`. |
 | `kb build-wiki` | Generate Markdown wiki pages and indexes. |
@@ -88,10 +88,10 @@ This is cross-platform because the workflow is implemented inside the Rust CLI, 
 `kb status` is implemented:
 
 ```bash
-kb --lib /path/to/literature-folder/knowledgebase status
-kb --lib /path/to/literature-folder/knowledgebase status --json
-kb --lib /path/to/literature-folder/knowledgebase status --unprocessed
-kb --lib /path/to/literature-folder/knowledgebase status --dry-run
+kb --wiki /path/to/literature-folder/knowledgebase status
+kb --wiki /path/to/literature-folder/knowledgebase status --json
+kb --wiki /path/to/literature-folder/knowledgebase status --unprocessed
+kb --wiki /path/to/literature-folder/knowledgebase status --dry-run
 ```
 
 Current behavior:
@@ -107,10 +107,10 @@ The manifest is not a stable external API yet; treat it as a local project file 
 `kb lint-static` is implemented as a deterministic local Markdown health check. It does not call an LLM and does not rewrite `wiki/`.
 
 ```bash
-kb --lib /path/to/literature-folder/knowledgebase lint-static
-kb --lib /path/to/literature-folder/knowledgebase lint-static --no-report
-kb --lib /path/to/literature-folder/knowledgebase lint-static --json
-kb --lib /path/to/literature-folder/knowledgebase lint-static --strict
+kb --wiki /path/to/literature-folder/knowledgebase lint-static
+kb --wiki /path/to/literature-folder/knowledgebase lint-static --no-report
+kb --wiki /path/to/literature-folder/knowledgebase lint-static --json
+kb --wiki /path/to/literature-folder/knowledgebase lint-static --strict
 ```
 
 Reports are written under `interfaces/reports/` unless `--dry-run`, `--preview`, or `--no-report` is used. `--no-report` is specific to `lint-static`.
@@ -121,10 +121,10 @@ Reports are written under `interfaces/reports/` unless `--dry-run`, `--preview`,
 `kb query` is implemented in v0.5.0 as deterministic local keyword search over `wiki/**/*.md`.
 
 ```bash
-kb --lib /path/to/literature-folder/knowledgebase query thermal cloak
-kb --lib /path/to/literature-folder/knowledgebase query thermal cloak --limit 5
-kb --lib /path/to/literature-folder/knowledgebase query thermal cloak --json
-kb --lib /path/to/literature-folder/knowledgebase query thermal cloak --title-only
+kb --wiki /path/to/literature-folder/knowledgebase query thermal cloak
+kb --wiki /path/to/literature-folder/knowledgebase query thermal cloak --limit 5
+kb --wiki /path/to/literature-folder/knowledgebase query thermal cloak --json
+kb --wiki /path/to/literature-folder/knowledgebase query thermal cloak --title-only
 ```
 
 Current behavior:
