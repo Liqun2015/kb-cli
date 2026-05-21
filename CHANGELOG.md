@@ -1,23 +1,24 @@
 # Changelog
 
-## v0.7.38
+## v0.7.39
 
-`v0.7.38` handles the small-corpus path first. It defines the canonical create command as `kb create --wiki <A> --from <B> --about <topic>` and generates Karpathy-style LLM Wiki workflow guides when the corpus has fewer than 200 papers.
+`v0.7.39` prepares the `< 200 papers` LLM Wiki workflow for OpenClaw as a practical Manager LLM. It keeps `kb-cli` as the deterministic workflow generator, while OpenClaw receives explicit topic-library creation and daily-maintenance instructions.
 
-### Changed
+### Added
 
-- Repositioned `kb-cli` as a deterministic LLM Wiki collaborative workflow generator, not a PDF parsing tool.
-- Replaced the public global selector wording from `--lib` to `--wiki`.
-- Added workflow routing status under `processing/workflow_status.json`.
-- Added `LLM/workflow.md`.
-- Added small-corpus Manager, Worker, and Human Review checklists under `LLM/tasks/`.
-- Added shared small-corpus protocol under `agents/shared/`.
-- `kb view` now displays corpus size, threshold, workflow mode, and recommended next step.
+- Generated `agents/openclaw/README.md` as the OpenClaw Manager entry point.
+- Generated `agents/openclaw/manager.md` for OpenClaw role boundaries.
+- Generated `agents/openclaw/create-topic-library.md` for establishing a topic library with `kb create --wiki <A> --from <B> --about <topic>`.
+- Generated `agents/openclaw/daily-maintenance.md` for routine update and maintenance work.
+- Generated `agents/openclaw/worker-dispatch.md` to standardize bounded Worker LLM tasks.
+- Generated `agents/openclaw/start-prompt.md` for starting OpenClaw safely.
+- Generated `LLM/tasks/openclaw_manager_create_and_maintain.md` as the durable Manager task contract.
 
-### Scope
+### Behavior
 
-- For `< 200` papers: generate Karpathy-style LLM Wiki task guides.
-- For `>= 200` papers: record that RAG-assisted workflow is required; full RAG implementation is deferred to a later version.
+- `kb create` and `kb build` now refresh OpenClaw-specific guidance along with the small-corpus workflow guides.
+- Final create/build output points to the OpenClaw entry and daily-maintenance files.
+- The OpenClaw files stay in `agents/openclaw/`, separate from Claude Code and Codex files.
 
 ## v0.7.33
 

@@ -6,7 +6,7 @@ This guide gives the shared workflow. For platform-specific details, see:
 - `docs/unix-quickstart.md`
 - `docs/platform-notes.md`
 
-Current version: `v0.7.38`
+Current version: `v0.7.39`
 
 ## 1. Install `kb`
 

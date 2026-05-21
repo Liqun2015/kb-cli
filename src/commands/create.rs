@@ -193,6 +193,16 @@ pub fn execute(
     );
     println!("Agent entry: {}", kb_path.join("AGENTS.md").display());
     println!(
+        "OpenClaw entry: {}",
+        kb_path.join("agents/openclaw/README.md").display()
+    );
+    println!(
+        "OpenClaw daily maintenance: {}",
+        kb_path
+            .join("agents/openclaw/daily-maintenance.md")
+            .display()
+    );
+    println!(
         "Topic workbench: {}",
         kb_path
             .join("topics")

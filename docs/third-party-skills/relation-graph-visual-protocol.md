@@ -1,6 +1,6 @@
 # Relation Graph Visual Protocol
 
-Current version: `v0.7.38`
+Current version: `v0.7.39`
 
 This document defines the recommended visual protocol for third-party graph skills and tools that display LLM Wiki literature relationships.
 

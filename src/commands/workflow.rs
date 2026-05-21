@@ -57,7 +57,7 @@ pub fn refresh_workflow_guides(
     };
 
     let mut status = WorkflowStatus {
-        schema_version: "workflow.v0.7.38".to_string(),
+        schema_version: "workflow.v0.7.39".to_string(),
         generated_by: "kb-cli workflow".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         paper_count,
@@ -108,6 +108,34 @@ pub fn refresh_workflow_guides(
             (
                 "agents/shared/karpathy-small-corpus-workflow.md",
                 render_small_corpus_shared_agent_protocol(&status, topic_title),
+            ),
+            (
+                "agents/openclaw/README.md",
+                render_openclaw_readme(&status, topic_title),
+            ),
+            (
+                "agents/openclaw/manager.md",
+                render_openclaw_manager_guide(&status, topic_title),
+            ),
+            (
+                "agents/openclaw/create-topic-library.md",
+                render_openclaw_create_topic_library(&status, topic_title),
+            ),
+            (
+                "agents/openclaw/daily-maintenance.md",
+                render_openclaw_daily_maintenance(&status, topic_title),
+            ),
+            (
+                "agents/openclaw/worker-dispatch.md",
+                render_openclaw_worker_dispatch(&status, topic_title),
+            ),
+            (
+                "agents/openclaw/start-prompt.md",
+                render_openclaw_start_prompt(&status, topic_title),
+            ),
+            (
+                "LLM/tasks/openclaw_manager_create_and_maintain.md",
+                render_openclaw_manager_task(&status, topic_title),
             ),
         ];
         for (rel, content) in specs {
@@ -502,6 +530,391 @@ Agents must not rewrite `raw/`. They may propose or edit `wiki/`, `processing/`,
         paper_count = status.paper_count,
         threshold = status.rag_threshold,
         topic = topic,
+    )
+}
+
+fn render_openclaw_readme(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# OpenClaw Entry — LLM Wiki Manager
+
+This directory is the OpenClaw-specific entry point. It is intentionally separate from `agents/claude-code/` and `agents/codex/` so that each agent keeps its own habits, prompts, and operational boundaries.
+
+## Current Workspace Mode
+
+- Mode: `{mode}`
+- Corpus size: `{paper_count}` papers
+- RAG threshold: `{threshold}` papers
+- Current topic: `{topic}`
+
+Because this version focuses on the `< 200 papers` case, OpenClaw should use the Karpathy-style LLM Wiki workflow: inspect the deterministic workspace, assign bounded Worker tasks, collect outputs, and route high-value judgments to Human Review.
+
+## Read Order
+
+1. `agents/openclaw/README.md` — this file.
+2. `agents/openclaw/manager.md` — Manager role and boundaries.
+3. `agents/openclaw/create-topic-library.md` — how to establish a topic library.
+4. `agents/openclaw/daily-maintenance.md` — routine maintenance/update checklist.
+5. `agents/openclaw/worker-dispatch.md` — how to call or brief Worker LLMs.
+6. `LLM/workflow.md`.
+7. `LLM/tasks/openclaw_manager_create_and_maintain.md`.
+8. `AGENTS.md` and `LLM/handoff/current.md` for shared contracts.
+
+## Default Manager Rule
+
+OpenClaw is the Manager. It should not behave like an unrestricted autonomous editor. It should first call deterministic `kb` commands, then assign one bounded task at a time to a Worker LLM, and finally request Human Review for key academic decisions.
+
+## Safe First Command
+
+```bash
+kb --wiki <workspace> view
+```
+
+Then inspect:
+
+- `interfaces/html/index.html`
+- `interfaces/html/wiki.html`
+- `LLM/tasks/index.md`
+- `agents/openclaw/daily-maintenance.md`
+"#,
+        mode = status.mode.as_str(),
+        paper_count = status.paper_count,
+        threshold = status.rag_threshold,
+        topic = topic,
+    )
+}
+
+fn render_openclaw_manager_guide(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# OpenClaw Manager Guide
+
+## Identity
+
+You are the OpenClaw Manager for this LLM Wiki workspace. Your job is not to write the whole Wiki yourself. Your job is to coordinate `kb-cli`, Worker LLMs, and Human Review.
+
+## Current Mode
+
+- Corpus size: **{paper_count} papers**
+- Threshold: **{threshold} papers**
+- Workflow mode: **{mode_label}**
+- Topic: `{topic}`
+
+## Manager Duties
+
+1. Use `kb create --wiki <workspace> --from <literature-folder> --about <topic>` to establish or refresh a topic library.
+2. Use deterministic commands first: `kb view`, `kb view --wiki`, `kb tasks`, `kb topic list`, `kb topic status <topic>`.
+3. Read task lists before assigning work.
+4. Assign Worker LLM tasks in small batches.
+5. Keep Worker output inside permitted files.
+6. Ask Human Review to approve anchor papers, topic narratives, confirmed relation edges, and merges into reviewed pages.
+7. Record accepted work under `LLM/memory/` or topic review notes.
+
+## Manager Must Not
+
+- Do not modify `raw/`.
+- Do not let Worker LLMs invent missing title, author, DOI, abstract, or references.
+- Do not convert relation candidates to confirmed relations without evidence and review.
+- Do not replace `kb-cli` deterministic checks with free-form guesses.
+- Do not mix OpenClaw prompts with Claude Code or Codex prompts.
+
+## Standard Loop
+
+```text
+observe workspace
+→ run deterministic kb command
+→ inspect generated task/view files
+→ assign one Worker task
+→ review Worker output
+→ route high-value judgments to Human Review
+→ record accepted result
+→ refresh kb view / kb view --wiki
+```
+"#,
+        paper_count = status.paper_count,
+        threshold = status.rag_threshold,
+        mode_label = status.mode_label.as_str(),
+        topic = topic,
+    )
+}
+
+fn render_openclaw_create_topic_library(
+    status: &WorkflowStatus,
+    topic_title: Option<&str>,
+) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# OpenClaw Procedure — Create a Topic Library
+
+This procedure tells OpenClaw how to establish a topic library from a literature folder.
+
+## Canonical Command
+
+```bash
+kb create --wiki <workspace> --from <literature-folder> --about "{topic}"
+```
+
+## What This Command Means
+
+`kb create` creates the LLM Wiki worksite. It does not semantically finish the Wiki. It creates:
+
+- directory skeletons;
+- raw literature registry;
+- paper stubs;
+- topic workspace;
+- deterministic indexes;
+- LLM Manager/Worker task guides;
+- Human Review checklists;
+- `kb view` and `kb view --wiki` HTML entrances.
+
+## OpenClaw After-Create Checklist
+
+1. Run or verify `kb create`.
+2. Open `processing/workflow_status.json` and confirm `paper_count < 200` for this workflow.
+3. Open `LLM/workflow.md`.
+4. Open `LLM/tasks/index.md`.
+5. Open `LLM/tasks/openclaw_manager_create_and_maintain.md`.
+6. Open `interfaces/html/index.html` for the control console.
+7. Open `interfaces/html/wiki.html` for the Wiki reader.
+8. Assign the first Worker batch for paper key-info extraction.
+9. Ask Human Review to choose or approve anchor papers before finalizing the topic story.
+
+## First Worker Batch
+
+Start with 3 to 10 topic-relevant papers. Each Worker task should extract:
+
+- title;
+- authors;
+- journal / venue;
+- year;
+- DOI when visible;
+- abstract;
+- keywords;
+- introduction notes;
+- topic relevance notes;
+- links to other paper pages.
+
+Output should go to:
+
+- `processing/paper_profiles/<paper_id>.md`
+- `wiki/papers/<paper_id>.md` only when explicitly allowed.
+"#,
+        topic = topic,
+    )
+}
+
+fn render_openclaw_daily_maintenance(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# OpenClaw Daily Maintenance Protocol
+
+This file is the daily maintenance checklist for OpenClaw Manager.
+
+## Current Scope
+
+- Topic: `{topic}`
+- Corpus size: `{paper_count}` papers
+- Workflow mode: `{mode_label}`
+
+## Daily Start
+
+1. Read `agents/openclaw/README.md`.
+2. Read `LLM/workflow.md`.
+3. Read `LLM/tasks/index.md` if present.
+4. Run or request:
+
+```bash
+kb --wiki <workspace> view
+kb --wiki <workspace> view --wiki
+kb --wiki <workspace> tasks
+kb --wiki <workspace> topic status {topic}
+```
+
+## Maintenance Queue
+
+Handle only one queue item at a time:
+
+1. New PDFs added to `raw/papers/` or source folder.
+2. Paper stubs needing LLM extraction.
+3. Paper profiles needing Human Review.
+4. Topic narrative sections needing linked evidence.
+5. Relation candidates needing evidence checks.
+6. Broken WikiLinks or missing backlinks.
+7. Outdated task files or handoff files.
+
+## Update Rules
+
+- If new literature appears, rerun `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"` or the equivalent deterministic refresh command.
+- If the corpus count reaches `{threshold}` or more, stop the direct small-corpus workflow and request RAG-assisted workflow preparation.
+- After Worker edits, refresh `kb view` and `kb view --wiki`.
+- Record accepted maintenance under `LLM/memory/`.
+
+## End-of-Day Note Template
+
+```markdown
+# OpenClaw Maintenance Note — <date>
+
+## Commands Run
+
+## Tasks Assigned
+
+## Worker Outputs Accepted
+
+## Human Review Needed
+
+## Files Changed
+
+## Next Maintenance Step
+```
+"#,
+        topic = topic,
+        paper_count = status.paper_count,
+        mode_label = status.mode_label.as_str(),
+        threshold = status.rag_threshold,
+    )
+}
+
+fn render_openclaw_worker_dispatch(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# OpenClaw Worker Dispatch Template
+
+OpenClaw Manager may call a Worker LLM, but every Worker task must be bounded.
+
+## Worker Brief Template
+
+```text
+You are a Worker LLM for an LLM Wiki.
+
+Topic: {topic}
+Corpus mode: {mode_label}
+
+Read only the files listed below.
+Work only on the allowed output files.
+Do not modify raw/.
+Do not invent missing metadata.
+Mark uncertain claims as needs_human_review.
+
+Task:
+<one concrete task>
+
+Input files:
+- <file 1>
+- <file 2>
+
+Allowed output files:
+- <output 1>
+
+Return:
+1. work summary;
+2. files changed;
+3. evidence used;
+4. unresolved uncertainty;
+5. human review needs.
+```
+
+## Good Worker Tasks
+
+- Extract key information for one paper or a small batch.
+- Draft one section of `wiki/topics/{topic}.md` with links to paper pages.
+- Check one relation candidate and return evidence.
+- Fix one small group of broken WikiLinks.
+
+## Bad Worker Tasks
+
+- Read the whole corpus and write the whole Wiki.
+- Rewrite all topic pages.
+- Confirm all relation candidates.
+- Delete or reorganize `raw/`.
+"#,
+        topic = topic,
+        mode_label = status.mode_label.as_str(),
+    )
+}
+
+fn render_openclaw_start_prompt(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"You are OpenClaw acting as the Manager LLM for an LLM Wiki workspace.
+
+First, read these files:
+
+1. agents/openclaw/README.md
+2. agents/openclaw/manager.md
+3. agents/openclaw/create-topic-library.md
+4. agents/openclaw/daily-maintenance.md
+5. LLM/workflow.md
+6. LLM/tasks/openclaw_manager_create_and_maintain.md
+7. AGENTS.md
+8. LLM/handoff/current.md
+
+Current topic: {topic}
+Current mode: {mode_label}
+Corpus size: {paper_count} papers
+
+Do not modify files yet. Return:
+
+1. current workspace state;
+2. whether this is still a <200-paper Karpathy-style workflow;
+3. the top task queue;
+4. the safest next three actions;
+5. which decisions require Human Review.
+"#,
+        topic = topic,
+        mode_label = status.mode_label.as_str(),
+        paper_count = status.paper_count,
+    )
+}
+
+fn render_openclaw_manager_task(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# OpenClaw Manager Task — Create and Maintain Topic Library
+
+## Goal
+
+Use OpenClaw as the Manager LLM to establish and maintain this topic library.
+
+## Topic
+
+`{topic}`
+
+## Mode
+
+- `{mode_label}`
+- Paper count: `{paper_count}`
+- RAG threshold: `{threshold}`
+
+## Required Manager Actions
+
+1. Confirm the workspace was created by `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"`.
+2. Confirm `processing/workflow_status.json` reports `< {threshold}` papers.
+3. Use `kb view` as the control console and `kb view --wiki` as the reading view.
+4. Assign Worker LLM tasks for paper key-info extraction.
+5. Assign Worker LLM tasks for topic narrative drafting after enough paper profiles exist.
+6. Route anchor-paper choices, confirmed relation edges, and final topic narrative claims to Human Review.
+7. Record accepted work under `LLM/memory/`.
+8. Keep OpenClaw-specific notes inside `agents/openclaw/` or assigned task outputs.
+
+## Forbidden Actions
+
+- Do not treat Rust PDF text extraction as complete paper understanding.
+- Do not ask Workers to process the whole corpus in one prompt.
+- Do not modify `raw/`.
+- Do not mix OpenClaw prompts with `agents/claude-code/` or `agents/codex/`.
+
+## Done When
+
+- Paper profiles exist for the topic-relevant papers.
+- `wiki/topics/{topic}.md` contains a concise linked topic story.
+- Important claims link to paper pages.
+- Human Review has approved anchor papers and high-value judgments.
+- `kb view --wiki` shows a readable topic-centered Wiki.
+"#,
+        topic = topic,
+        mode_label = status.mode_label.as_str(),
+        paper_count = status.paper_count,
+        threshold = status.rag_threshold,
     )
 }
 

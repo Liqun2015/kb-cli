@@ -1,6 +1,6 @@
 # LLM Wiki Root Marker
 
-Current version: `v0.7.38`
+Current version: `v0.7.39`
 
 `llm-wiki.toml` is the root marker file for a local LLM Wiki workspace. It plays the same practical role that `Cargo.toml` plays for a Rust project or `.git/` plays for a Git repository: it lets humans, deterministic commands, and future LLM agents recognize the managed workspace boundary.
 

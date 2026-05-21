@@ -18,11 +18,11 @@ For fewer than 200 papers, `kb-cli` prepares a Karpathy-style LLM Wiki workflow.
 
 ## Current Version
 
-Current version: `v0.7.38`
+Current version: `v0.7.39`
 
-### v0.7.38
+### v0.7.39
 
-`v0.7.38` repositions `kb-cli` as an LLM Wiki collaborative workflow generator rather than a PDF parsing tool. The canonical workflow is now `kb create --wiki <A> --from <B> --about <topic>`. For corpora below 200 papers, `kb create` / `kb build` generate Karpathy-style Manager, Worker, and Human Review guides under `LLM/`, `LLM/tasks/`, and `agents/shared/`, and `kb view` displays the current workflow mode. Large-corpus RAG mode is only routed and marked for a later implementation phase.
+`v0.7.39` prepares the small-corpus workflow for OpenClaw daily use. `kb create --wiki <A> --from <B> --about <topic>` now generates OpenClaw-specific Manager entry files under `agents/openclaw/`, including topic-library creation, daily maintenance, Worker dispatch, and start-prompt guides. OpenClaw is positioned as the Manager LLM that calls deterministic `kb` commands, assigns bounded Worker tasks, and routes high-value academic decisions to Human Review.
 
 ### v0.7.36
 

@@ -297,6 +297,8 @@ pub fn execute(custom_kb: Option<&Path>, args: &BuildArgs) -> Result<()> {
     println!("\nBuild pipeline complete.");
     println!("Next human entry: obsidian_main.md");
     println!("Next agent entry: AGENTS.md / CLAUDE.md -> LLM/handoff/current.md");
+    println!("OpenClaw entry: agents/openclaw/README.md");
+    println!("OpenClaw maintenance: agents/openclaw/daily-maintenance.md");
     println!("Topic workbench: topics/{}/index.md", topic);
     Ok(())
 }

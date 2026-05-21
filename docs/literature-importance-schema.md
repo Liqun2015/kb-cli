@@ -1,6 +1,6 @@
 # Literature Importance Schema
 
-Current version: `v0.7.38`
+Current version: `v0.7.39`
 
 This document defines a lightweight, reviewable way to record literature importance in LLM Wiki.
 

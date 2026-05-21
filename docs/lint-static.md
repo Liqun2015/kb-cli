@@ -8,7 +8,7 @@ It does **not** call an LLM, does **not** modify `raw/`, and does **not** rewrit
 interfaces/reports/lint_static_<timestamp>.md
 ```
 
-Current version: `v0.7.38`
+Current version: `v0.7.39`
 
 ## Commands
 

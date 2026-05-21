@@ -1,6 +1,6 @@
 # CLI / Shell Principle
 
-Current version: `v0.7.38`
+Current version: `v0.7.39`
 
 This document records the boundary between batch mode, interactive shell mode, and future LLM-assisted modes.
 
