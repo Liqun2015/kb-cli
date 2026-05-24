@@ -57,7 +57,7 @@ pub fn refresh_workflow_guides(
     };
 
     let mut status = WorkflowStatus {
-        schema_version: "workflow.v0.7.39".to_string(),
+        schema_version: "workflow.v0.7.40".to_string(),
         generated_by: "kb-cli workflow".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         paper_count,
@@ -727,6 +727,7 @@ This file is the daily maintenance checklist for OpenClaw Manager.
 kb --wiki <workspace> view
 kb --wiki <workspace> view --wiki
 kb --wiki <workspace> tasks
+kb --wiki <workspace> task list
 kb --wiki <workspace> topic status {topic}
 ```
 
@@ -736,6 +737,9 @@ Handle only one queue item at a time:
 
 1. New PDFs added to `raw/papers/` or source folder.
 2. Paper stubs needing LLM extraction.
+   - Create a small batch with `kb --wiki <workspace> batch paper-profile --topic {topic} --limit 5`.
+   - Print the Worker prompt with `kb --wiki <workspace> prompt paper-profile --task <batch-id> --topic {topic}`.
+   - Mark progress with `kb --wiki <workspace> task status <batch-id> --mark assigned|in_progress|completed|blocked`.
 3. Paper profiles needing Human Review.
 4. Topic narrative sections needing linked evidence.
 5. Relation candidates needing evidence checks.
@@ -746,8 +750,9 @@ Handle only one queue item at a time:
 
 - If new literature appears, rerun `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"` or the equivalent deterministic refresh command.
 - If the corpus count reaches `{threshold}` or more, stop the direct small-corpus workflow and request RAG-assisted workflow preparation.
-- After Worker edits, refresh `kb view` and `kb view --wiki`.
-- Record accepted maintenance under `LLM/memory/`.
+- After Worker edits, mark task progress with `kb task status <id> --mark <state>`.
+- After accepted Worker outputs, refresh `kb view` and `kb view --wiki`.
+- Record accepted maintenance under `LLM/memory/` after the task is marked completed.
 
 ## End-of-Day Note Template
 
@@ -780,6 +785,14 @@ fn render_openclaw_worker_dispatch(status: &WorkflowStatus, topic_title: Option<
         r#"# OpenClaw Worker Dispatch Template
 
 OpenClaw Manager may call a Worker LLM, but every Worker task must be bounded.
+
+## Preferred Dispatch Commands
+
+```bash
+kb --wiki <workspace> batch paper-profile --topic {topic} --limit 5
+kb --wiki <workspace> prompt paper-profile --task <batch-id> --topic {topic}
+kb --wiki <workspace> task status <batch-id> --mark assigned --assignee <worker>
+```
 
 ## Worker Brief Template
 

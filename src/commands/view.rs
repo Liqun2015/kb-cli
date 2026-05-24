@@ -432,7 +432,7 @@ fn build_relationship_data(kb_path: &Path, args: &ViewArgs) -> Result<Relationsh
 
     Ok(RelationshipData {
         meta: RelationshipMeta {
-            version: "v0.7.39".to_string(),
+            version: "v0.7.40".to_string(),
             generated_by: "kb view --relations".to_string(),
             generated_at: Utc::now().to_rfc3339(),
             knowledge_base: kb_path.display().to_string(),
@@ -1500,11 +1500,9 @@ fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
     sections.push(ViewerSection {
         id: "tasks".to_string(),
         title: "LLM Tasks".to_string(),
-        subtitle: "Latest handoff task list for Manager/Worker LLM workflows".to_string(),
-        html: render_source_card_or_empty(
-            latest_matching_file(kb_path, "LLM/tasks", "llm_tasks_", "md")?,
-            "No LLM task handoff found. Run `kb tasks` first.",
-        ),
+        subtitle: "Latest handoff task list and task progress for Manager/Worker LLM workflows"
+            .to_string(),
+        html: render_tasks_dashboard(kb_path)?,
     });
 
     sections.push(ViewerSection {
@@ -1525,6 +1523,66 @@ fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
     });
 
     Ok(sections)
+}
+
+fn render_tasks_dashboard(kb_path: &Path) -> Result<String> {
+    let mut html = String::new();
+    let records = crate::commands::task::collect_task_records(kb_path).unwrap_or_default();
+    html.push_str("<div class=\"suggestion-box\"><strong>Task progress command:</strong> use <code>kb task list</code>, <code>kb task show &lt;id&gt;</code>, and <code>kb task status &lt;id&gt; --mark &lt;state&gt;</code> so the Manager can resume after restart.</div>\n");
+
+    if records.is_empty() {
+        html.push_str("<div class=\"empty\">No explicit task items or task state records were found. Run <code>kb tasks</code> or <code>kb batch paper-profile --topic &lt;topic&gt; --limit 5</code>.</div>\n");
+    } else {
+        let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+        for record in &records {
+            *counts.entry(record.state.clone()).or_insert(0) += 1;
+        }
+        html.push_str("<div class=\"task-stats\">\n");
+        for state in [
+            "pending",
+            "assigned",
+            "in_progress",
+            "needs_human",
+            "blocked",
+            "completed",
+            "rejected",
+        ] {
+            let count = counts.get(state).copied().unwrap_or(0);
+            html.push_str(&format!(
+                "<div class=\"task-stat task-state-{}\"><span>{}</span><strong>{}</strong></div>\n",
+                html_escape(state),
+                html_escape(state),
+                count
+            ));
+        }
+        html.push_str("</div>\n");
+
+        html.push_str("<h3>Task Queue</h3>\n<table><thead><tr><th>state</th><th>task_id</th><th>priority</th><th>category</th><th>assignee</th><th>updated</th><th>file</th></tr></thead><tbody>\n");
+        for record in &records {
+            html.push_str(&format!(
+                "<tr><td><span class=\"badge {}\">{}</span></td><td><code>{}</code></td><td>{}</td><td>{}</td><td>{}</td><td>{}</td><td>{}</td></tr>\n",
+                html_escape(&record.state),
+                html_escape(&record.state),
+                html_escape(&record.task_id),
+                html_escape(record.priority.as_deref().unwrap_or("")),
+                html_escape(record.category.as_deref().unwrap_or("")),
+                html_escape(record.assignee.as_deref().unwrap_or("")),
+                html_escape(record.updated_at.as_deref().unwrap_or("")),
+                record.task_file.as_deref().map(|path| format!("<code>{}</code>", html_escape(path))).unwrap_or_default(),
+            ));
+        }
+        html.push_str("</tbody></table>\n");
+    }
+
+    html.push_str(
+        "<details class=\"compact-toggle\"><summary>Latest task handoff snapshot</summary>\n",
+    );
+    html.push_str(&render_source_card_or_empty(
+        latest_matching_file(kb_path, "LLM/tasks", "llm_tasks_", "md")?,
+        "No LLM task handoff found. Run `kb tasks` first.",
+    ));
+    html.push_str("</details>\n");
+    Ok(html)
 }
 
 fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
@@ -1693,6 +1751,10 @@ summary { cursor: pointer; color: #2b6cb0; font-weight: 600; }
 .compact-toggle[open] summary { border-bottom: 1px solid #e2e8f0; background: #f7fafc; }
 .compact-toggle > :not(summary) { margin-left: 1rem; margin-right: 1rem; }
 .compact-toggle > :last-child { margin-bottom: 1rem; }
+.task-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.65rem; margin: 1rem 0; }
+.task-stat { border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.75rem; background: #f8fafc; }
+.task-stat span { display: block; font-size: 0.78rem; color: #718096; }
+.task-stat strong { display: block; font-size: 1.45rem; color: #2b6cb0; }
 mark { background: #fefcbf; padding: 0 0.15rem; }
 "#;
 

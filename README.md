@@ -18,11 +18,11 @@ For fewer than 200 papers, `kb-cli` prepares a Karpathy-style LLM Wiki workflow.
 
 ## Current Version
 
-Current version: `v0.7.39`
+Current version: `v0.7.40`
 
-### v0.7.39
+### v0.7.40
 
-`v0.7.39` prepares the small-corpus workflow for OpenClaw daily use. `kb create --wiki <A> --from <B> --about <topic>` now generates OpenClaw-specific Manager entry files under `agents/openclaw/`, including topic-library creation, daily maintenance, Worker dispatch, and start-prompt guides. OpenClaw is positioned as the Manager LLM that calls deterministic `kb` commands, assigns bounded Worker tasks, and routes high-value academic decisions to Human Review.
+`v0.7.40` closes the first OpenClaw daily-maintenance loop. It adds task progress commands (`kb task list/show/status`), standard Worker/Human prompt templates (`kb prompt ...`), small paper-profile Worker batches (`kb batch paper-profile --topic <topic> --limit 5`), and a task-status summary inside `kb view`. Manager LLMs can now mark work as assigned / in progress / completed / blocked and resume after restart.
 
 ### v0.7.36
 

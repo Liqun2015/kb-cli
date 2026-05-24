@@ -203,6 +203,15 @@ pub fn execute(
             .display()
     );
     println!(
+        "Task progress: kb --wiki \"{}\" task list",
+        kb_path.display()
+    );
+    println!(
+        "First batch: kb --wiki \"{}\" batch paper-profile --topic \"{}\" --limit 5",
+        kb_path.display(),
+        topic_slug
+    );
+    println!(
         "Topic workbench: {}",
         kb_path
             .join("topics")

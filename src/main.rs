@@ -78,6 +78,18 @@ enum Commands {
     RefsGraph(commands::refs_graph::RefsGraphArgs),
     #[command(about = "Generate deferred LLM/agent task handoff lists from deterministic checks")]
     Tasks(commands::tasks::TasksArgs),
+    #[command(
+        name = "task",
+        about = "List, show, and mark Worker/Human task progress"
+    )]
+    Task(commands::task::TaskArgs),
+    #[command(
+        name = "prompt",
+        about = "Print standard Worker/Human prompt templates for common LLM Wiki tasks"
+    )]
+    Prompt(commands::prompt::PromptArgs),
+    #[command(name = "batch", about = "Create small bounded Worker task batches")]
+    Batch(commands::batch::BatchArgs),
     #[command(about = "Generate generic/agent-adapter handoff files for external LLM Wiki agents")]
     Handoff(commands::handoff::HandoffArgs),
     #[command(about = "Append a completed task memory record under LLM/memory/")]
@@ -152,6 +164,9 @@ fn main() -> anyhow::Result<()> {
         Some(Commands::RefsIndex(args)) => commands::refs_index::execute(cli.wiki.as_deref(), args),
         Some(Commands::RefsGraph(args)) => commands::refs_graph::execute(cli.wiki.as_deref(), args),
         Some(Commands::Tasks(args)) => commands::tasks::execute(cli.wiki.as_deref(), args),
+        Some(Commands::Task(args)) => commands::task::execute(cli.wiki.as_deref(), args),
+        Some(Commands::Prompt(args)) => commands::prompt::execute(cli.wiki.as_deref(), args),
+        Some(Commands::Batch(args)) => commands::batch::execute(cli.wiki.as_deref(), args),
         Some(Commands::Handoff(args)) => commands::handoff::execute(cli.wiki.as_deref(), args),
         Some(Commands::Memory(args)) => commands::memory::execute(cli.wiki.as_deref(), args),
         Some(Commands::Grep(args)) => commands::grep::execute(cli.wiki.as_deref(), args),
@@ -207,6 +222,11 @@ fn main() -> anyhow::Result<()> {
             println!("  refs-index [--path PATH] [--dry-run|--preview] [--json]  Build bibliographic index relation candidates");
             println!("  refs-graph [--json|--mermaid|--dot] [--dry-run]  Export refs-index relations as graph data");
             println!("  tasks [--dry-run|--preview] [--json] [--index-only|--no-index]  Generate LLM task handoff lists and LLM/tasks/index.md");
+            println!(
+                "  task list|show|status        List, inspect, and mark Worker/Human task progress"
+            );
+            println!("  prompt paper-profile|topic-narrative|relation-review|wiki-link-repair|human-review  Print standard Worker/Human prompt templates");
+            println!("  batch paper-profile --topic TOPIC --limit 5  Create a small bounded paper-profile Worker batch");
             println!("  handoff [--topic TOPIC|--all-topics] [--agent AGENT|--all-agents] [--force]  Generate generic/agent-adapter handoff files");
             println!("  memory --task-id ID --summary TEXT [--file PATH]  Record completed task memory under LLM/memory");
             println!("  grep <pattern> [--path PATH] [--regex] [--json]  Search text files with line numbers");

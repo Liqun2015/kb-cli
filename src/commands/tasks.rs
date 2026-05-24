@@ -155,7 +155,7 @@ fn run_task_scan(kb_path: &Path, args: &TasksArgs) -> Result<TasksReport> {
     };
 
     Ok(TasksReport {
-        schema_version: "0.7.39".to_string(),
+        schema_version: "0.7.40".to_string(),
         generated_by: "kb-cli tasks".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         dry_run: args.dry_run || args.preview,
@@ -1022,8 +1022,12 @@ fn render_task_item(task: &DeferredTask) -> String {
     out.push_str("- Do not commit changes directly; leave the result for Git diff review.\n\n");
 
     out.push_str("## Completion\n\n");
-    out.push_str("After the work is reviewed and accepted, record it with:\n\n");
+    out.push_str("After dispatch, progress, review, and acceptance, update task status with:\n\n");
     out.push_str("```bash\n");
+    out.push_str(&format!(
+        "kb task status {} --mark completed --note \"<what changed>\"\n",
+        task.id
+    ));
     out.push_str(&format!(
         "kb memory --task-id {} --summary \"<what changed>\"\n",
         task.id
@@ -1077,8 +1081,36 @@ fn render_task_index(
     out.push_str("4. Do not let Worker LLMs browse the whole knowledge base unless the task explicitly says so.\n");
     out.push_str("5. Require evidence, uncertainty, changed-file lists, and follow-up notes.\n");
     out.push_str(
-        "6. After human/Git review accepts the result, record completion with `kb memory`.\n\n",
+        "6. After dispatch/review/acceptance, record progress with `kb task status <id> --mark <state>` and accepted work with `kb memory`.\n\n",
     );
+
+    out.push_str("## Task Progress Summary\n\n");
+    let task_records = crate::commands::task::collect_task_records(kb_path)?;
+    if task_records.is_empty() {
+        out.push_str("No explicit task status records yet. Use `kb task status <id> --mark <state>` as soon as tasks are dispatched.\n\n");
+    } else {
+        let mut counts: BTreeMap<String, usize> = BTreeMap::new();
+        for record in &task_records {
+            *counts.entry(record.state.clone()).or_insert(0) += 1;
+        }
+        out.push_str("| state | count |\n|---|---|\n");
+        for state in [
+            "pending",
+            "assigned",
+            "in_progress",
+            "needs_human",
+            "blocked",
+            "completed",
+            "rejected",
+        ] {
+            out.push_str(&format!(
+                "| `{}` | `{}` |\n",
+                state,
+                counts.get(state).copied().unwrap_or(0)
+            ));
+        }
+        out.push_str("\n");
+    }
 
     out.push_str("## Pending Worker Task Items\n\n");
     if report.tasks.is_empty() {
@@ -1147,7 +1179,9 @@ fn render_task_index(
     out.push_str("        ↓\n");
     out.push_str("review changed files with Git diff\n");
     out.push_str("        ↓\n");
-    out.push_str("record accepted work with kb memory\n");
+    out.push_str(
+        "mark task completed with kb task status, then record accepted work with kb memory\n",
+    );
     out.push_str("```\n\n");
 
     out.push_str("## Boundary\n\n");

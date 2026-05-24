@@ -18,7 +18,7 @@ The guiding rule is simple:
 | Deterministic core | `init`, `ingest`, `setup`, `build`, `status`, `sync-wiki`, `lint-static`, `build-wiki` | No LLM | Maintain the file structure, manifest, wiki skeleton, topic preparation pipeline, and static checks. |
 | Search / inspection | `query`, `grep`, `links` | No LLM | Locate pages, lines, and WikiLink relations for later review. |
 | Text / reference processing | `extract-text`, `extract-sections`, `refs`, `refs-index`, `refs-graph`, `keywords`, `extract-metadata` | No LLM | Convert source traces into searchable text, section-level evidence, bibliographic relation candidates, and keyword/topic relation evidence. |
-| Handoff / memory | `tasks`, `handoff`, `memory` | No LLM | Prepare reviewable work items, generic agent handoff files, and completed-work records. |
+| Handoff / task closure | `tasks`, `task`, `prompt`, `batch`, `handoff`, `memory` | No LLM | Prepare reviewable work items, mark task progress, print bounded Worker prompts, create small batches, and record accepted work. |
 | Health / reporting | `health` | No LLM | Summarize relationship-network completeness, review backlog, and pipeline health. |
 | Proof audit | `audit-wiki` | Explicit LLM handoff | Check whether the folder has become a reviewable LLM Wiki and write an LLM audit prompt. |
 | Static viewing | `view` | No LLM | Generate a local read-only HTML dashboard from Markdown/JSON outputs. |
@@ -224,6 +224,41 @@ kb build thermal-metamaterials --dry-run
 - **Allows LLM:** no. It prepares tasks for future human/LLM execution.
 - **Deferred work:** all generated task groups should include target agent, goal, requirements, file list, and evidence. The Manager LLM starts from `LLM/tasks/index.md`; Worker LLMs receive bounded files under `LLM/tasks/items/`.
 - **Useful modes:** `--index-only` refreshes the Manager/Worker task dashboard without writing a new timestamped snapshot; `--no-index` preserves the older report-only behavior.
+
+### `kb task`
+
+- **Ability:** list, show, and mark Worker/Human task progress so a Manager LLM can resume after restart.
+- **Primary output:** `LLM/tasks/state/<task_id>.json` and `LLM/tasks/status_events.jsonl`.
+- **Typical commands:**
+
+```bash
+kb --wiki <A> task list
+kb --wiki <A> task show paper-key-info-extraction-001
+kb --wiki <A> task status paper-key-info-extraction-001 --mark assigned --assignee openclaw
+kb --wiki <A> task status paper-key-info-extraction-001 --mark completed --note "accepted after review"
+```
+
+### `kb prompt`
+
+- **Ability:** print reusable prompt templates for common Worker/Human tasks.
+- **Typical commands:**
+
+```bash
+kb --wiki <A> prompt paper-profile --task <task-id> --topic <topic>
+kb --wiki <A> prompt topic-narrative --topic <topic>
+kb --wiki <A> prompt relation-review --task <task-id>
+kb --wiki <A> prompt human-review --task <task-id>
+```
+
+### `kb batch`
+
+- **Ability:** create a bounded small Worker batch instead of dispatching many papers one by one.
+- **Primary output:** `LLM/tasks/batches/<batch-id>.md`.
+- **Typical command:**
+
+```bash
+kb --wiki <A> batch paper-profile --topic <topic> --limit 5
+```
 
 ### `kb memory`
 

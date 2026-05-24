@@ -1,24 +1,23 @@
 # Changelog
 
-## v0.7.39
+## v0.7.40
 
-`v0.7.39` prepares the `< 200 papers` LLM Wiki workflow for OpenClaw as a practical Manager LLM. It keeps `kb-cli` as the deterministic workflow generator, while OpenClaw receives explicit topic-library creation and daily-maintenance instructions.
+`v0.7.40` adds the first practical task-closure layer for OpenClaw Manager daily maintenance.
 
 ### Added
 
-- Generated `agents/openclaw/README.md` as the OpenClaw Manager entry point.
-- Generated `agents/openclaw/manager.md` for OpenClaw role boundaries.
-- Generated `agents/openclaw/create-topic-library.md` for establishing a topic library with `kb create --wiki <A> --from <B> --about <topic>`.
-- Generated `agents/openclaw/daily-maintenance.md` for routine update and maintenance work.
-- Generated `agents/openclaw/worker-dispatch.md` to standardize bounded Worker LLM tasks.
-- Generated `agents/openclaw/start-prompt.md` for starting OpenClaw safely.
-- Generated `LLM/tasks/openclaw_manager_create_and_maintain.md` as the durable Manager task contract.
+- `kb task list` to list generated Worker/Human tasks with their current state.
+- `kb task show <id>` to inspect one task and its Markdown task file.
+- `kb task status <id> --mark <state>` to mark task progress as `pending`, `assigned`, `in_progress`, `needs_human`, `blocked`, `completed`, or `rejected`.
+- Task state records under `LLM/tasks/state/<task-id>.json` and event logs under `LLM/tasks/status_events.jsonl`.
+- `kb prompt paper-profile`, `kb prompt topic-narrative`, `kb prompt relation-review`, `kb prompt wiki-link-repair`, and `kb prompt human-review` for reusable Worker/Human prompt templates.
+- `kb batch paper-profile --topic <topic> --limit 5` to create a bounded paper-profile Worker batch under `LLM/tasks/batches/`.
+- Task progress summary and task queue table inside the `LLM Tasks` tab of `kb view`.
 
-### Behavior
+### Changed
 
-- `kb create` and `kb build` now refresh OpenClaw-specific guidance along with the small-corpus workflow guides.
-- Final create/build output points to the OpenClaw entry and daily-maintenance files.
-- The OpenClaw files stay in `agents/openclaw/`, separate from Claude Code and Codex files.
+- Generated Worker task files now recommend `kb task status <id> --mark completed` before recording accepted work with `kb memory`.
+- `LLM/tasks/index.md` includes a task progress summary so Managers can recover state after restart.
 
 ## v0.7.33
 
