@@ -18,7 +18,15 @@ For fewer than 200 papers, `kb-cli` prepares a Karpathy-style LLM Wiki workflow.
 
 ## Current Version
 
-Current version: `v0.7.40`
+Current version: `v0.7.42`
+
+### v0.7.42
+
+`v0.7.42` adds Codex as a first-class LLM Manager adapter for the small-corpus LLM Wiki workflow. `kb create --wiki <A> --from <B> --about <topic>` now generates `agents/codex/` Manager files, `agents/codex/skills/llm-wiki-manager/SKILL.md`, and `LLM/tasks/codex_manager_create_and_maintain.md` alongside OpenClaw and Claude Code guides. Codex uses the generic `AGENTS.md` entry and keeps Codex-specific prompts isolated under `agents/codex/`.
+
+### v0.7.41
+
+`v0.7.41` adds Claude Code as a first-class LLM Manager adapter for the small-corpus LLM Wiki workflow. `kb create --wiki <A> --from <B> --about <topic>` now generates `CLAUDE.md`, `agents/claude-code/` Manager files, and `LLM/tasks/claude_code_manager_create_and_maintain.md` alongside the existing OpenClaw guides. It also keeps task progress, Worker prompt, and batch-dispatch commands from v0.7.40.
 
 ### v0.7.40
 

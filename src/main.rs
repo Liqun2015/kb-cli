@@ -226,7 +226,7 @@ fn main() -> anyhow::Result<()> {
                 "  task list|show|status        List, inspect, and mark Worker/Human task progress"
             );
             println!("  prompt paper-profile|topic-narrative|relation-review|wiki-link-repair|human-review  Print standard Worker/Human prompt templates");
-            println!("  batch paper-profile --topic TOPIC --limit 5  Create a small bounded paper-profile Worker batch");
+            println!("  batch paper-profile --topic TOPIC --limit 5 [--assignee manager]  Create a small bounded paper-profile Worker batch");
             println!("  handoff [--topic TOPIC|--all-topics] [--agent AGENT|--all-agents] [--force]  Generate generic/agent-adapter handoff files");
             println!("  memory --task-id ID --summary TEXT [--file PATH]  Record completed task memory under LLM/memory");
             println!("  grep <pattern> [--path PATH] [--regex] [--json]  Search text files with line numbers");

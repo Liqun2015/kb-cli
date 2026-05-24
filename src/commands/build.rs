@@ -299,6 +299,9 @@ pub fn execute(custom_kb: Option<&Path>, args: &BuildArgs) -> Result<()> {
     println!("Next agent entry: AGENTS.md / CLAUDE.md -> LLM/handoff/current.md");
     println!("OpenClaw entry: agents/openclaw/README.md");
     println!("OpenClaw maintenance: agents/openclaw/daily-maintenance.md");
+    println!("Claude Code entry: CLAUDE.md / agents/claude-code/README.md");
+    println!("Codex entry: AGENTS.md / agents/codex/README.md");
+    println!("Codex maintenance: agents/codex/daily-maintenance.md");
     println!("Topic workbench: topics/{}/index.md", topic);
     Ok(())
 }

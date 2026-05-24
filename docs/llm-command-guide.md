@@ -1,6 +1,6 @@
 # LLM Command Guide
 
-Current version: `v0.7.40`
+Current version: `v0.7.42`
 
 This document is the operating guide for the top-level Manager LLM, external agent sessions, Claude Code sessions, Codex sessions, Obsidian users, and human operators who use `kb-cli` as a structured command layer.
 

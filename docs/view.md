@@ -1,6 +1,6 @@
 # kb view
 
-Current version: `v0.7.40`
+Current version: `v0.7.42`
 
 `kb view` generates static local HTML viewers for the current LLM Wiki.
 

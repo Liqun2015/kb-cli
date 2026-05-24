@@ -30,6 +30,13 @@ pub struct PaperProfileBatchArgs {
         help = "Maximum papers in this batch. Recommended range: 3-5"
     )]
     pub limit: usize,
+    #[arg(
+        long,
+        default_value = "manager",
+        help = "Assignee recorded when the generated batch is auto-marked as assigned"
+    )]
+    pub assignee: String,
+
     #[arg(long, help = "Do not mark the generated batch task as assigned")]
     pub no_mark: bool,
 }
@@ -87,14 +94,14 @@ fn execute_paper_profile_batch(kb_path: &Path, args: &PaperProfileBatchArgs) -> 
             kb_path,
             &batch_id,
             "assigned",
-            Some("openclaw-manager"),
+            Some(args.assignee.as_str()),
             Some(&note),
         )?;
         let _ = crate::commands::task::mark_task_state(
             kb_path,
             "paper-key-info-extraction-001",
             "assigned",
-            Some("openclaw-manager"),
+            Some(args.assignee.as_str()),
             Some("At least one paper-profile batch has been created."),
         );
     }

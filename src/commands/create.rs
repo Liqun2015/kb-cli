@@ -202,12 +202,48 @@ pub fn execute(
             .join("agents/openclaw/daily-maintenance.md")
             .display()
     );
+    println!("Claude Code entry: {}", kb_path.join("CLAUDE.md").display());
+    println!(
+        "Claude Code manager: {}",
+        kb_path.join("agents/claude-code/manager.md").display()
+    );
+    println!(
+        "Claude Code daily maintenance: {}",
+        kb_path
+            .join("agents/claude-code/daily-maintenance.md")
+            .display()
+    );
+    println!("Codex entry: {}", kb_path.join("AGENTS.md").display());
+    println!(
+        "Codex manager: {}",
+        kb_path.join("agents/codex/manager.md").display()
+    );
+    println!(
+        "Codex daily maintenance: {}",
+        kb_path.join("agents/codex/daily-maintenance.md").display()
+    );
+    println!(
+        "Codex skill descriptor: {}",
+        kb_path
+            .join("agents/codex/skills/llm-wiki-manager/SKILL.md")
+            .display()
+    );
     println!(
         "Task progress: kb --wiki \"{}\" task list",
         kb_path.display()
     );
     println!(
-        "First batch: kb --wiki \"{}\" batch paper-profile --topic \"{}\" --limit 5",
+        "First OpenClaw batch: kb --wiki \"{}\" batch paper-profile --topic \"{}\" --limit 5 --assignee openclaw-manager",
+        kb_path.display(),
+        topic_slug
+    );
+    println!(
+        "First Claude Code batch: kb --wiki \"{}\" batch paper-profile --topic \"{}\" --limit 5 --assignee claude-code-manager",
+        kb_path.display(),
+        topic_slug
+    );
+    println!(
+        "First Codex batch: kb --wiki \"{}\" batch paper-profile --topic \"{}\" --limit 5 --assignee codex-manager",
         kb_path.display(),
         topic_slug
     );

@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.7.42
+
+`v0.7.42` adds Codex as a first-class LLM Manager adapter for small-corpus LLM Wiki maintenance.
+
+- Added `agents/codex/README.md`, `manager.md`, `create-topic-library.md`, `daily-maintenance.md`, `worker-dispatch.md`, and `start-prompt.md` to the generated workflow guides.
+- Added `agents/codex/skills/llm-wiki-manager/SKILL.md` as a Codex Skill-style workflow descriptor for `kb-cli` task orchestration.
+- Added `LLM/tasks/codex_manager_create_and_maintain.md` to give Codex a Manager-level task checklist.
+- Updated `kb create` completion output to show Codex entry points and `codex-manager` batch-dispatch examples.
+- Kept Codex files isolated under `agents/codex/`; shared rules remain in `AGENTS.md` and `agents/shared/`.
+
+## v0.7.41
+
+`v0.7.41` adds Claude Code as a first-class LLM Manager adapter for small-corpus LLM Wiki workspaces.
+
+- `kb create --wiki <A> --from <B> --about <topic>` now generates root `CLAUDE.md`.
+- Adds `agents/claude-code/README.md`, `manager.md`, `create-topic-library.md`, `daily-maintenance.md`, `worker-dispatch.md`, and `start-prompt.md`.
+- Adds `LLM/tasks/claude_code_manager_create_and_maintain.md`.
+- Keeps Claude Code guidance separate from `agents/openclaw/` and `agents/codex/`, while sharing `agents/shared/` protocols.
+- Keeps the v0.7.40 task lifecycle commands for progress tracking, Worker prompts, and paper-profile batching.
+
 ## v0.7.40
 
 `v0.7.40` adds the first practical task-closure layer for OpenClaw Manager daily maintenance.

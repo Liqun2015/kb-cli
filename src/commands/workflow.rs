@@ -57,7 +57,7 @@ pub fn refresh_workflow_guides(
     };
 
     let mut status = WorkflowStatus {
-        schema_version: "workflow.v0.7.40".to_string(),
+        schema_version: "workflow.v0.7.42".to_string(),
         generated_by: "kb-cli workflow".to_string(),
         generated_at: chrono::Utc::now().to_rfc3339(),
         paper_count,
@@ -136,6 +136,70 @@ pub fn refresh_workflow_guides(
             (
                 "LLM/tasks/openclaw_manager_create_and_maintain.md",
                 render_openclaw_manager_task(&status, topic_title),
+            ),
+            (
+                "agents/claude-code/README.md",
+                render_claude_code_readme(&status, topic_title),
+            ),
+            (
+                "agents/claude-code/manager.md",
+                render_claude_code_manager_guide(&status, topic_title),
+            ),
+            (
+                "agents/claude-code/create-topic-library.md",
+                render_claude_code_create_topic_library(&status, topic_title),
+            ),
+            (
+                "agents/claude-code/daily-maintenance.md",
+                render_claude_code_daily_maintenance(&status, topic_title),
+            ),
+            (
+                "agents/claude-code/worker-dispatch.md",
+                render_claude_code_worker_dispatch(&status, topic_title),
+            ),
+            (
+                "agents/claude-code/start-prompt.md",
+                render_claude_code_start_prompt(&status, topic_title),
+            ),
+            (
+                "LLM/tasks/claude_code_manager_create_and_maintain.md",
+                render_claude_code_manager_task(&status, topic_title),
+            ),
+            (
+                "CLAUDE.md",
+                render_claude_code_root_entry(&status, topic_title),
+            ),
+            (
+                "agents/codex/README.md",
+                render_codex_readme(&status, topic_title),
+            ),
+            (
+                "agents/codex/manager.md",
+                render_codex_manager_guide(&status, topic_title),
+            ),
+            (
+                "agents/codex/create-topic-library.md",
+                render_codex_create_topic_library(&status, topic_title),
+            ),
+            (
+                "agents/codex/daily-maintenance.md",
+                render_codex_daily_maintenance(&status, topic_title),
+            ),
+            (
+                "agents/codex/worker-dispatch.md",
+                render_codex_worker_dispatch(&status, topic_title),
+            ),
+            (
+                "agents/codex/start-prompt.md",
+                render_codex_start_prompt(&status, topic_title),
+            ),
+            (
+                "agents/codex/skills/llm-wiki-manager/SKILL.md",
+                render_codex_llm_wiki_manager_skill(&status, topic_title),
+            ),
+            (
+                "LLM/tasks/codex_manager_create_and_maintain.md",
+                render_codex_manager_task(&status, topic_title),
             ),
         ];
         for (rel, content) in specs {
@@ -737,7 +801,7 @@ Handle only one queue item at a time:
 
 1. New PDFs added to `raw/papers/` or source folder.
 2. Paper stubs needing LLM extraction.
-   - Create a small batch with `kb --wiki <workspace> batch paper-profile --topic {topic} --limit 5`.
+   - Create a small batch with `kb --wiki <workspace> batch paper-profile --topic {topic} --limit 5 --assignee openclaw-manager`.
    - Print the Worker prompt with `kb --wiki <workspace> prompt paper-profile --task <batch-id> --topic {topic}`.
    - Mark progress with `kb --wiki <workspace> task status <batch-id> --mark assigned|in_progress|completed|blocked`.
 3. Paper profiles needing Human Review.
@@ -789,7 +853,7 @@ OpenClaw Manager may call a Worker LLM, but every Worker task must be bounded.
 ## Preferred Dispatch Commands
 
 ```bash
-kb --wiki <workspace> batch paper-profile --topic {topic} --limit 5
+kb --wiki <workspace> batch paper-profile --topic {topic} --limit 5 --assignee openclaw-manager
 kb --wiki <workspace> prompt paper-profile --task <batch-id> --topic {topic}
 kb --wiki <workspace> task status <batch-id> --mark assigned --assignee <worker>
 ```
@@ -907,14 +971,949 @@ Use OpenClaw as the Manager LLM to establish and maintain this topic library.
 5. Assign Worker LLM tasks for topic narrative drafting after enough paper profiles exist.
 6. Route anchor-paper choices, confirmed relation edges, and final topic narrative claims to Human Review.
 7. Record accepted work under `LLM/memory/`.
-8. Keep OpenClaw-specific notes inside `agents/openclaw/` or assigned task outputs.
+8. Keep Manager-specific notes inside that Manager adapter directory (`agents/openclaw/`, `agents/claude-code/`, or `agents/codex/`) or assigned task outputs.
 
 ## Forbidden Actions
 
 - Do not treat Rust PDF text extraction as complete paper understanding.
 - Do not ask Workers to process the whole corpus in one prompt.
 - Do not modify `raw/`.
-- Do not mix OpenClaw prompts with `agents/claude-code/` or `agents/codex/`.
+- Do not mix prompts across `agents/openclaw/`, `agents/claude-code/`, and `agents/codex/`.
+
+## Done When
+
+- Paper profiles exist for the topic-relevant papers.
+- `wiki/topics/{topic}.md` contains a concise linked topic story.
+- Important claims link to paper pages.
+- Human Review has approved anchor papers and high-value judgments.
+- `kb view --wiki` shows a readable topic-centered Wiki.
+"#,
+        topic = topic,
+        mode_label = status.mode_label.as_str(),
+        paper_count = status.paper_count,
+        threshold = status.rag_threshold,
+    )
+}
+
+fn render_claude_code_readme(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# Claude Code Entry — LLM Wiki Manager
+
+This directory is the Claude Code-specific entry point. It is intentionally separate from `agents/openclaw/` and `agents/codex/` so that each Manager agent keeps its own prompt style, habits, and operational boundary.
+
+Claude Code may serve as the **LLM Manager** for this workspace. In that role, it should coordinate `kb-cli`, bounded Worker prompts, and Human Review. It should not behave as an unconstrained all-files editor.
+
+## Current Workspace Mode
+
+- Mode: `{mode}`
+- Corpus size: `{paper_count}` papers
+- RAG threshold: `{threshold}` papers
+- Current topic: `{topic}`
+
+This version focuses on the `< 200 papers` case. Claude Code should use the Karpathy-style LLM Wiki workflow: inspect deterministic reports, create small Worker batches, generate reusable prompts, review outputs, and route high-value decisions to Human Review.
+
+## Claude Code Read Order
+
+1. `CLAUDE.md` — root Claude Code compatibility entry.
+2. `AGENTS.md` — generic external-agent contract.
+3. `agents/claude-code/README.md` — this file.
+4. `agents/claude-code/manager.md` — Manager identity and boundaries.
+5. `agents/claude-code/create-topic-library.md` — how to establish a topic library.
+6. `agents/claude-code/daily-maintenance.md` — routine maintenance/update checklist.
+7. `agents/claude-code/worker-dispatch.md` — how to create Worker prompts and small batches.
+8. `LLM/workflow.md`.
+9. `LLM/tasks/claude_code_manager_create_and_maintain.md`.
+
+## Safe First Command
+
+```bash
+kb --wiki <workspace> view
+```
+
+Then inspect:
+
+- `interfaces/html/index.html`
+- `interfaces/html/wiki.html`
+- `LLM/tasks/index.md`
+- `agents/claude-code/daily-maintenance.md`
+"#,
+        mode = status.mode.as_str(),
+        paper_count = status.paper_count,
+        threshold = status.rag_threshold,
+        topic = topic,
+    )
+}
+
+fn render_claude_code_manager_guide(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# Claude Code Manager Guide
+
+## Identity
+
+You are Claude Code acting as the Manager LLM for this LLM Wiki workspace.
+
+Your job is not to complete the whole Wiki in one pass. Your job is to coordinate deterministic `kb-cli` commands, bounded Worker tasks, and Human Review so that paper understanding, topic narratives, and Wiki links are completed safely.
+
+## Current Mode
+
+- Corpus size: **{paper_count} papers**
+- Threshold: **{threshold} papers**
+- Workflow mode: **{mode_label}**
+- Topic: `{topic}`
+
+## Manager Duties
+
+1. Read `CLAUDE.md`, `AGENTS.md`, `LLM/workflow.md`, `LLM/tasks/index.md`, and `agents/claude-code/` before editing.
+2. Use deterministic commands first: `kb view`, `kb view --wiki`, `kb tasks`, `kb task list`, `kb topic status <topic>`.
+3. Create Worker batches using `kb batch paper-profile --topic <topic> --limit 5 --assignee claude-code-manager`.
+4. Generate standard Worker prompts using `kb prompt paper-profile --task <batch-id> --topic <topic>`.
+5. Track progress with `kb task status <id> --mark <state>`.
+6. Keep Worker output inside explicitly allowed files.
+7. Ask Human Review to approve anchor papers, topic narratives, confirmed relation edges, and merges into reviewed pages.
+8. Record accepted work under `LLM/memory/` or topic review notes.
+
+## Claude Code Must Not
+
+- Do not modify `raw/`.
+- Do not invent missing title, author, DOI, abstract, references, or scientific claims.
+- Do not convert relation candidates to confirmed relations without evidence and review.
+- Do not let a Worker process the whole corpus in one prompt.
+- Do not mix Claude Code instructions with `agents/openclaw/` or `agents/codex/` prompts.
+- Do not treat `interfaces/html/` as a durable source of truth.
+
+## Standard Loop
+
+```text
+observe workspace
+→ run deterministic kb command
+→ inspect generated task/view files
+→ create one small Worker batch or one bounded task
+→ generate a reusable Worker prompt
+→ review Worker output
+→ route high-value judgments to Human Review
+→ mark task status
+→ record accepted result
+→ refresh kb view / kb view --wiki
+```
+"#,
+        paper_count = status.paper_count,
+        threshold = status.rag_threshold,
+        mode_label = status.mode_label.as_str(),
+        topic = topic,
+    )
+}
+
+fn render_claude_code_create_topic_library(
+    status: &WorkflowStatus,
+    topic_title: Option<&str>,
+) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# Claude Code Procedure — Create a Topic Library
+
+This procedure tells Claude Code how to establish or refresh a topic library as the Manager LLM.
+
+## Canonical Command
+
+```bash
+kb create --wiki <workspace> --from <literature-folder> --about "{topic}"
+```
+
+## What This Command Means
+
+`kb create` creates the LLM Wiki worksite. It does not semantically finish the Wiki. It creates:
+
+- directory skeletons;
+- raw literature registry;
+- paper stubs;
+- topic workspace;
+- deterministic indexes;
+- Manager/Worker task guides;
+- Human Review checklists;
+- `kb view` and `kb view --wiki` HTML entrances.
+
+## Claude Code After-Create Checklist
+
+1. Verify `kb create` completed.
+2. Open `processing/workflow_status.json` and confirm the workflow mode.
+3. Open `LLM/workflow.md`.
+4. Open `LLM/tasks/index.md`.
+5. Open `LLM/tasks/claude_code_manager_create_and_maintain.md`.
+6. Open `interfaces/html/index.html` for the control console.
+7. Open `interfaces/html/wiki.html` for the Wiki reader.
+8. Create the first paper-profile Worker batch.
+9. Ask Human Review to choose or approve anchor papers before finalizing the topic story.
+
+## First Worker Batch
+
+```bash
+kb --wiki <workspace> batch paper-profile --topic "{topic}" --limit 5 --assignee claude-code-manager
+kb --wiki <workspace> prompt paper-profile --task <batch-id> --topic "{topic}"
+```
+
+Output should go to:
+
+- `processing/paper_profiles/<paper_id>.md`
+- `wiki/papers/<paper_id>.md` only when explicitly allowed.
+"#,
+        topic = topic,
+    )
+}
+
+fn render_claude_code_daily_maintenance(
+    status: &WorkflowStatus,
+    topic_title: Option<&str>,
+) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# Claude Code Daily Maintenance Protocol
+
+This file is the daily maintenance checklist for Claude Code Manager.
+
+## Current Scope
+
+- Topic: `{topic}`
+- Corpus size: `{paper_count}` papers
+- Workflow mode: `{mode_label}`
+
+## Daily Start
+
+1. Read `CLAUDE.md`.
+2. Read `AGENTS.md`.
+3. Read `agents/claude-code/README.md`.
+4. Read `LLM/workflow.md`.
+5. Read `LLM/tasks/index.md` if present.
+6. Run or request:
+
+```bash
+kb --wiki <workspace> view
+kb --wiki <workspace> view --wiki
+kb --wiki <workspace> tasks
+kb --wiki <workspace> task list
+kb --wiki <workspace> topic status {topic}
+```
+
+## Maintenance Queue
+
+Handle only one queue item at a time:
+
+1. New PDFs added to `raw/papers/` or source folder.
+2. Paper stubs needing LLM extraction.
+   - Create a small batch with `kb --wiki <workspace> batch paper-profile --topic {topic} --limit 5 --assignee claude-code-manager`.
+   - Print the Worker prompt with `kb --wiki <workspace> prompt paper-profile --task <batch-id> --topic {topic}`.
+   - Mark progress with `kb --wiki <workspace> task status <batch-id> --mark assigned|in_progress|completed|blocked`.
+3. Paper profiles needing Human Review.
+4. Topic narrative sections needing linked evidence.
+5. Relation candidates needing evidence checks.
+6. Broken WikiLinks or missing backlinks.
+7. Outdated task files or handoff files.
+
+## Update Rules
+
+- If new literature appears, rerun `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"` or the equivalent deterministic refresh command.
+- If the corpus count reaches `{threshold}` or more, stop the direct small-corpus workflow and request RAG-assisted workflow preparation.
+- After Worker edits, mark task progress with `kb task status <id> --mark <state>`.
+- After accepted Worker outputs, refresh `kb view` and `kb view --wiki`.
+- Record accepted maintenance under `LLM/memory/` after the task is marked completed.
+
+## End-of-Day Note Template
+
+```markdown
+# Claude Code Maintenance Note — <date>
+
+## Commands Run
+
+## Tasks Assigned
+
+## Worker Outputs Accepted
+
+## Human Review Needed
+
+## Files Changed
+
+## Next Maintenance Step
+```
+"#,
+        topic = topic,
+        paper_count = status.paper_count,
+        mode_label = status.mode_label.as_str(),
+        threshold = status.rag_threshold,
+    )
+}
+
+fn render_claude_code_worker_dispatch(
+    status: &WorkflowStatus,
+    topic_title: Option<&str>,
+) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# Claude Code Worker Dispatch Template
+
+Claude Code Manager may dispatch work to another LLM session or a bounded subtask, but every Worker task must be limited and auditable.
+
+## Preferred Dispatch Commands
+
+```bash
+kb --wiki <workspace> batch paper-profile --topic {topic} --limit 5 --assignee claude-code-manager
+kb --wiki <workspace> prompt paper-profile --task <batch-id> --topic {topic}
+kb --wiki <workspace> task status <batch-id> --mark assigned --assignee claude-code-manager
+```
+
+## Worker Brief Template
+
+```text
+You are a Worker LLM for an LLM Wiki.
+
+Topic: {topic}
+Corpus mode: {mode_label}
+Manager: Claude Code
+
+Read only the files listed below.
+Work only on the allowed output files.
+Do not modify raw/.
+Do not invent missing metadata.
+Mark uncertain claims as needs_human_review.
+
+Task:
+<one concrete task>
+
+Input files:
+- <file 1>
+- <file 2>
+
+Allowed output files:
+- <output 1>
+
+Return:
+1. work summary;
+2. files changed;
+3. evidence used;
+4. unresolved uncertainty;
+5. human review needs.
+```
+
+## Good Worker Tasks
+
+- Extract key information for one paper or a small batch.
+- Draft one section of `wiki/topics/{topic}.md` with links to paper pages.
+- Check one relation candidate and return evidence.
+- Fix one small group of broken WikiLinks.
+
+## Bad Worker Tasks
+
+- Read the whole corpus and write the whole Wiki.
+- Rewrite all topic pages.
+- Confirm all relation candidates.
+- Delete or reorganize `raw/`.
+"#,
+        topic = topic,
+        mode_label = status.mode_label.as_str(),
+    )
+}
+
+fn render_claude_code_start_prompt(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"You are Claude Code acting as the Manager LLM for an LLM Wiki workspace.
+
+First, read these files:
+
+1. CLAUDE.md
+2. AGENTS.md
+3. agents/claude-code/README.md
+4. agents/claude-code/manager.md
+5. agents/claude-code/create-topic-library.md
+6. agents/claude-code/daily-maintenance.md
+7. LLM/workflow.md
+8. LLM/tasks/claude_code_manager_create_and_maintain.md
+9. LLM/handoff/current.md
+
+Current topic: {topic}
+Current mode: {mode_label}
+Corpus size: {paper_count} papers
+
+Do not modify files yet. Return:
+
+1. current workspace state;
+2. whether this is still a <200-paper Karpathy-style workflow;
+3. the top task queue;
+4. the safest next three actions;
+5. which decisions require Human Review;
+6. which `kb task status` updates are needed.
+"#,
+        topic = topic,
+        mode_label = status.mode_label.as_str(),
+        paper_count = status.paper_count,
+    )
+}
+
+fn render_claude_code_manager_task(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# Claude Code Manager Task — Create and Maintain Topic Library
+
+## Goal
+
+Use Claude Code as the Manager LLM to establish and maintain this topic library.
+
+## Topic
+
+`{topic}`
+
+## Mode
+
+- `{mode_label}`
+- Paper count: `{paper_count}`
+- RAG threshold: `{threshold}`
+
+## Required Manager Actions
+
+1. Confirm the workspace was created by `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"`.
+2. Confirm `processing/workflow_status.json` reports `< {threshold}` papers for direct small-corpus work.
+3. Use `kb view` as the control console and `kb view --wiki` as the reading view.
+4. Use `kb task list` to recover task state after restart.
+5. Use `kb batch paper-profile --topic "{topic}" --limit 5 --assignee claude-code-manager` to create bounded paper-profile Worker batches.
+6. Use `kb prompt paper-profile --task <batch-id> --topic "{topic}"` to produce standard Worker prompts.
+7. Route anchor-paper choices, confirmed relation edges, and final topic narrative claims to Human Review.
+8. Record accepted work under `LLM/memory/`.
+9. Keep Claude Code-specific notes inside `agents/claude-code/` or assigned task outputs.
+
+## Forbidden Actions
+
+- Do not treat Rust PDF text extraction as complete paper understanding.
+- Do not ask Workers to process the whole corpus in one prompt.
+- Do not modify `raw/`.
+- Do not mix Claude Code prompts with `agents/openclaw/` or `agents/codex/`.
+
+## Done When
+
+- Paper profiles exist for the topic-relevant papers.
+- `wiki/topics/{topic}.md` contains a concise linked topic story.
+- Important claims link to paper pages.
+- Human Review has approved anchor papers and high-value judgments.
+- `kb view --wiki` shows a readable topic-centered Wiki.
+"#,
+        topic = topic,
+        mode_label = status.mode_label.as_str(),
+        paper_count = status.paper_count,
+        threshold = status.rag_threshold,
+    )
+}
+
+fn render_claude_code_root_entry(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# CLAUDE.md — Claude Code Entry for LLM Wiki
+
+Claude Code should use this file as the root entry for this LLM Wiki workspace.
+
+## Current Role
+
+Claude Code may act as the **LLM Manager** for this workspace.
+
+It should coordinate deterministic `kb-cli` commands, bounded Worker prompts, and Human Review. It should not directly rewrite the whole Wiki or treat PDF text extraction as complete scholarly understanding.
+
+## Current Workspace
+
+- Topic: `{topic}`
+- Workflow mode: `{mode_label}`
+- Paper count: `{paper_count}`
+- RAG threshold: `{threshold}`
+
+## Read First
+
+1. `AGENTS.md`
+2. `LLM/workflow.md`
+3. `LLM/tasks/index.md`
+4. `agents/shared/karpathy-small-corpus-workflow.md`
+5. `agents/claude-code/README.md`
+6. `agents/claude-code/manager.md`
+7. `agents/claude-code/daily-maintenance.md`
+8. `LLM/tasks/claude_code_manager_create_and_maintain.md`
+
+## Default Safe Commands
+
+```bash
+kb --wiki <workspace> view
+kb --wiki <workspace> view --wiki
+kb --wiki <workspace> tasks
+kb --wiki <workspace> task list
+```
+
+## Core Loop
+
+1. Observe the current workspace with deterministic `kb` commands.
+2. Create one bounded Worker batch or one bounded task.
+3. Generate a reusable Worker prompt with `kb prompt ...`.
+4. Review Worker output before accepting it.
+5. Route high-value judgments to Human Review.
+6. Mark task status with `kb task status <id> --mark <state>`.
+7. Record accepted results under `LLM/memory/`.
+
+## Hard Boundaries
+
+- Do not modify `raw/`.
+- Do not invent missing metadata, citations, or paper claims.
+- Do not confirm relation candidates without evidence and review.
+- Do not treat files under `interfaces/html/` as durable source-of-truth files.
+- Keep Claude Code-specific notes under `agents/claude-code/` or assigned task output files.
+"#,
+        topic = topic,
+        mode_label = status.mode_label.as_str(),
+        paper_count = status.paper_count,
+        threshold = status.rag_threshold,
+    )
+}
+
+fn render_codex_readme(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# Codex Entry — LLM Wiki Manager
+
+This directory is the Codex-specific entry point. It is intentionally separate from `agents/openclaw/` and `agents/claude-code/` so that each Manager agent keeps its own prompt style, operational habits, and boundary rules.
+
+Codex may serve as the **LLM Manager** for this workspace. In that role, Codex should coordinate deterministic `kb-cli` commands, bounded Worker prompts, and Human Review. It should not behave as an unconstrained all-files editor.
+
+## Current Workspace Mode
+
+- Mode: `{mode}`
+- Corpus size: `{paper_count}` papers
+- RAG threshold: `{threshold}` papers
+- Current topic: `{topic}`
+
+This version focuses on the `< 200 papers` case. Codex should use the Karpathy-style LLM Wiki workflow: inspect deterministic reports, create small Worker batches, generate reusable prompts, review outputs, and route high-value decisions to Human Review.
+
+## Codex Read Order
+
+1. `AGENTS.md` — Codex project entry and shared external-agent contract.
+2. `LLM/workflow.md` — current workflow mode and routing decision.
+3. `LLM/tasks/index.md` — task dashboard.
+4. `agents/shared/karpathy-small-corpus-workflow.md` — shared small-corpus protocol.
+5. `agents/codex/README.md` — this file.
+6. `agents/codex/manager.md` — Manager identity and boundaries.
+7. `agents/codex/create-topic-library.md` — how to establish a topic library.
+8. `agents/codex/daily-maintenance.md` — routine maintenance/update checklist.
+9. `agents/codex/worker-dispatch.md` — how to create Worker prompts and small batches.
+10. `agents/codex/skills/llm-wiki-manager/SKILL.md` — optional Codex Skill-style reusable workflow descriptor.
+11. `LLM/tasks/codex_manager_create_and_maintain.md`.
+
+## Safe First Command
+
+```bash
+kb --wiki <workspace> view
+```
+
+Then inspect:
+
+- `interfaces/html/index.html`
+- `interfaces/html/wiki.html`
+- `LLM/tasks/index.md`
+- `agents/codex/daily-maintenance.md`
+"#,
+        mode = status.mode.as_str(),
+        paper_count = status.paper_count,
+        threshold = status.rag_threshold,
+        topic = topic,
+    )
+}
+
+fn render_codex_manager_guide(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# Codex Manager Guide
+
+## Identity
+
+You are Codex acting as the Manager LLM for this LLM Wiki workspace.
+
+Your job is not to complete the whole Wiki in one pass. Your job is to coordinate deterministic `kb-cli` commands, bounded Worker tasks, and Human Review so that paper understanding, topic narratives, and Wiki links are completed safely.
+
+## Current Mode
+
+- Corpus size: **{paper_count} papers**
+- Threshold: **{threshold} papers**
+- Workflow mode: **{mode_label}**
+- Topic: `{topic}`
+
+## Manager Duties
+
+1. Read `AGENTS.md`, `LLM/workflow.md`, `LLM/tasks/index.md`, and `agents/codex/` before editing.
+2. Use deterministic commands first: `kb view`, `kb view --wiki`, `kb tasks`, `kb task list`, `kb topic status <topic>`.
+3. Create Worker batches using `kb batch paper-profile --topic <topic> --limit 5 --assignee codex-manager`.
+4. Generate standard Worker prompts using `kb prompt paper-profile --task <batch-id> --topic <topic>`.
+5. Track progress with `kb task status <id> --mark <state>`.
+6. Keep Worker output inside explicitly allowed files.
+7. Ask Human Review to approve anchor papers, topic narratives, confirmed relation edges, and merges into reviewed pages.
+8. Record accepted work under `LLM/memory/` or topic review notes.
+
+## Codex Must Not
+
+- Do not modify `raw/`.
+- Do not invent missing title, author, DOI, abstract, references, or scientific claims.
+- Do not convert relation candidates to confirmed relations without evidence and review.
+- Do not let a Worker process the whole corpus in one prompt.
+- Do not mix Codex instructions with `agents/openclaw/` or `agents/claude-code/` prompts.
+- Do not treat `interfaces/html/` as a durable source of truth.
+
+## Standard Loop
+
+```text
+observe workspace
+→ run deterministic kb command
+→ inspect generated task/view files
+→ create one small Worker batch or one bounded task
+→ generate a reusable Worker prompt
+→ review Worker output
+→ route high-value judgments to Human Review
+→ mark task status
+→ record accepted result
+→ refresh kb view / kb view --wiki
+```
+"#,
+        paper_count = status.paper_count,
+        threshold = status.rag_threshold,
+        mode_label = status.mode_label.as_str(),
+        topic = topic,
+    )
+}
+
+fn render_codex_create_topic_library(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# Codex Procedure — Create a Topic Library
+
+This procedure tells Codex how to establish or refresh a topic library as the Manager LLM.
+
+## Canonical Command
+
+```bash
+kb create --wiki <workspace> --from <literature-folder> --about "{topic}"
+```
+
+## What This Command Means
+
+`kb create` creates the LLM Wiki worksite. It does not semantically finish the Wiki. It creates:
+
+- directory skeletons;
+- raw literature registry;
+- paper stubs;
+- topic workspace;
+- deterministic indexes;
+- Manager/Worker task guides;
+- Human Review checklists;
+- `kb view` and `kb view --wiki` HTML entrances.
+
+## Codex After-Create Checklist
+
+1. Verify `kb create` completed.
+2. Open `processing/workflow_status.json` and confirm the workflow mode.
+3. Open `LLM/workflow.md`.
+4. Open `LLM/tasks/index.md`.
+5. Open `LLM/tasks/codex_manager_create_and_maintain.md`.
+6. Open `interfaces/html/index.html` for the control console.
+7. Open `interfaces/html/wiki.html` for the Wiki reader.
+8. Create the first paper-profile Worker batch.
+9. Ask Human Review to choose or approve anchor papers before finalizing the topic story.
+
+## First Worker Batch
+
+```bash
+kb --wiki <workspace> batch paper-profile --topic "{topic}" --limit 5 --assignee codex-manager
+kb --wiki <workspace> prompt paper-profile --task <batch-id> --topic "{topic}"
+```
+
+Output should go to:
+
+- `processing/paper_profiles/<paper_id>.md`
+- `wiki/papers/<paper_id>.md` only when explicitly allowed.
+"#,
+        topic = topic,
+    )
+}
+
+fn render_codex_daily_maintenance(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# Codex Daily Maintenance Protocol
+
+This file is the daily maintenance checklist for Codex Manager.
+
+## Current Scope
+
+- Topic: `{topic}`
+- Corpus size: `{paper_count}` papers
+- Workflow mode: `{mode_label}`
+
+## Daily Start
+
+1. Read `AGENTS.md`.
+2. Read `agents/codex/README.md`.
+3. Read `agents/codex/manager.md`.
+4. Read `LLM/workflow.md`.
+5. Read `LLM/tasks/index.md` if present.
+6. Run or request:
+
+```bash
+kb --wiki <workspace> view
+kb --wiki <workspace> view --wiki
+kb --wiki <workspace> tasks
+kb --wiki <workspace> task list
+kb --wiki <workspace> topic status {topic}
+```
+
+## Maintenance Queue
+
+Handle only one queue item at a time:
+
+1. New PDFs added to `raw/papers/` or source folder.
+2. Paper stubs needing LLM extraction.
+   - Create a small batch with `kb --wiki <workspace> batch paper-profile --topic {topic} --limit 5 --assignee codex-manager`.
+   - Print the Worker prompt with `kb --wiki <workspace> prompt paper-profile --task <batch-id> --topic {topic}`.
+   - Mark progress with `kb --wiki <workspace> task status <batch-id> --mark assigned|in_progress|completed|blocked`.
+3. Paper profiles needing Human Review.
+4. Topic narrative sections needing linked evidence.
+5. Relation candidates needing evidence checks.
+6. Broken WikiLinks or missing backlinks.
+7. Outdated task files or handoff files.
+
+## Update Rules
+
+- If new literature appears, rerun `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"` or the equivalent deterministic refresh command.
+- If the corpus count reaches `{threshold}` or more, stop the direct small-corpus workflow and request RAG-assisted workflow preparation.
+- After Worker edits, mark task progress with `kb task status <id> --mark <state>`.
+- After accepted Worker outputs, refresh `kb view` and `kb view --wiki`.
+- Record accepted maintenance under `LLM/memory/` after the task is marked completed.
+
+## Maintenance Note Template
+
+```markdown
+# Codex Maintenance Note — <date>
+
+## Commands Run
+
+## Tasks Assigned
+
+## Worker Outputs Accepted
+
+## Human Review Needed
+
+## Files Changed
+
+## Next Maintenance Step
+```
+"#,
+        topic = topic,
+        paper_count = status.paper_count,
+        mode_label = status.mode_label.as_str(),
+        threshold = status.rag_threshold,
+    )
+}
+
+fn render_codex_worker_dispatch(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# Codex Worker Dispatch Template
+
+Codex Manager may dispatch work to another LLM session or a bounded subtask, but every Worker task must be limited and auditable.
+
+## Preferred Dispatch Commands
+
+```bash
+kb --wiki <workspace> batch paper-profile --topic {topic} --limit 5 --assignee codex-manager
+kb --wiki <workspace> prompt paper-profile --task <batch-id> --topic {topic}
+kb --wiki <workspace> task status <batch-id> --mark assigned --assignee codex-manager
+```
+
+## Worker Brief Template
+
+```text
+You are a Worker LLM for an LLM Wiki.
+
+Topic: {topic}
+Corpus mode: {mode_label}
+Manager: Codex
+
+Read only the files listed below.
+Work only on the allowed output files.
+Do not modify raw/.
+Do not invent missing metadata.
+Mark uncertain claims as needs_human_review.
+
+Task:
+<one concrete task>
+
+Input files:
+- <file 1>
+- <file 2>
+
+Allowed output files:
+- <output 1>
+
+Return:
+1. work summary;
+2. files changed;
+3. evidence used;
+4. unresolved uncertainty;
+5. human review needs.
+```
+
+## Good Worker Tasks
+
+- Extract key information for one paper or a small batch.
+- Draft one section of `wiki/topics/{topic}.md` with links to paper pages.
+- Check one relation candidate and return evidence.
+- Fix one small group of broken WikiLinks.
+
+## Bad Worker Tasks
+
+- Read the whole corpus and write the whole Wiki.
+- Rewrite all topic pages.
+- Confirm all relation candidates.
+- Delete or reorganize `raw/`.
+"#,
+        topic = topic,
+        mode_label = status.mode_label.as_str(),
+    )
+}
+
+fn render_codex_start_prompt(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"You are Codex acting as the Manager LLM for an LLM Wiki workspace.
+
+First, read these files:
+
+1. AGENTS.md
+2. LLM/workflow.md
+3. agents/codex/README.md
+4. agents/codex/manager.md
+5. agents/codex/create-topic-library.md
+6. agents/codex/daily-maintenance.md
+7. agents/codex/skills/llm-wiki-manager/SKILL.md
+8. LLM/tasks/codex_manager_create_and_maintain.md
+9. LLM/handoff/current.md
+
+Current topic: {topic}
+Current mode: {mode_label}
+Corpus size: {paper_count} papers
+
+Do not modify files yet. Return:
+
+1. current workspace state;
+2. whether this is still a <200-paper Karpathy-style workflow;
+3. the top task queue;
+4. the safest next three actions;
+5. which decisions require Human Review;
+6. which `kb task status` updates are needed.
+"#,
+        topic = topic,
+        mode_label = status.mode_label.as_str(),
+        paper_count = status.paper_count,
+    )
+}
+
+fn render_codex_llm_wiki_manager_skill(
+    status: &WorkflowStatus,
+    topic_title: Option<&str>,
+) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"---
+name: llm-wiki-manager
+description: Manage a small-corpus LLM Wiki workspace with kb-cli, bounded Worker prompts, and Human Review.
+---
+
+# LLM Wiki Manager Skill
+
+Use this skill when Codex is asked to establish, maintain, or recover work in an LLM Wiki workspace.
+
+## Current Workspace
+
+- Topic: `{topic}`
+- Workflow mode: `{mode_label}`
+- Paper count: `{paper_count}`
+- RAG threshold: `{threshold}`
+
+## Default Procedure
+
+1. Read `AGENTS.md` and `LLM/workflow.md`.
+2. Read `agents/codex/README.md` and `agents/codex/manager.md`.
+3. Run deterministic inspection commands before editing:
+
+```bash
+kb --wiki <workspace> view
+kb --wiki <workspace> view --wiki
+kb --wiki <workspace> task list
+```
+
+4. Create only small bounded Worker batches:
+
+```bash
+kb --wiki <workspace> batch paper-profile --topic {topic} --limit 5 --assignee codex-manager
+kb --wiki <workspace> prompt paper-profile --task <batch-id> --topic {topic}
+```
+
+5. Mark task progress:
+
+```bash
+kb --wiki <workspace> task status <task-id> --mark in_progress --assignee codex-manager
+```
+
+6. Route anchor-paper decisions, relation confirmations, and final topic narratives to Human Review.
+
+## Boundaries
+
+- Never modify `raw/`.
+- Never invent paper metadata or scientific claims.
+- Never process the whole corpus in one prompt.
+- Never mix Codex notes with OpenClaw or Claude Code adapter directories.
+"#,
+        topic = topic,
+        mode_label = status.mode_label.as_str(),
+        paper_count = status.paper_count,
+        threshold = status.rag_threshold,
+    )
+}
+
+fn render_codex_manager_task(status: &WorkflowStatus, topic_title: Option<&str>) -> String {
+    let topic = topic_title.or(status.topic.as_deref()).unwrap_or("<topic>");
+    format!(
+        r#"# Codex Manager Task — Create and Maintain Topic Library
+
+## Goal
+
+Use Codex as the Manager LLM to establish and maintain this topic library.
+
+## Topic
+
+`{topic}`
+
+## Mode
+
+- `{mode_label}`
+- Paper count: `{paper_count}`
+- RAG threshold: `{threshold}`
+
+## Required Manager Actions
+
+1. Confirm the workspace was created by `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"`.
+2. Confirm `processing/workflow_status.json` reports `< {threshold}` papers for direct small-corpus work.
+3. Use `kb view` as the control console and `kb view --wiki` as the reading view.
+4. Use `kb task list` to recover task state after restart.
+5. Use `kb batch paper-profile --topic "{topic}" --limit 5 --assignee codex-manager` to create bounded paper-profile Worker batches.
+6. Use `kb prompt paper-profile --task <batch-id> --topic "{topic}"` to produce standard Worker prompts.
+7. Route anchor-paper choices, confirmed relation edges, and final topic narrative claims to Human Review.
+8. Record accepted work under `LLM/memory/`.
+9. Keep Codex-specific notes inside `agents/codex/` or assigned task outputs.
+
+## Forbidden Actions
+
+- Do not treat Rust PDF text extraction as complete paper understanding.
+- Do not ask Workers to process the whole corpus in one prompt.
+- Do not modify `raw/`.
+- Do not mix Codex prompts with `agents/openclaw/` or `agents/claude-code/`.
 
 ## Done When
 
