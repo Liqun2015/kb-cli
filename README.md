@@ -12,13 +12,17 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 - index source materials and generated evidence;
 - create paper/topic scaffolds;
 - generate Manager/Worker/Human Review guides and checklists;
-- generate `kb view` and `kb view --wiki` as human-facing review and reading entrances.
+- generate `kb check` and `kb check --wiki` as human-facing review and reading entrances.
 
 For fewer than 200 papers, `kb-cli` prepares a Karpathy-style LLM Wiki workflow. LLM Workers may process paper stubs and topic scaffolds directly in bounded batches. When the corpus reaches 200 papers or more, the workspace should be routed to a RAG-assisted workflow before topic narrative work.
 
 ## Current Version
 
-Current version: `v0.7.42`
+Current version: `v0.7.43`
+
+### v0.7.43
+
+`v0.7.43` makes `kb check` the only system inspection command and removes the old inspection command from the active CLI. Use `kb check`, `kb check --relations`, and `kb check --wiki` for dashboard, relationship-graph, and Wiki-reader inspection outputs. The shell whitelist, help text, generated handoff guidance, and documentation now point to `check`.
 
 ### v0.7.42
 
@@ -30,7 +34,7 @@ Current version: `v0.7.42`
 
 ### v0.7.40
 
-`v0.7.40` closes the first OpenClaw daily-maintenance loop. It adds task progress commands (`kb task list/show/status`), standard Worker/Human prompt templates (`kb prompt ...`), small paper-profile Worker batches (`kb batch paper-profile --topic <topic> --limit 5`), and a task-status summary inside `kb view`. Manager LLMs can now mark work as assigned / in progress / completed / blocked and resume after restart.
+`v0.7.40` closes the first OpenClaw daily-maintenance loop. It adds task progress commands (`kb task list/show/status`), standard Worker/Human prompt templates (`kb prompt ...`), small paper-profile Worker batches (`kb batch paper-profile --topic <topic> --limit 5`), and a task-status summary inside `kb check`. Manager LLMs can now mark work as assigned / in progress / completed / blocked and resume after restart.
 
 ### v0.7.36
 
@@ -46,23 +50,23 @@ Current version: `v0.7.42`
 
 ### v0.7.31
 
-`v0.7.31` fixes sidebar active-state cleanup in the generated `kb view` dashboard.
+`v0.7.31` fixes sidebar active-state cleanup in the generated `kb check` dashboard.
 
 ### v0.7.30
 
-`kb view` compactness and readability polish: long JSON blocks now render in fixed-height scroll windows, `Refs Index` keeps relation candidates and Deferred human / LLM task handoff behind click-to-open panels, and sidebar active buttons now match the blue active state of the main tab bar.
+`kb check` compactness and readability polish: long JSON blocks now render in fixed-height scroll windows, `Refs Index` keeps relation candidates and Deferred human / LLM task handoff behind click-to-open panels, and sidebar active buttons now match the blue active state of the main tab bar.
 
 ### v0.7.29
 
-Compile hotfix for `kb view`: the resolved wiki path is now borrowed correctly when generating relationship data and `relationship_viewer.html`. This keeps the v0.7.28 readability changes intact while fixing the Rust `E0308` type mismatch.
+Compile hotfix for `kb check`: the resolved wiki path is now borrowed correctly when generating relationship data and `relationship_viewer.html`. This keeps the v0.7.28 readability changes intact while fixing the Rust `E0308` type mismatch.
 
 ### v0.7.28
 
-`kb view` readability update: refs-index relation candidates are rendered as review cards, refs-graph JSON is rendered as an inline SVG graph, and regular `kb view` now also generates `relationship_viewer.html` so the **查看关系图** link works immediately.
+`kb check` readability update: refs-index relation candidates are rendered as review cards, refs-graph JSON is rendered as an inline SVG graph, and regular `kb check` now also generates `relationship_viewer.html` so the **查看关系图** link works immediately.
 
 ### v0.7.27
 
-`v0.7.27` keeps `kb view` as the unified human-facing inspection interface and improves the generated HTML layout by decoupling sidebar scrolling from main-content scrolling. The sidebar keeps the same visual style but remains available while the right-side content moves independently.
+`v0.7.27` keeps `kb check` as the unified human-facing inspection interface and improves the generated HTML layout by decoupling sidebar scrolling from main-content scrolling. The sidebar keeps the same visual style but remains available while the right-side content moves independently.
 
 ### v0.7.26
 
@@ -78,7 +82,7 @@ Wiki Flag release. The global wiki selector is now `--wiki` across the CLI. This
 
 ```bash
 kb create --wiki <A> --from <B> --about <topic>
-kb --wiki <A> view
+kb --wiki <A> check
 kb --wiki <A> build <topic>
 ```
 
@@ -86,7 +90,7 @@ kb --wiki <A> build <topic>
 
 ### v0.7.23
 
-LLM Launch Panel release. `kb view` now adds a safe **About launching LLM** tab to `interfaces/html/index.html`. It opens a static panel with copyable Claude Code / Codex launch commands and bounded Manager/Worker prompts. The HTML still does not execute shell commands or call an LLM; it only helps the operator start an external agent deliberately.
+LLM Launch Panel release. `kb check` now adds a safe **About launching LLM** tab to `interfaces/html/index.html`. It opens a static panel with copyable Claude Code / Codex launch commands and bounded Manager/Worker prompts. The HTML still does not execute shell commands or call an LLM; it only helps the operator start an external agent deliberately.
 
 ### v0.7.22
 
@@ -143,8 +147,8 @@ Workflow naming realignment release. The second, topic-specific LLM Wiki workflo
 The two recommended workflows are now:
 
 ```text
-Workflow 1: init/setup -> build global evidence and generic citation/reference layers -> inspect with kb view
-Workflow 2: kb topic build <topic> -> kb topic review/tasks/handoff -> inspect with kb view --relations --topic <topic>
+Workflow 1: init/setup -> build global evidence and generic citation/reference layers -> inspect with kb check
+Workflow 2: kb topic build <topic> -> kb topic review/tasks/handoff -> inspect with kb check --relations --topic <topic>
 ```
 
 For the complete post-setup assembly, continue to use:
@@ -259,16 +263,16 @@ External agents should read `AGENTS.md`, process one bounded task at a time, and
 
 ### v0.7.10
 
-Topic Relation View Fix. `kb view --relations` and `kb view --relations --topic <topic>` now have distinct meanings:
+Topic Relation View Fix. `kb check --relations` and `kb check --relations --topic <topic>` now have distinct meanings:
 
 ```bash
-kb view --relations
+kb check --relations
 ```
 
 opens the topic relation overview and lists all topic workspaces under `topics/`.
 
 ```bash
-kb view --relations --topic thermal-metamaterials
+kb check --relations --topic thermal-metamaterials
 ```
 
 opens the concrete directed relation graph for only that topic. The generated `relationship_data.json` is filtered at the data layer, not merely hidden in the browser.
@@ -286,7 +290,7 @@ into:
 
 ```bash
 kb topic build <topic>
-kb view --relations --topic <topic>
+kb check --relations --topic <topic>
 ```
 
 In `v0.7.17`, the preferred command name for this second workflow became `kb topic build <topic>`. In `v0.7.18`, the old alias was removed from the active CLI.
@@ -342,33 +346,33 @@ This is the root marker for the local LLM Wiki. It records the workspace layout,
 
 ### v0.7.5
 
-View Relations Mode.
+Check Relations Mode.
 
-This version extends the existing `kb view` command with a relationship graph review mode:
+This version extends the existing `kb check` command with a relationship graph review mode:
 
 ```bash
-kb view --relations
-kb view --relations --no-open
-kb view --relations --topic thermal-metamaterials
-kb view --relations --data-only
+kb check --relations
+kb check --relations --no-open
+kb check --relations --topic thermal-metamaterials
+kb check --relations --data-only
 ```
 
 The regular dashboard remains:
 
 ```bash
-kb view
+kb check
 ```
 
-`kb view --relations` generates:
+`kb check --relations` generates:
 
 ```text
 interfaces/html/relationship_viewer.html
 interfaces/html/relationship_data.json
 ```
 
-As of v0.7.10, `kb view --relations` is the topic overview, while `kb view --relations --topic <topic>` is the strict single-topic relation graph. Confirmed or accepted edges are rendered as solid lines, candidate or LLM-review-needed edges as dashed lines, and missing or unresolved references as dotted lines.
+As of v0.7.10, `kb check --relations` is the topic overview, while `kb check --relations --topic <topic>` is the strict single-topic relation graph. Confirmed or accepted edges are rendered as solid lines, candidate or LLM-review-needed edges as dashed lines, and missing or unresolved references as dotted lines.
 
-No new `kb view-relations` command is added. The relationship graph remains part of the unified `kb view` HTML viewing system.
+No new `kb check-relations` command is added. The relationship graph remains part of the unified `kb check` HTML viewing system.
 
 ### v0.7.4
 
@@ -582,7 +586,7 @@ The expected workflow is:
 5. Build or update Markdown knowledge pages under `wiki/`
 6. Use topic commands to inspect topic-specific relationship workspaces
 7. Use `kb topic build <topic>` to run topic-local importance ranking and relation graph compilation
-8. Use `kb view --relations` to inspect all topic workspaces, then `kb view --relations --topic <topic>` to inspect one topic graph
+8. Use `kb check --relations` to inspect all topic workspaces, then `kb check --relations --topic <topic>` to inspect one topic graph
 9. Use `kb topic review <topic>` to build a review queue from candidates when needed
 10. Use `kb topic tasks <topic>` to generate topic-local Worker handoff files
 11. Let human reviewers or explicit AI agents revise the outputs under Git review
@@ -621,10 +625,10 @@ This workflow is not meant to replace human judgment. It is meant to make AI-ass
 | `kb topic build <topic>` | Run topic ranking and relation graph compilation together. |
 | `kb topic review <topic>` | Build a deterministic review queue from topic-local candidates. |
 | `kb topic tasks <topic>` | Generate topic-local Manager/Worker LLM handoff tasks. |
-| `kb view` | Generate and open the static HTML review dashboard. |
-| `kb view --relations` | Generate the topic relation overview page and `relationship_data.json`. |
-| `kb view --relations --topic <topic>` | Generate the strict single-topic directed relation graph. |
-| `kb view --relations --data-only` | Generate only `interfaces/html/relationship_data.json`. |
+| `kb check` | Generate and open the static HTML review dashboard. |
+| `kb check --relations` | Generate the topic relation overview page and `relationship_data.json`. |
+| `kb check --relations --topic <topic>` | Generate the strict single-topic directed relation graph. |
+| `kb check --relations --data-only` | Generate only `interfaces/html/relationship_data.json`. |
 | `kb shell` | Start a deterministic interactive command shell. |
 
 For detailed command behavior, see `docs/commands.md`, `docs/extract-sections.md`, `docs/llm-task-index.md`, `docs/audit-wiki.md`, and `docs/topic-review-command.md`.

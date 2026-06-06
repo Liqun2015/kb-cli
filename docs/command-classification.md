@@ -307,4 +307,4 @@ The global bibliographic relation layer remains under `processing/refs/`; topic-
 
 ## Static viewer boundary
 
-`kb view` is a static display command. It may render existing Markdown/JSON outputs into `interfaces/html/index.html`, but it must not call an LLM, execute shell commands from the browser, or modify source/wiki files. The **About launching LLM** panel only provides copyable external-agent commands/prompts; the `kb-view>` box is display navigation only.
+`kb check` is a static display command. It may render existing Markdown/JSON outputs into `interfaces/html/index.html`, but it must not call an LLM, execute shell commands from the browser, or modify source/wiki files. The **About launching LLM** panel only provides copyable external-agent commands/prompts; the `kb-check>` box is display navigation only.

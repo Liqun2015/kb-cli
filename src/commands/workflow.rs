@@ -574,7 +574,7 @@ For fewer than 200 papers, use a Karpathy-style LLM Wiki workflow:
 2. build reviewable Markdown knowledge pages under `wiki/`;
 3. use `topics/` for topic-specific relationship and importance work;
 4. use `LLM/tasks/` and `LLM/handoff/` to coordinate Manager/Worker work;
-5. use `kb view` and `kb view --wiki` as human-facing review and reading entrances.
+5. use `kb check` and `kb check --wiki` as human-facing review and reading entrances.
 
 ## Agent Separation
 
@@ -631,7 +631,7 @@ OpenClaw is the Manager. It should not behave like an unrestricted autonomous ed
 ## Safe First Command
 
 ```bash
-kb --wiki <workspace> view
+kb --wiki <workspace> check
 ```
 
 Then inspect:
@@ -667,7 +667,7 @@ You are the OpenClaw Manager for this LLM Wiki workspace. Your job is not to wri
 ## Manager Duties
 
 1. Use `kb create --wiki <workspace> --from <literature-folder> --about <topic>` to establish or refresh a topic library.
-2. Use deterministic commands first: `kb view`, `kb view --wiki`, `kb tasks`, `kb topic list`, `kb topic status <topic>`.
+2. Use deterministic commands first: `kb check`, `kb check --wiki`, `kb tasks`, `kb topic list`, `kb topic status <topic>`.
 3. Read task lists before assigning work.
 4. Assign Worker LLM tasks in small batches.
 5. Keep Worker output inside permitted files.
@@ -687,12 +687,12 @@ You are the OpenClaw Manager for this LLM Wiki workspace. Your job is not to wri
 ```text
 observe workspace
 → run deterministic kb command
-→ inspect generated task/view files
+→ inspect generated task/interface files
 → assign one Worker task
 → review Worker output
 → route high-value judgments to Human Review
 → record accepted result
-→ refresh kb view / kb view --wiki
+→ refresh kb check / kb check --wiki
 ```
 "#,
         paper_count = status.paper_count,
@@ -729,7 +729,7 @@ kb create --wiki <workspace> --from <literature-folder> --about "{topic}"
 - deterministic indexes;
 - LLM Manager/Worker task guides;
 - Human Review checklists;
-- `kb view` and `kb view --wiki` HTML entrances.
+- `kb check` and `kb check --wiki` HTML entrances.
 
 ## OpenClaw After-Create Checklist
 
@@ -788,8 +788,8 @@ This file is the daily maintenance checklist for OpenClaw Manager.
 4. Run or request:
 
 ```bash
-kb --wiki <workspace> view
-kb --wiki <workspace> view --wiki
+kb --wiki <workspace> check
+kb --wiki <workspace> check --wiki
 kb --wiki <workspace> tasks
 kb --wiki <workspace> task list
 kb --wiki <workspace> topic status {topic}
@@ -815,7 +815,7 @@ Handle only one queue item at a time:
 - If new literature appears, rerun `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"` or the equivalent deterministic refresh command.
 - If the corpus count reaches `{threshold}` or more, stop the direct small-corpus workflow and request RAG-assisted workflow preparation.
 - After Worker edits, mark task progress with `kb task status <id> --mark <state>`.
-- After accepted Worker outputs, refresh `kb view` and `kb view --wiki`.
+- After accepted Worker outputs, refresh `kb check` and `kb check --wiki`.
 - Record accepted maintenance under `LLM/memory/` after the task is marked completed.
 
 ## End-of-Day Note Template
@@ -966,7 +966,7 @@ Use OpenClaw as the Manager LLM to establish and maintain this topic library.
 
 1. Confirm the workspace was created by `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"`.
 2. Confirm `processing/workflow_status.json` reports `< {threshold}` papers.
-3. Use `kb view` as the control console and `kb view --wiki` as the reading view.
+3. Use `kb check` as the control console and `kb check --wiki` as the reading view.
 4. Assign Worker LLM tasks for paper key-info extraction.
 5. Assign Worker LLM tasks for topic narrative drafting after enough paper profiles exist.
 6. Route anchor-paper choices, confirmed relation edges, and final topic narrative claims to Human Review.
@@ -986,7 +986,7 @@ Use OpenClaw as the Manager LLM to establish and maintain this topic library.
 - `wiki/topics/{topic}.md` contains a concise linked topic story.
 - Important claims link to paper pages.
 - Human Review has approved anchor papers and high-value judgments.
-- `kb view --wiki` shows a readable topic-centered Wiki.
+- `kb check --wiki` shows a readable topic-centered Wiki.
 "#,
         topic = topic,
         mode_label = status.mode_label.as_str(),
@@ -1028,7 +1028,7 @@ This version focuses on the `< 200 papers` case. Claude Code should use the Karp
 ## Safe First Command
 
 ```bash
-kb --wiki <workspace> view
+kb --wiki <workspace> check
 ```
 
 Then inspect:
@@ -1066,7 +1066,7 @@ Your job is not to complete the whole Wiki in one pass. Your job is to coordinat
 ## Manager Duties
 
 1. Read `CLAUDE.md`, `AGENTS.md`, `LLM/workflow.md`, `LLM/tasks/index.md`, and `agents/claude-code/` before editing.
-2. Use deterministic commands first: `kb view`, `kb view --wiki`, `kb tasks`, `kb task list`, `kb topic status <topic>`.
+2. Use deterministic commands first: `kb check`, `kb check --wiki`, `kb tasks`, `kb task list`, `kb topic status <topic>`.
 3. Create Worker batches using `kb batch paper-profile --topic <topic> --limit 5 --assignee claude-code-manager`.
 4. Generate standard Worker prompts using `kb prompt paper-profile --task <batch-id> --topic <topic>`.
 5. Track progress with `kb task status <id> --mark <state>`.
@@ -1088,14 +1088,14 @@ Your job is not to complete the whole Wiki in one pass. Your job is to coordinat
 ```text
 observe workspace
 → run deterministic kb command
-→ inspect generated task/view files
+→ inspect generated task/interface files
 → create one small Worker batch or one bounded task
 → generate a reusable Worker prompt
 → review Worker output
 → route high-value judgments to Human Review
 → mark task status
 → record accepted result
-→ refresh kb view / kb view --wiki
+→ refresh kb check / kb check --wiki
 ```
 "#,
         paper_count = status.paper_count,
@@ -1132,7 +1132,7 @@ kb create --wiki <workspace> --from <literature-folder> --about "{topic}"
 - deterministic indexes;
 - Manager/Worker task guides;
 - Human Review checklists;
-- `kb view` and `kb view --wiki` HTML entrances.
+- `kb check` and `kb check --wiki` HTML entrances.
 
 ## Claude Code After-Create Checklist
 
@@ -1188,8 +1188,8 @@ This file is the daily maintenance checklist for Claude Code Manager.
 6. Run or request:
 
 ```bash
-kb --wiki <workspace> view
-kb --wiki <workspace> view --wiki
+kb --wiki <workspace> check
+kb --wiki <workspace> check --wiki
 kb --wiki <workspace> tasks
 kb --wiki <workspace> task list
 kb --wiki <workspace> topic status {topic}
@@ -1215,7 +1215,7 @@ Handle only one queue item at a time:
 - If new literature appears, rerun `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"` or the equivalent deterministic refresh command.
 - If the corpus count reaches `{threshold}` or more, stop the direct small-corpus workflow and request RAG-assisted workflow preparation.
 - After Worker edits, mark task progress with `kb task status <id> --mark <state>`.
-- After accepted Worker outputs, refresh `kb view` and `kb view --wiki`.
+- After accepted Worker outputs, refresh `kb check` and `kb check --wiki`.
 - Record accepted maintenance under `LLM/memory/` after the task is marked completed.
 
 ## End-of-Day Note Template
@@ -1372,7 +1372,7 @@ Use Claude Code as the Manager LLM to establish and maintain this topic library.
 
 1. Confirm the workspace was created by `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"`.
 2. Confirm `processing/workflow_status.json` reports `< {threshold}` papers for direct small-corpus work.
-3. Use `kb view` as the control console and `kb view --wiki` as the reading view.
+3. Use `kb check` as the control console and `kb check --wiki` as the reading view.
 4. Use `kb task list` to recover task state after restart.
 5. Use `kb batch paper-profile --topic "{topic}" --limit 5 --assignee claude-code-manager` to create bounded paper-profile Worker batches.
 6. Use `kb prompt paper-profile --task <batch-id> --topic "{topic}"` to produce standard Worker prompts.
@@ -1393,7 +1393,7 @@ Use Claude Code as the Manager LLM to establish and maintain this topic library.
 - `wiki/topics/{topic}.md` contains a concise linked topic story.
 - Important claims link to paper pages.
 - Human Review has approved anchor papers and high-value judgments.
-- `kb view --wiki` shows a readable topic-centered Wiki.
+- `kb check --wiki` shows a readable topic-centered Wiki.
 "#,
         topic = topic,
         mode_label = status.mode_label.as_str(),
@@ -1436,8 +1436,8 @@ It should coordinate deterministic `kb-cli` commands, bounded Worker prompts, an
 ## Default Safe Commands
 
 ```bash
-kb --wiki <workspace> view
-kb --wiki <workspace> view --wiki
+kb --wiki <workspace> check
+kb --wiki <workspace> check --wiki
 kb --wiki <workspace> tasks
 kb --wiki <workspace> task list
 ```
@@ -1502,7 +1502,7 @@ This version focuses on the `< 200 papers` case. Codex should use the Karpathy-s
 ## Safe First Command
 
 ```bash
-kb --wiki <workspace> view
+kb --wiki <workspace> check
 ```
 
 Then inspect:
@@ -1540,7 +1540,7 @@ Your job is not to complete the whole Wiki in one pass. Your job is to coordinat
 ## Manager Duties
 
 1. Read `AGENTS.md`, `LLM/workflow.md`, `LLM/tasks/index.md`, and `agents/codex/` before editing.
-2. Use deterministic commands first: `kb view`, `kb view --wiki`, `kb tasks`, `kb task list`, `kb topic status <topic>`.
+2. Use deterministic commands first: `kb check`, `kb check --wiki`, `kb tasks`, `kb task list`, `kb topic status <topic>`.
 3. Create Worker batches using `kb batch paper-profile --topic <topic> --limit 5 --assignee codex-manager`.
 4. Generate standard Worker prompts using `kb prompt paper-profile --task <batch-id> --topic <topic>`.
 5. Track progress with `kb task status <id> --mark <state>`.
@@ -1562,14 +1562,14 @@ Your job is not to complete the whole Wiki in one pass. Your job is to coordinat
 ```text
 observe workspace
 → run deterministic kb command
-→ inspect generated task/view files
+→ inspect generated task/interface files
 → create one small Worker batch or one bounded task
 → generate a reusable Worker prompt
 → review Worker output
 → route high-value judgments to Human Review
 → mark task status
 → record accepted result
-→ refresh kb view / kb view --wiki
+→ refresh kb check / kb check --wiki
 ```
 "#,
         paper_count = status.paper_count,
@@ -1603,7 +1603,7 @@ kb create --wiki <workspace> --from <literature-folder> --about "{topic}"
 - deterministic indexes;
 - Manager/Worker task guides;
 - Human Review checklists;
-- `kb view` and `kb view --wiki` HTML entrances.
+- `kb check` and `kb check --wiki` HTML entrances.
 
 ## Codex After-Create Checklist
 
@@ -1656,8 +1656,8 @@ This file is the daily maintenance checklist for Codex Manager.
 6. Run or request:
 
 ```bash
-kb --wiki <workspace> view
-kb --wiki <workspace> view --wiki
+kb --wiki <workspace> check
+kb --wiki <workspace> check --wiki
 kb --wiki <workspace> tasks
 kb --wiki <workspace> task list
 kb --wiki <workspace> topic status {topic}
@@ -1683,7 +1683,7 @@ Handle only one queue item at a time:
 - If new literature appears, rerun `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"` or the equivalent deterministic refresh command.
 - If the corpus count reaches `{threshold}` or more, stop the direct small-corpus workflow and request RAG-assisted workflow preparation.
 - After Worker edits, mark task progress with `kb task status <id> --mark <state>`.
-- After accepted Worker outputs, refresh `kb view` and `kb view --wiki`.
+- After accepted Worker outputs, refresh `kb check` and `kb check --wiki`.
 - Record accepted maintenance under `LLM/memory/` after the task is marked completed.
 
 ## Maintenance Note Template
@@ -1843,8 +1843,8 @@ Use this skill when Codex is asked to establish, maintain, or recover work in an
 3. Run deterministic inspection commands before editing:
 
 ```bash
-kb --wiki <workspace> view
-kb --wiki <workspace> view --wiki
+kb --wiki <workspace> check
+kb --wiki <workspace> check --wiki
 kb --wiki <workspace> task list
 ```
 
@@ -1900,7 +1900,7 @@ Use Codex as the Manager LLM to establish and maintain this topic library.
 
 1. Confirm the workspace was created by `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"`.
 2. Confirm `processing/workflow_status.json` reports `< {threshold}` papers for direct small-corpus work.
-3. Use `kb view` as the control console and `kb view --wiki` as the reading view.
+3. Use `kb check` as the control console and `kb check --wiki` as the reading view.
 4. Use `kb task list` to recover task state after restart.
 5. Use `kb batch paper-profile --topic "{topic}" --limit 5 --assignee codex-manager` to create bounded paper-profile Worker batches.
 6. Use `kb prompt paper-profile --task <batch-id> --topic "{topic}"` to produce standard Worker prompts.
@@ -1921,7 +1921,7 @@ Use Codex as the Manager LLM to establish and maintain this topic library.
 - `wiki/topics/{topic}.md` contains a concise linked topic story.
 - Important claims link to paper pages.
 - Human Review has approved anchor papers and high-value judgments.
-- `kb view --wiki` shows a readable topic-centered Wiki.
+- `kb check --wiki` shows a readable topic-centered Wiki.
 "#,
         topic = topic,
         mode_label = status.mode_label.as_str(),

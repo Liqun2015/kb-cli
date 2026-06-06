@@ -102,8 +102,11 @@ enum Commands {
     AuditWiki(commands::audit_wiki::AuditWikiArgs),
     #[command(about = "Manage topic-specific literature relationship workspaces")]
     Topic(commands::topic::TopicArgs),
-    #[command(about = "Generate a static local HTML viewer for LLM Wiki results")]
-    View(commands::view::ViewArgs),
+    #[command(
+        name = "check",
+        about = "Generate static local HTML check dashboards for LLM Wiki system status"
+    )]
+    Check(commands::check::CheckArgs),
     #[command(about = "Sync wiki page source front matter back into processing/manifest.json")]
     SyncWiki(commands::sync_wiki::SyncWikiArgs),
     #[command(about = "Run static wiki health checks for links, orphans, and source front matter")]
@@ -173,7 +176,7 @@ fn main() -> anyhow::Result<()> {
         Some(Commands::Health(args)) => commands::health::execute(cli.wiki.as_deref(), args),
         Some(Commands::AuditWiki(args)) => commands::audit_wiki::execute(cli.wiki.as_deref(), args),
         Some(Commands::Topic(args)) => commands::topic::execute(cli.wiki.as_deref(), args),
-        Some(Commands::View(args)) => commands::view::execute(cli.wiki.as_deref(), args),
+        Some(Commands::Check(args)) => commands::check::execute(cli.wiki.as_deref(), args),
         Some(Commands::SyncWiki(args)) => commands::sync_wiki::execute(cli.wiki.as_deref(), args),
         Some(Commands::LintStatic(args)) => {
             commands::lint_static::execute(cli.wiki.as_deref(), args)
@@ -249,7 +252,7 @@ fn main() -> anyhow::Result<()> {
             println!(
                 "  topic handoff <topic> [--agent AGENT|--all-agents] [--json] [--dry-run] [--force]  Generate topic-local generic/agent-adapter handoff files"
             );
-            println!("  view [--wiki|--relations] [--topic TOPIC] [--data-only] [--no-open]  Generate dashboard, Wiki reader, or relationship HTML viewers");
+            println!("  check [--wiki|--relations] [--topic TOPIC] [--data-only] [--no-open]  Generate system check dashboard, Wiki reader, or relationship HTML viewers");
             println!(
                 "  shell                         Enter deterministic interactive command shell"
             );

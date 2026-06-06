@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.7.43
+
+`v0.7.43` makes `kb check` the only system inspection command.
+
+### Changed
+
+- Renamed the active CLI subcommand from `view` to `check`; no `view` compatibility alias is kept.
+- Moved the implementation module from `src/commands/view.rs` to `src/commands/check.rs`.
+- Updated shell command whitelist/help, generated task/handoff guidance, docs, and README examples to `kb check`.
+- Preserved output artifact paths such as `interfaces/html/index.html`, `wiki.html`, `relationship_viewer.html`, and `relationship_data.json`.
+
 ## v0.7.42
 
 `v0.7.42` adds Codex as a first-class LLM Manager adapter for small-corpus LLM Wiki maintenance.
@@ -32,7 +43,7 @@
 - Task state records under `LLM/tasks/state/<task-id>.json` and event logs under `LLM/tasks/status_events.jsonl`.
 - `kb prompt paper-profile`, `kb prompt topic-narrative`, `kb prompt relation-review`, `kb prompt wiki-link-repair`, and `kb prompt human-review` for reusable Worker/Human prompt templates.
 - `kb batch paper-profile --topic <topic> --limit 5` to create a bounded paper-profile Worker batch under `LLM/tasks/batches/`.
-- Task progress summary and task queue table inside the `LLM Tasks` tab of `kb view`.
+- Task progress summary and task queue table inside the `LLM Tasks` tab of `kb check`.
 
 ### Changed
 
@@ -49,14 +60,14 @@
 
 ## v0.7.31
 
-`v0.7.31` fixes sidebar active-state cleanup in the generated `kb view` dashboard.
+`v0.7.31` fixes sidebar active-state cleanup in the generated `kb check` dashboard.
 
 - Clears active styling from previous sidebar buttons when a new tab is selected.
 - Keeps sidebar and main tab highlighting synchronized.
 
 ## v0.7.30
 
-`v0.7.30` tightens the generated `kb view` dashboard without changing the underlying deterministic data.
+`v0.7.30` tightens the generated `kb check` dashboard without changing the underlying deterministic data.
 
 ### Changed
 
@@ -66,7 +77,7 @@
 
 ## v0.7.29
 
-`v0.7.29` is a compile hotfix for the `kb view` relationship viewer generation path.
+`v0.7.29` is a compile hotfix for the `kb check` relationship viewer generation path.
 
 ### Fixed
 
@@ -75,19 +86,19 @@
 
 ## v0.7.28
 
-`v0.7.28` improves the human-readable graph and relation review experience inside `kb view`.
+`v0.7.28` improves the human-readable graph and relation review experience inside `kb check`.
 
 ### Changed
 
 - Render refs-index relation candidates as readable review cards instead of a wide raw Markdown table.
 - Render the latest refs-graph JSON as an inline SVG relationship graph with circular nodes and solid/dashed/dotted edges.
-- Generate `relationship_data.json` and `relationship_viewer.html` during normal `kb view`, so the dashboard **查看关系图** / Topic Relations links work without running `kb view --relations` first.
+- Generate `relationship_data.json` and `relationship_viewer.html` during normal `kb check`, so the dashboard **查看关系图** / Topic Relations links work without running `kb check --relations` first.
 
 ## v0.7.27
 
 `v0.7.27` decouples the generated HTML sidebar from the main content scroll area.
 
-- Keeps the existing `kb view` visual style and navigation structure.
+- Keeps the existing `kb check` visual style and navigation structure.
 - Makes the dashboard sidebar an independent full-height panel while the main content scrolls separately.
 - Applies the same independent-scroll behavior to the topic relationship viewer.
 - Preserves responsive/mobile behavior by returning to a single-column flow on narrow screens.
@@ -131,7 +142,7 @@
 - Added a visible **About launching LLM** tab to `interfaces/html/index.html`.
 - The button opens a static launch section with copyable Claude Code / Codex terminal commands, a Manager startup prompt, and a Worker task prompt.
 - The HTML viewer still does not execute shell commands, call an LLM, or modify knowledge files. It only helps the operator hand off work to an external LLM agent.
-- Added the launch section as a normal dashboard tab so it is reachable by sidebar, header button, and `kb-view> open llm-launch`.
+- Added the launch section as a normal dashboard tab so it is reachable by sidebar, header button, and `kb-check> open llm-launch`.
 
 ## v0.7.22
 
@@ -150,7 +161,7 @@
 
 - Renamed the disposable artifact directory from `outputs/` to `interfaces/`.
 - Updated generated root marker policy fields to use `interfaces_dir`, `logs_dir = "interfaces/logs"`, and interface-boundary language.
-- Updated `kb view`, health/lint/audit reports, metadata logs, handoff files, and docs to write generated HTML/reports/logs under `interfaces/`.
+- Updated `kb check`, health/lint/audit reports, metadata logs, handoff files, and docs to write generated HTML/reports/logs under `interfaces/`.
 - Kept the source-of-truth rule unchanged: durable knowledge remains in Markdown/JSON/TOML under `raw/`, `wiki/`, `topics/`, `processing/`, `LLM/`, `rules/`, and root handoff files.
 
 ## v0.7.19
@@ -287,8 +298,8 @@
 
 `v0.7.10` fixes the topic relation viewer semantics.
 
-- `kb view --relations` now acts as the topic relation overview page. It lists topic workspaces and summary counts without loading every topic-local paper edge.
-- `kb view --relations --topic <topic>` now generates a strict single-topic relation graph. Its `relationship_data.json` includes only the requested topic, its topic node, its topic-local paper nodes, and its topic-local directed edges.
+- `kb check --relations` now acts as the topic relation overview page. It lists topic workspaces and summary counts without loading every topic-local paper edge.
+- `kb check --relations --topic <topic>` now generates a strict single-topic relation graph. Its `relationship_data.json` includes only the requested topic, its topic node, its topic-local paper nodes, and its topic-local directed edges.
 - Missing topics no longer fall back to a global mixed graph; the generated data records a warning and stays empty.
 - The viewer remains static, read-only, and review-only. No LLM call or automatic scholarly judgment is added.
 
@@ -302,7 +313,7 @@
 - `kb topic relations` writes stable graph artifacts under `topics/<topic>/graph/`:
   - `topic_graph.json`
   - `topic_graph.md`
-- `kb view --relations` now reads directed relation rows from `topics/<topic>/relations/*.md`, so the review page can show topic-local paper-to-paper edges.
+- `kb check --relations` now reads directed relation rows from `topics/<topic>/relations/*.md`, so the review page can show topic-local paper-to-paper edges.
 
 No LLM call or automatic scholarly judgment is added. Topic relations remain evidence-bearing candidates until reviewed.
 
@@ -338,22 +349,22 @@ No hidden LLM call, semantic duplicate detection, or automatic scientific relati
 
 ## v0.7.5
 
-View Relations Mode.
+Check Relations Mode.
 
 Main changes:
 
-- Extended the existing `kb view` command with a new `--relations` mode.
-- `kb view --relations` generates:
+- Extended the existing `kb check` command with a new `--relations` mode.
+- `kb check --relations` generates:
   - `interfaces/html/relationship_viewer.html`
   - `interfaces/html/relationship_data.json`
 - Added `--topic <topic>` for default topic focus in the relationship viewer.
 - Added `--data-only` for generating only the relationship JSON data source.
-- Kept regular `kb view` behavior unchanged for `interfaces/html/index.html`.
+- Kept regular `kb check` behavior unchanged for `interfaces/html/index.html`.
 - Added cross-links between the regular dashboard and the relationship graph viewer.
 - The relationship viewer is static and read-only; it does not call LLMs, execute commands, or mark candidate relations as confirmed.
 - Solid edges represent confirmed or accepted relations; dashed edges represent candidate or LLM-review-needed relations; dotted edges represent missing or unresolved references.
 
-No `kb view-relations` command is added. The relationship graph is part of the unified `kb view` viewing system.
+No `kb check-relations` command is added. The relationship graph is part of the unified `kb check` viewing system.
 
 ## v0.7.4
 
@@ -468,7 +479,7 @@ These candidates are intended for later human review rather than automatic seman
 
 ## v0.6.6.1
 
-`kb view` now uses the knowledge-base directory name as the HTML viewer title and updates the viewer subtitle to better reflect the research-oriented purpose of the LLM Wiki.
+`kb check` now uses the knowledge-base directory name as the HTML viewer title and updates the viewer subtitle to better reflect the research-oriented purpose of the LLM Wiki.
 
 ## v0.6.6
 

@@ -2,6 +2,7 @@ pub mod audit_wiki;
 pub mod batch;
 pub mod build;
 pub mod build_wiki;
+pub mod check;
 pub mod create;
 pub mod extract_metadata;
 pub mod extract_sections;
@@ -29,6 +30,5 @@ pub mod sync_wiki;
 pub mod task;
 pub mod tasks;
 pub mod topic;
-pub mod view;
 
 pub mod workflow;

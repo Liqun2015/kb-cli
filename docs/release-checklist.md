@@ -69,13 +69,13 @@ kb refs-index --help
 kb refs-graph --help
 kb keywords --help
 kb health --help
-kb view --help
+kb check --help
 kb topic init example-topic --dry-run
-kb view --dry-run
+kb check --dry-run
 # Optional manual browser-open check:
-# kb view
+# kb check
 # Optional manual check on a desktop environment:
-# kb view
+# kb check
 kb shell --help
 kb tasks --help
 kb memory --help
@@ -127,7 +127,7 @@ kb refs-index --help
 kb refs-graph --help
 kb keywords --help
 kb health --help
-kb view --help
+kb check --help
 kb topic init example-topic --dry-run
 kb shell --help
 kb refs-index --dry-run
@@ -179,10 +179,10 @@ If the downloaded source package does not include `Cargo.lock`, run `cargo check
 
 Before adding topic-specific relationship features, confirm that `docs/topic-relationships.md` still distinguishes global bibliographic index relations from topic-local causal, method, evidence, idea, and importance overlays.
 
-## View smoke test
+## Check smoke test
 
 ```bash
-kb view --dry-run
+kb check --dry-run
 ```
 
 The command should report the planned `interfaces/html/index.html` path without writing files.

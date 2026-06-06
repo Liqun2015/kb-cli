@@ -491,7 +491,7 @@ fn check_review_outputs_layer(kb_path: &Path) -> AuditCheck {
         ],
         remediation: if score < 10 {
             vec![
-                "Run `kb lint-static`, `kb health`, and `kb view --no-open` to create review outputs.".to_string(),
+                "Run `kb lint-static`, `kb health`, and `kb check --no-open` to create review outputs.".to_string(),
             ]
         } else {
             Vec::new()

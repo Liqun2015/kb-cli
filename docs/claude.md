@@ -346,7 +346,7 @@ Do not implement a universal causal graph. Do not auto-confirm causal, contradic
 
 ## Static viewer boundary
 
-`kb view` is a static display command. It renders existing Markdown/JSON outputs into `interfaces/html/index.html` and opens that static file in the system default browser by default. `kb view --no-open` refreshes the file without opening a browser. It must not call an LLM, start a local server, execute shell commands from the browser, or modify source/wiki files. The **About launching LLM** panel only provides copyable external-agent commands/prompts; the `kb-view>` box is display navigation only.
+`kb check` is a static display command. It renders existing Markdown/JSON outputs into `interfaces/html/index.html` and opens that static file in the system default browser by default. `kb check --no-open` refreshes the file without opening a browser. It must not call an LLM, start a local server, execute shell commands from the browser, or modify source/wiki files. The **About launching LLM** panel only provides copyable external-agent commands/prompts; the `kb-check>` box is display navigation only.
 
 
 ## Topic workspace rule
@@ -376,16 +376,16 @@ kb topic relations <topic>
 Treat `kb topic relations <topic>` as a compiler of existing directed relation rows under `topics/<topic>/relations/*.md`, not as an automatic scientific-relation inference engine. After running it, inspect the topic list with:
 
 ```bash
-kb view --relations
+kb check --relations
 ```
 
 and inspect one concrete topic graph with:
 
 ```bash
-kb view --relations --topic <topic>
+kb check --relations --topic <topic>
 ```
 
-`kb view --relations --topic <topic>` must be treated as a strict single-topic view. Do not mix unrelated topic graphs into the same review task. Do not mark generated candidate or `needs_human_review` edges as confirmed without explicit review evidence.
+`kb check --relations --topic <topic>` must be treated as a strict single-topic view. Do not mix unrelated topic graphs into the same review task. Do not mark generated candidate or `needs_human_review` edges as confirmed without explicit review evidence.
 
 
 ## Interface Directory Boundary

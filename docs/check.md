@@ -1,18 +1,18 @@
-# kb view
+# kb check
 
 Current version: `v0.7.42`
 
-`kb view` generates static local HTML viewers for the current LLM Wiki.
+`kb check` generates static local HTML check dashboards and related inspection pages for the current LLM Wiki.
 
 It is a display layer, not an execution layer.
 
 ## Regular dashboard
 
 ```bash
-kb view
-kb view --no-open
-kb view --dry-run
-kb view --output-dir interfaces/html
+kb check
+kb check --no-open
+kb check --dry-run
+kb check --output-dir interfaces/html
 ```
 
 Default output:
@@ -21,20 +21,20 @@ Default output:
 interfaces/html/index.html
 ```
 
-`kb view` opens the generated file with the system default browser by default. Use `kb view --no-open` when you only want to refresh the HTML file without opening a browser. Neither mode starts a server or grants the page permission to execute local commands.
+`kb check` opens the generated file with the system default browser by default. Use `kb check --no-open` when you only want to refresh the HTML file without opening a browser. Neither mode starts a server or grants the page permission to execute local commands.
 
 ## Topic relationship review mode
 
-Starting in `v0.7.5`, topic relationship review is part of the existing `kb view` command:
+Starting in `v0.7.5`, topic relationship review is part of the existing `kb check` command:
 
 ```bash
-kb view --relations
-kb view --relations --no-open
-kb view --relations --topic thermal-metamaterials
-kb view --relations --data-only
+kb check --relations
+kb check --relations --no-open
+kb check --relations --topic thermal-metamaterials
+kb check --relations --data-only
 ```
 
-This intentionally does **not** add a separate `kb view-relations` command.
+This intentionally does **not** add a separate `kb check-relations` command.
 
 Default outputs:
 
@@ -48,7 +48,7 @@ interfaces/html/relationship_data.json
 ### Topic overview mode
 
 ```bash
-kb view --relations
+kb check --relations
 ```
 
 Without `--topic`, the page is a topic relation overview. It lists all topic workspaces under:
@@ -62,7 +62,7 @@ and reports per-topic counts such as Markdown file count, relation file count, a
 ### Single-topic graph mode
 
 ```bash
-kb view --relations --topic thermal-metamaterials
+kb check --relations --topic thermal-metamaterials
 ```
 
 With `--topic`, the generated page is filtered to that one topic. `relationship_data.json` includes only:
@@ -83,7 +83,7 @@ If the topic does not exist, the command records a warning in the JSON/page and 
 ### `--data-only`
 
 ```bash
-kb view --relations --data-only
+kb check --relations --data-only
 ```
 
 Generates only:
@@ -129,7 +129,7 @@ The page has:
 ```text
 left sidebar      = Wiki/result navigator
 right main area   = tabbed content display
-kb-view> box      = display-only page navigation
+kb-check> box      = display-only page navigation
 ```
 
 The regular dashboard sidebar includes a link to:
@@ -200,35 +200,35 @@ edit wiki pages
 
 ## Why static first?
 
-`kb view` is intentionally conservative. A static HTML file is easy to review, easy to archive, and safe to open.
+`kb check` is intentionally conservative. A static HTML file is easy to review, easy to archive, and safe to open.
 
-A future `kb browser --serve` may provide a local backend bridge to deterministic `kb` commands, but that is not part of `kb view`.
+A future `kb browse --serve` may provide a local backend bridge to deterministic `kb` commands, but that is not part of `kb check`.
 
 ## Relationship to Markdown and JSON
 
 Markdown and JSON remain the source of truth. HTML is only a generated viewing layer.
 
-Do not manually edit generated HTML as project state. Re-run `kb view` or `kb view --relations` instead.
+Do not manually edit generated HTML as project state. Re-run `kb check` or `kb check --relations` instead.
 
 ## Windows browser opening note
 
-On Windows, `kb view` opens generated HTML through `rundll32.exe url.dll,FileProtocolHandler` instead of `cmd /C start`. This is more robust on systems where `start` reports access denied for local HTML files. Use `--no-open` to generate files without opening a browser.
+On Windows, `kb check` opens generated HTML through `rundll32.exe url.dll,FileProtocolHandler` instead of `cmd /C start`. This is more robust on systems where `start` reports access denied for local HTML files. Use `--no-open` to generate files without opening a browser.
 
 
 ## Disposable HTML Artifacts
 
-`kb view` writes HTML under `interfaces/html/`. These files are human review artifacts, not Wiki source files. Delete and regenerate them when needed. Accepted review decisions must be written back to Markdown/JSON/TOML source files outside `interfaces/`.
+`kb check` writes HTML under `interfaces/html/`. These files are human review artifacts, not Wiki source files. Delete and regenerate them when needed. Accepted review decisions must be written back to Markdown/JSON/TOML source files outside `interfaces/`.
 
 ## v0.7.28 HTML readability updates
 
-Regular `kb view` now also writes the companion relationship artifacts under the same output directory:
+Regular `kb check` now also writes the companion relationship artifacts under the same output directory:
 
 ```text
 interfaces/html/relationship_data.json
 interfaces/html/relationship_viewer.html
 ```
 
-This keeps the dashboard **查看关系图** and sidebar **Topic Relations** links usable immediately after a normal `kb view` run.
+This keeps the dashboard **查看关系图** and sidebar **Topic Relations** links usable immediately after a normal `kb check` run.
 
 The dashboard also renders:
 
@@ -240,4 +240,4 @@ The raw JSON / Mermaid / DOT artifacts remain available in collapsed `<details>`
 
 ## Wiki reader
 
-`kb view --wiki` generates `interfaces/html/wiki.html`, a human-readable Wiki surface for pages under `wiki/`. It is intended for topic-oriented reading rather than inspecting low-level task, JSON, and interface artifacts.
+`kb check --wiki` generates `interfaces/html/wiki.html`, a human-readable Wiki surface for pages under `wiki/`. It is intended for topic-oriented reading rather than inspecting low-level task, JSON, and interface artifacts.

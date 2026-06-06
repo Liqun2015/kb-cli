@@ -25,8 +25,8 @@ This document records what `kb-cli v0.7.10` actually supports. It is intentional
 | `kb tasks [--dry-run|--preview] [--json] [--index-only|--no-index]` | Generate deferred human/LLM/agent handoffs, `LLM/tasks/index.md`, and bounded `LLM/tasks/items/<task_id>.md` files. |
 | `kb memory --task-id ID --summary TEXT` | Append completed-task audit memory under `LLM/memory/completed_tasks.md`. |
 | `kb health [--dry-run|--preview] [--json] [--strict]` | Summarize deterministic LLM Wiki and literature-relation health. |
-| `kb view [--no-open|--dry-run|--output-dir DIR]` | Generate the regular static HTML dashboard. |
-| `kb view --relations [--topic TOPIC] [--data-only]` | Generate the topic relation overview, or a strict single-topic graph when `--topic` is provided. |
+| `kb check [--no-open|--dry-run|--output-dir DIR]` | Generate the regular static HTML dashboard. |
+| `kb check --relations [--topic TOPIC] [--data-only]` | Generate the topic relation overview, or a strict single-topic graph when `--topic` is provided. |
 | `kb shell` | Start deterministic interactive shell mode. |
 | `kb list-models` | List configured LLM models. |
 | `kb show-model` | Show the active model configuration. |
@@ -299,9 +299,9 @@ These documents are schema contracts for future Manager LLM, Worker LLM, and thi
 
 ## Static viewer boundary
 
-`kb view` is a static display command. It renders existing Markdown/JSON outputs into `interfaces/html/index.html` and opens that static file in the system default browser by default. `kb view --no-open` refreshes the file without opening a browser. It must not call an LLM, start a local server, execute shell commands from the browser, or modify source/wiki files. The **About launching LLM** panel only provides copyable external-agent commands/prompts; the `kb-view>` box is display navigation only.
+`kb check` is a static display command. It renders existing Markdown/JSON outputs into `interfaces/html/index.html` and opens that static file in the system default browser by default. `kb check --no-open` refreshes the file without opening a browser. It must not call an LLM, start a local server, execute shell commands from the browser, or modify source/wiki files. The **About launching LLM** panel only provides copyable external-agent commands/prompts; the `kb-check>` box is display navigation only.
 
-`kb view --relations` is the topic relation overview. It lists topic workspaces under `topics/`. `kb view --relations --topic <topic>` is a strict single-topic graph and must not include unrelated topics in `relationship_data.json`.
+`kb check --relations` is the topic relation overview. It lists topic workspaces under `topics/`. `kb check --relations --topic <topic>` is a strict single-topic graph and must not include unrelated topics in `relationship_data.json`.
 
 
 ## Topic workspace command

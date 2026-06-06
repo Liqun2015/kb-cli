@@ -12,7 +12,7 @@ use walkdir::WalkDir;
 use crate::commands::init::get_kb_path;
 
 #[derive(Debug, Clone, Args)]
-pub struct ViewArgs {
+pub struct CheckArgs {
     #[arg(
         long = "output-dir",
         value_name = "DIR",
@@ -57,11 +57,11 @@ pub struct ViewArgs {
     )]
     pub data_only: bool,
 
-    #[arg(long, hide = true, help = "Legacy no-op: kb view opens by default")]
+    #[arg(long, hide = true, help = "Legacy no-op: kb check opens by default")]
     pub open: bool,
 }
 
-impl ViewArgs {
+impl CheckArgs {
     fn is_dry_run(&self) -> bool {
         self.dry_run || self.preview
     }
@@ -72,7 +72,7 @@ impl ViewArgs {
 }
 
 #[derive(Debug, Clone)]
-struct ViewerSection {
+struct CheckSection {
     id: String,
     title: String,
     subtitle: String,
@@ -86,7 +86,7 @@ struct SourceCard {
     html: String,
 }
 
-pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
+pub fn execute(custom_kb: Option<&Path>, args: &CheckArgs) -> Result<()> {
     let kb_path = get_kb_path(custom_kb);
     if !kb_path.exists() {
         return Err(anyhow!(
@@ -96,11 +96,11 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
     }
 
     if args.relations {
-        return execute_relationship_view(&kb_path, args);
+        return execute_relationship_check(&kb_path, args);
     }
 
     if args.wiki {
-        return execute_wiki_view(&kb_path, args);
+        return execute_wiki_check(&kb_path, args);
     }
 
     if args.topic.is_some() {
@@ -118,10 +118,10 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
     let output_path = output_root.join("index.html");
 
     let sections = build_sections(&kb_path)?;
-    let html = render_viewer(&kb_path, &sections);
+    let html = render_check_dashboard(&kb_path, &sections);
 
     if args.is_dry_run() {
-        println!("kb view preview:");
+        println!("kb check preview:");
         println!("  knowledge base : {}", kb_path.display());
         println!("  output         : {}", output_path.display());
         println!("  sections       : {}", sections.len());
@@ -155,7 +155,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
     let wiki_html_path = output_root.join("wiki.html");
     fs::write(&wiki_html_path, render_wiki_reader(&kb_path, &output_root)?)?;
 
-    println!("Static HTML viewer generated:");
+    println!("Static HTML check dashboard generated:");
     println!("  {}", output_path.display());
     println!("Relationship graph viewer generated:");
     println!("  {}", relationship_html_path.display());
@@ -190,7 +190,7 @@ struct WikiPageSource {
     summary: String,
 }
 
-fn execute_wiki_view(kb_path: &Path, args: &ViewArgs) -> Result<()> {
+fn execute_wiki_check(kb_path: &Path, args: &CheckArgs) -> Result<()> {
     if args.topic.is_some() {
         eprintln!("Warning: --topic is only used with --relations; ignoring it for --wiki.");
     }
@@ -207,7 +207,7 @@ fn execute_wiki_view(kb_path: &Path, args: &ViewArgs) -> Result<()> {
     let pages = collect_wiki_page_sources(kb_path)?;
 
     if args.is_dry_run() {
-        println!("kb view --wiki preview:");
+        println!("kb check --wiki preview:");
         println!("  knowledge base : {}", kb_path.display());
         println!("  output         : {}", output_path.display());
         println!("  wiki pages     : {}", pages.len());
@@ -314,7 +314,7 @@ struct RelationshipTask {
     evidence: Vec<String>,
 }
 
-fn execute_relationship_view(kb_path: &Path, args: &ViewArgs) -> Result<()> {
+fn execute_relationship_check(kb_path: &Path, args: &CheckArgs) -> Result<()> {
     let output_dir = args
         .output_dir
         .clone()
@@ -326,7 +326,7 @@ fn execute_relationship_view(kb_path: &Path, args: &ViewArgs) -> Result<()> {
     let data = build_relationship_data(kb_path, args)?;
 
     if args.is_dry_run() {
-        println!("kb view --relations preview:");
+        println!("kb check --relations preview:");
         println!("  knowledge base : {}", kb_path.display());
         println!("  data output    : {}", data_path.display());
         if args.data_only {
@@ -378,7 +378,7 @@ fn execute_relationship_view(kb_path: &Path, args: &ViewArgs) -> Result<()> {
     Ok(())
 }
 
-fn build_relationship_data(kb_path: &Path, args: &ViewArgs) -> Result<RelationshipData> {
+fn build_relationship_data(kb_path: &Path, args: &CheckArgs) -> Result<RelationshipData> {
     let mut warnings = Vec::new();
     let mut nodes_by_id: BTreeMap<String, RelationshipNode> = BTreeMap::new();
     let mut edges: Vec<RelationshipEdge> = Vec::new();
@@ -433,7 +433,7 @@ fn build_relationship_data(kb_path: &Path, args: &ViewArgs) -> Result<Relationsh
     Ok(RelationshipData {
         meta: RelationshipMeta {
             version: "v0.7.40".to_string(),
-            generated_by: "kb view --relations".to_string(),
+            generated_by: "kb check --relations".to_string(),
             generated_at: Utc::now().to_rfc3339(),
             knowledge_base: kb_path.display().to_string(),
             default_topic: args.topic.clone(),
@@ -648,7 +648,7 @@ fn add_topic_relationships(
             },
         );
 
-        // `kb view --relations` without `--topic` is now a topic index page.
+        // `kb check --relations` without `--topic` is now a topic index page.
         // It intentionally stops at topic-level summary data and does not load
         // paper nodes or topic-local edges. Use `--topic <topic>` for the
         // concrete directed graph of one topic.
@@ -995,7 +995,7 @@ fn build_relationship_manager_tasks(
             status: "open".to_string(),
             files,
             evidence: vec![format!(
-                "{} topic workspaces indexed. Use `kb view --relations --topic <topic>` for a concrete topic graph.",
+                "{} topic workspaces indexed. Use `kb check --relations --topic <topic>` for a concrete topic graph.",
                 overview.topic_count
             )],
         }]
@@ -1435,17 +1435,17 @@ fn open_in_default_browser(path: &Path) -> Result<()> {
     }
 }
 
-fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
+fn build_sections(kb_path: &Path) -> Result<Vec<CheckSection>> {
     let mut sections = Vec::new();
 
-    sections.push(ViewerSection {
+    sections.push(CheckSection {
         id: "overview".to_string(),
         title: "Overview".to_string(),
         subtitle: "Local LLM Wiki structure and latest generated artifacts".to_string(),
         html: render_overview(kb_path),
     });
 
-    sections.push(ViewerSection {
+    sections.push(CheckSection {
         id: "wiki".to_string(),
         title: "Wiki".to_string(),
         subtitle: "Wiki home or project README".to_string(),
@@ -1455,21 +1455,21 @@ fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
         ),
     });
 
-    sections.push(ViewerSection {
+    sections.push(CheckSection {
         id: "refs-index".to_string(),
         title: "Refs Index".to_string(),
         subtitle: "Latest bibliographic index relation candidate report".to_string(),
         html: render_refs_index(kb_path)?,
     });
 
-    sections.push(ViewerSection {
+    sections.push(CheckSection {
         id: "refs-graph".to_string(),
         title: "Refs Graph".to_string(),
         subtitle: "Latest graph export files for third-party visualizers".to_string(),
         html: render_refs_graph(kb_path)?,
     });
 
-    sections.push(ViewerSection {
+    sections.push(CheckSection {
         id: "keywords".to_string(),
         title: "Keywords".to_string(),
         subtitle: "Latest keyword/topic relation candidate report".to_string(),
@@ -1479,7 +1479,7 @@ fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
         ),
     });
 
-    sections.push(ViewerSection {
+    sections.push(CheckSection {
         id: "health".to_string(),
         title: "Health".to_string(),
         subtitle: "Latest deterministic project health report".to_string(),
@@ -1489,7 +1489,7 @@ fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
         ),
     });
 
-    sections.push(ViewerSection {
+    sections.push(CheckSection {
         id: "llm-launch".to_string(),
         title: "About launching LLM".to_string(),
         subtitle: "Copy safe launch commands and Manager prompts for external LLM agents"
@@ -1497,7 +1497,7 @@ fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
         html: render_llm_launch(kb_path)?,
     });
 
-    sections.push(ViewerSection {
+    sections.push(CheckSection {
         id: "tasks".to_string(),
         title: "LLM Tasks".to_string(),
         subtitle: "Latest handoff task list and task progress for Manager/Worker LLM workflows"
@@ -1505,7 +1505,7 @@ fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
         html: render_tasks_dashboard(kb_path)?,
     });
 
-    sections.push(ViewerSection {
+    sections.push(CheckSection {
         id: "memory".to_string(),
         title: "LLM Memory".to_string(),
         subtitle: "Completed task memory records".to_string(),
@@ -1515,7 +1515,7 @@ fn build_sections(kb_path: &Path) -> Result<Vec<ViewerSection>> {
         ),
     });
 
-    sections.push(ViewerSection {
+    sections.push(CheckSection {
         id: "topics".to_string(),
         title: "Topics".to_string(),
         subtitle: "Topic-specific relationship overlays".to_string(),
@@ -1585,7 +1585,7 @@ fn render_tasks_dashboard(kb_path: &Path) -> Result<String> {
     Ok(html)
 }
 
-fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
+fn render_check_dashboard(kb_path: &Path, sections: &[CheckSection]) -> String {
     let generated_at = html_escape(&Utc::now().to_rfc3339());
     let kb_display = html_escape(&kb_path.display().to_string());
     let kb_name_raw = kb_path
@@ -1622,7 +1622,10 @@ fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
 
     let mut html = String::new();
     html.push_str("<!DOCTYPE html>\n<html lang=\"zh-CN\">\n<head>\n<meta charset=\"UTF-8\" />\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n");
-    html.push_str(&format!("<title>{} - LLM Wiki Viewer</title>\n", kb_name));
+    html.push_str(&format!(
+        "<title>{} - LLM Wiki Check Dashboard</title>\n",
+        kb_name
+    ));
     html.push_str("<style>\n");
     html.push_str(VIEWER_CSS);
     html.push_str("\n</style>\n</head>\n<body>\n<div class=\"container\">\n");
@@ -1639,7 +1642,7 @@ fn render_viewer(kb_path: &Path, sections: &[ViewerSection]) -> String {
     html.push_str(&sidebar_links);
     html.push_str("<a class=\"sidebar-link sidebar-anchor\" href=\"relationship_viewer.html\">Topic Relations</a>\n");
     html.push_str("</div>\n</div>\n");
-    html.push_str("<div class=\"terminal\">\n<div class=\"terminal-head\">kb-view&gt; display commands only</div>\n<div class=\"terminal-log\" id=\"commandLog\"><div class=\"terminal-msg\">Type <code>help</code>. This box cannot execute local kb commands.</div></div>\n<div class=\"terminal-input\"><input id=\"viewCommand\" type=\"text\" placeholder=\"help / open health / find DOI\"/><button id=\"runViewCommand\">Run</button></div>\n</div>\n");
+    html.push_str("<div class=\"terminal\">\n<div class=\"terminal-head\">kb-check&gt; display commands only</div>\n<div class=\"terminal-log\" id=\"commandLog\"><div class=\"terminal-msg\">Type <code>help</code>. This box cannot execute local kb commands.</div></div>\n<div class=\"terminal-input\"><input id=\"checkCommand\" type=\"text\" placeholder=\"help / open health / find DOI\"/><button id=\"runCheckCommand\">Run</button></div>\n</div>\n");
     html.push_str(
         "</div>\n</aside>\n<button class=\"toggle-sidebar\" id=\"toggleBtn\">‹</button>\n",
     );
@@ -1762,8 +1765,8 @@ const VIEWER_JS: &str = r#"
 const sidebar = document.getElementById('wikiSidebar');
 const toggleBtn = document.getElementById('toggleBtn');
 const commandLog = document.getElementById('commandLog');
-const commandInput = document.getElementById('viewCommand');
-const commandButton = document.getElementById('runViewCommand');
+const commandInput = document.getElementById('checkCommand');
+const commandButton = document.getElementById('runCheckCommand');
 
 function switchTab(id) {
   const target = document.getElementById(id);
@@ -1784,10 +1787,10 @@ function log(msg) {
   commandLog.scrollTop = commandLog.scrollHeight;
 }
 
-function runViewCommand() {
+function runCheckCommand() {
   const raw = commandInput.value.trim();
   if (!raw) return;
-  log(`<span style="color:#90cdf4">kb-view&gt;</span> ${escapeHtml(raw)}`);
+  log(`<span style="color:#90cdf4">kb-check&gt;</span> ${escapeHtml(raw)}`);
   commandInput.value = '';
   const lower = raw.toLowerCase();
   if (lower === 'help') {
@@ -1855,9 +1858,9 @@ document.querySelectorAll('.nav-tab, .sidebar-link, .primary-action').forEach(ta
   tab.addEventListener('click', () => switchTab(tab.dataset.target));
 });
 
-commandButton.addEventListener('click', runViewCommand);
+commandButton.addEventListener('click', runCheckCommand);
 commandInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') runViewCommand();
+  if (e.key === 'Enter') runCheckCommand();
 });
 "#;
 
@@ -2000,7 +2003,7 @@ fn render_wiki_reader_from_pages(
     html.push_str("</nav><div class=\"wiki-side-note\">This page renders <code>wiki/</code> as a human-readable knowledge layer. It is a generated interface, not the source of truth.</div></aside>");
     html.push_str("<main class=\"wiki-reader-main\"><header class=\"wiki-reader-header\"><div><p class=\"eyebrow\">LLM Wiki knowledge reader</p><h1>");
     html.push_str(&kb_name);
-    html.push_str("</h1><p>围绕主题阅读知识页、WikiLinks、图片与文献页面；底层任务、JSON 和审查面板仍在 <a href=\"index.html\">kb view dashboard</a> 中。</p></div><div class=\"wiki-meta\"><span>");
+    html.push_str("</h1><p>围绕主题阅读知识页、WikiLinks、图片与文献页面；底层任务、JSON 和审查面板仍在 <a href=\"index.html\">kb check dashboard</a> 中。</p></div><div class=\"wiki-meta\"><span>");
     html.push_str(&format!("{} pages", pages.len()));
     html.push_str("</span><span>");
     html.push_str(&generated_at);
@@ -2791,7 +2794,7 @@ fn render_llm_launch(kb_path: &Path) -> Result<String> {
         html_escape(&worker_prompt)
     ));
 
-    out.push_str("<div class=\"suggestion-box\"><strong>推荐流程：</strong><br><code>kb build &lt;topic&gt;</code> → <code>kb view</code> → 打开 <strong>About launching LLM</strong> → 复制命令与 Manager Prompt → Agent 读取任务 → 人工审查回写。</div>");
+    out.push_str("<div class=\"suggestion-box\"><strong>推荐流程：</strong><br><code>kb build &lt;topic&gt;</code> → <code>kb check</code> → 打开 <strong>About launching LLM</strong> → 复制命令与 Manager Prompt → Agent 读取任务 → 人工审查回写。</div>");
     Ok(out)
 }
 
@@ -2837,7 +2840,7 @@ fn render_overview(kb_path: &Path) -> String {
         ));
     }
     out.push_str("</tbody></table>");
-    out.push_str("<div class=\"suggestion-box\"><strong>Suggested refresh flow:</strong><br><code>kb health</code> → <code>kb refs-index</code> → <code>kb refs-graph</code> → <code>kb keywords</code> → <code>kb tasks</code> → <code>kb view</code></div>");
+    out.push_str("<div class=\"suggestion-box\"><strong>Suggested refresh flow:</strong><br><code>kb health</code> → <code>kb refs-index</code> → <code>kb refs-graph</code> → <code>kb keywords</code> → <code>kb tasks</code> → <code>kb check</code></div>");
     out
 }
 

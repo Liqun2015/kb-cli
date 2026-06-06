@@ -1022,7 +1022,7 @@ fn execute_topic_build(custom_kb: Option<&Path>, args: &TopicBuildArgs) -> Resul
             next_steps: vec![
                 format!("Would run `kb topic rank {slug} --limit {}`.", args.limit),
                 format!("Would run `kb topic relations {slug}`."),
-                format!("Then inspect the result with `kb view --relations --topic {slug}`."),
+                format!("Then inspect the result with `kb check --relations --topic {slug}`."),
             ],
         };
         if args.json {
@@ -1067,7 +1067,7 @@ fn execute_topic_build(custom_kb: Option<&Path>, args: &TopicBuildArgs) -> Resul
         next_steps: vec![
             format!("Review topic-local importance under topics/{slug}/importance/."),
             format!("Review directed topic relations under topics/{slug}/relations/."),
-            format!("Inspect the graph with `kb view --relations --topic {slug}`."),
+            format!("Inspect the graph with `kb check --relations --topic {slug}`."),
         ],
     };
 
@@ -1166,7 +1166,7 @@ fn build_topic_relations_report(
     let next_steps = vec![
         format!("Edit topics/{slug}/relations/*.md to add evidence-backed directed paper-to-paper relations."),
         format!("Run `kb topic build {slug}` after changing literature, importance, or relation files."),
-        format!("Inspect with `kb view --relations --topic {slug}`."),
+        format!("Inspect with `kb check --relations --topic {slug}`."),
     ];
 
     Ok(TopicRelationsReport {
@@ -1842,7 +1842,7 @@ fn build_topic_tasks_report(
             source_command: format!("kb topic relations {slug}"),
             expected_output: vec![
                 format!("Evidence-backed rows in `topics/{slug}/relations/*.md`."),
-                format!("Then run `kb topic build {slug}` and inspect `kb view --relations --topic {slug}`."),
+                format!("Then run `kb topic build {slug}` and inspect `kb check --relations --topic {slug}`."),
             ],
             review_rule: "Worker output remains candidate-level until reviewed; confirmed relations require explicit acceptance.".to_string(),
         });
@@ -1881,7 +1881,7 @@ fn build_topic_tasks_report(
             goal: "Compile the topic graph artifacts so the Manager LLM and human reviewer can inspect the relation structure visually.".to_string(),
             requirements: vec![
                 format!("Run `kb topic relations {slug}` or `kb topic build {slug}`."),
-                format!("Inspect the result with `kb view --relations --topic {slug}`."),
+                format!("Inspect the result with `kb check --relations --topic {slug}`."),
                 "Treat dashed/candidate edges as unresolved review items.".to_string(),
             ],
             files: vec![
@@ -1947,7 +1947,7 @@ fn build_topic_tasks_report(
     let next_steps = if returned_tasks.is_empty() {
         vec![
             format!("No topic-specific handoff tasks detected for `{slug}`."),
-            format!("Run `kb topic build {slug}` and `kb view --relations --topic {slug}` when topic materials change."),
+            format!("Run `kb topic build {slug}` and `kb check --relations --topic {slug}` when topic materials change."),
         ]
     } else {
         vec![
