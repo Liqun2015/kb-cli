@@ -202,7 +202,7 @@ edit wiki pages
 
 `kb check` is intentionally conservative. A static HTML file is easy to review, easy to archive, and safe to open.
 
-A future `kb browse --serve` may provide a local backend bridge to deterministic `kb` commands, but that is not part of `kb check`.
+A future served interface may provide a local backend bridge to deterministic `kb` commands, but that is not part of `kb check`.
 
 ## Relationship to Markdown and JSON
 
@@ -238,6 +238,6 @@ The dashboard also renders:
 The raw JSON / Mermaid / DOT artifacts remain available in collapsed `<details>` blocks for debugging and third-party visualizers.
 
 
-## Wiki reader
+## knowledge portal
 
-`kb check --wiki` generates `interfaces/html/wiki.html`, a human-readable Wiki surface for pages under `wiki/`. It is intended for topic-oriented reading rather than inspecting low-level task, JSON, and interface artifacts.
+`kb view` generates `interfaces/html/browse.html`, a human-readable Wiki surface for pages under `wiki/`. It is intended for topic-oriented reading rather than inspecting low-level task, JSON, and interface artifacts.

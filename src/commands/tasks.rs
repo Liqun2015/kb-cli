@@ -666,7 +666,7 @@ fn scan_topic_story_narrative_tasks(kb_path: &Path) -> Result<Option<DeferredTas
         ],
         files,
         evidence,
-        source_command: "kb topic build <topic> + kb build-wiki + kb check --wiki".to_string(),
+        source_command: "kb topic build <topic> + kb build-wiki + kb view".to_string(),
         priority: "high".to_string(),
     }))
 }

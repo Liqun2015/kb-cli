@@ -559,7 +559,7 @@ kb --wiki /path/to/llm-wiki init --topic <topic>
 kb --source /path/to/literature-folder --wiki /path/to/llm-wiki ingest --copy --recursive
 kb --wiki /path/to/llm-wiki build <topic>
 kb --wiki /path/to/llm-wiki check
-kb --wiki /path/to/llm-wiki check --wiki
+kb --wiki /path/to/llm-wiki view
 ```
 
 ## Root Marker

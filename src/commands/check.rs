@@ -38,10 +38,7 @@ pub struct CheckArgs {
     )]
     pub relations: bool,
 
-    #[arg(
-        long,
-        help = "Generate a human-readable Wiki reader page with topic navigation, WikiLinks, and images"
-    )]
+    #[arg(long, hide = true, help = "Legacy option moved to `kb view`.")]
     pub wiki: bool,
 
     #[arg(
@@ -100,7 +97,7 @@ pub fn execute(custom_kb: Option<&Path>, args: &CheckArgs) -> Result<()> {
     }
 
     if args.wiki {
-        return execute_wiki_check(&kb_path, args);
+        return Err(anyhow!("`kb check --wiki` has moved to `kb view`. `kb check` is now reserved for system status and task-scene inspection."));
     }
 
     if args.topic.is_some() {
@@ -129,10 +126,6 @@ pub fn execute(custom_kb: Option<&Path>, args: &CheckArgs) -> Result<()> {
             "  relation page  : {}",
             output_root.join("relationship_viewer.html").display()
         );
-        println!(
-            "  wiki reader    : {}",
-            output_root.join("wiki.html").display()
-        );
         println!("  open browser   : {}", args.should_open());
         println!("  no files written");
         return Ok(());
@@ -152,17 +145,12 @@ pub fn execute(custom_kb: Option<&Path>, args: &CheckArgs) -> Result<()> {
         &relationship_html_path,
         render_relationship_viewer(&kb_path, &relationship_data)?,
     )?;
-    let wiki_html_path = output_root.join("wiki.html");
-    fs::write(&wiki_html_path, render_wiki_reader(&kb_path, &output_root)?)?;
-
     println!("Static HTML check dashboard generated:");
     println!("  {}", output_path.display());
     println!("Relationship graph viewer generated:");
     println!("  {}", relationship_html_path.display());
     println!("Relationship graph data generated:");
     println!("  {}", relationship_data_path.display());
-    println!("Wiki reader generated:");
-    println!("  {}", wiki_html_path.display());
     println!();
     if args.should_open() {
         open_in_default_browser(&output_path)?;
@@ -188,50 +176,6 @@ struct WikiPageSource {
     folder: String,
     content: String,
     summary: String,
-}
-
-fn execute_wiki_check(kb_path: &Path, args: &CheckArgs) -> Result<()> {
-    if args.topic.is_some() {
-        eprintln!("Warning: --topic is only used with --relations; ignoring it for --wiki.");
-    }
-    if args.data_only {
-        eprintln!("Warning: --data-only is only used with --relations; ignoring it for --wiki.");
-    }
-
-    let output_dir = args
-        .output_dir
-        .clone()
-        .unwrap_or_else(|| PathBuf::from("interfaces/html"));
-    let output_root = resolve_under_kb(kb_path, &output_dir);
-    let output_path = output_root.join("wiki.html");
-    let pages = collect_wiki_page_sources(kb_path)?;
-
-    if args.is_dry_run() {
-        println!("kb check --wiki preview:");
-        println!("  knowledge base : {}", kb_path.display());
-        println!("  output         : {}", output_path.display());
-        println!("  wiki pages     : {}", pages.len());
-        println!("  open browser   : {}", args.should_open());
-        println!("  no files written");
-        return Ok(());
-    }
-
-    fs::create_dir_all(&output_root)?;
-    fs::write(
-        &output_path,
-        render_wiki_reader_from_pages(kb_path, &output_root, &pages)?,
-    )?;
-
-    println!("Wiki reader generated:");
-    println!("  {}", output_path.display());
-    if args.should_open() {
-        open_in_default_browser(&output_path)?;
-        println!("Opened in the system default browser.");
-    } else {
-        println!("HTML generated without opening a browser because --no-open was set.");
-        println!("Open this file manually in a browser when needed.");
-    }
-    Ok(())
 }
 
 #[derive(Debug, Serialize)]
@@ -1648,7 +1592,7 @@ fn render_check_dashboard(kb_path: &Path, sections: &[CheckSection]) -> String {
     );
     html.push_str("<main class=\"main\">\n<header><h1>");
     html.push_str(&kb_name);
-    html.push_str("</h1><p class=\"subtitle\">LLM Wiki of your knowledge base for the purpose of swift and high quality research</p><div class=\"header-actions\"><a class=\"secondary-action\" href=\"wiki.html\">阅读 Wiki</a><a class=\"secondary-action\" href=\"relationship_viewer.html\">查看关系图</a></div><div class=\"artifact-notice\"><strong>Interface artifact:</strong> this HTML file is generated under <code>interfaces/</code> for human review and agent communication only. Do not treat it as the knowledge source; write accepted decisions back to Markdown/JSON/TOML outside <code>interfaces/</code>.</div></header>\n");
+    html.push_str("</h1><p class=\"subtitle\">LLM Wiki of your knowledge base for the purpose of swift and high quality research</p><div class=\"header-actions\"><a class=\"secondary-action\" href=\"browse.html\">用户视图</a><a class=\"secondary-action\" href=\"relationship_viewer.html\">查看关系图</a></div><div class=\"artifact-notice\"><strong>Interface artifact:</strong> this HTML file is generated under <code>interfaces/</code> for human review and agent communication only. Do not treat it as the knowledge source; write accepted decisions back to Markdown/JSON/TOML outside <code>interfaces/</code>.</div></header>\n");
     html.push_str("<nav class=\"nav-tabs\">\n");
     html.push_str(&nav_buttons);
     html.push_str("</nav>\n");
@@ -1864,9 +1808,13 @@ commandInput.addEventListener('keydown', e => {
 });
 "#;
 
-fn render_wiki_reader(kb_path: &Path, output_root: &Path) -> Result<String> {
+pub fn render_user_knowledge_view(kb_path: &Path, output_root: &Path) -> Result<String> {
     let pages = collect_wiki_page_sources(kb_path)?;
     render_wiki_reader_from_pages(kb_path, output_root, &pages)
+}
+
+pub fn count_user_knowledge_pages(kb_path: &Path) -> Result<usize> {
+    Ok(collect_wiki_page_sources(kb_path)?.len())
 }
 
 fn collect_wiki_page_sources(kb_path: &Path) -> Result<Vec<WikiPageSource>> {
@@ -1991,17 +1939,17 @@ fn render_wiki_reader_from_pages(
 
     let mut html = String::new();
     html.push_str("<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
-    html.push_str(&format!("<title>{} Wiki Reader</title>", kb_name));
+    html.push_str(&format!("<title>{} Knowledge Portal</title>", kb_name));
     html.push_str("<style>");
     html.push_str(WIKI_READER_CSS);
     html.push_str("</style></head><body>");
     html.push_str("<div class=\"wiki-shell\">");
     html.push_str("<aside class=\"wiki-reader-sidebar\"><div class=\"wiki-brand\"><strong>");
     html.push_str(&kb_name);
-    html.push_str("</strong><span>Wiki Reader</span></div><input id=\"wikiSearch\" class=\"wiki-search\" placeholder=\"搜索页面、标题、路径…\"><nav class=\"wiki-nav\">");
+    html.push_str("</strong><span>Knowledge Portal</span></div><input id=\"wikiSearch\" class=\"wiki-search\" placeholder=\"搜索页面、标题、路径…\"><nav class=\"wiki-nav\">");
     html.push_str(&sidebar);
-    html.push_str("</nav><div class=\"wiki-side-note\">This page renders <code>wiki/</code> as a human-readable knowledge layer. It is a generated interface, not the source of truth.</div></aside>");
-    html.push_str("<main class=\"wiki-reader-main\"><header class=\"wiki-reader-header\"><div><p class=\"eyebrow\">LLM Wiki knowledge reader</p><h1>");
+    html.push_str("</nav><div class=\"wiki-side-note\">This page renders <code>wiki/</code> as a reader-facing knowledge portal. It hides low-level task status, JSON, and agent handoff details.</div></aside>");
+    html.push_str("<main class=\"wiki-reader-main\"><header class=\"wiki-reader-header\"><div><p class=\"eyebrow\">LLM Wiki knowledge portal</p><h1>");
     html.push_str(&kb_name);
     html.push_str("</h1><p>围绕主题阅读知识页、WikiLinks、图片与文献页面；底层任务、JSON 和审查面板仍在 <a href=\"index.html\">kb check dashboard</a> 中。</p></div><div class=\"wiki-meta\"><span>");
     html.push_str(&format!("{} pages", pages.len()));

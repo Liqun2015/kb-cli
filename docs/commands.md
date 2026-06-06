@@ -22,6 +22,8 @@ The guiding rule is simple:
 | Health / reporting | `health` | No LLM | Summarize relationship-network completeness, review backlog, and pipeline health. |
 | Proof audit | `audit-wiki` | Explicit LLM handoff | Check whether the folder has become a reviewable LLM Wiki and write an LLM audit prompt. |
 | System check | `check` | No LLM | Generate local read-only HTML check dashboards from Markdown/JSON outputs. |
+| User knowledge portal | `view` | No LLM | Generate the reader-facing LLM Wiki portal from `wiki/` pages. |
+| Review writing | `review` | Reserved | Reserved entry for the future literature-review writing workflow. |
 | Interactive shell | `shell` | No hidden LLM | Deterministic interactive command shell; not a chat interface. |
 | Model configuration | `list-models`, `show-model`, `add-model`, `switch-model`, `delete-model`, `validate-model` | Configuration only | Manage model configuration without turning deterministic commands into implicit LLM calls. |
 
@@ -299,6 +301,21 @@ kb --wiki <A> batch paper-profile --topic <topic> --limit 5
 - **Allows LLM:** no hidden call. The regular dashboard includes a safe **About launching LLM** launch panel with copyable external-agent commands/prompts, but the viewer itself never starts an LLM, executes shell commands, or modifies files.
 - **Deferred work:** relationship edges marked candidate, ambiguous, missing, or `needs_llm_review` are review inputs for Manager/Worker LLM workflows. The viewer itself is display-only and must not execute local commands or interpret natural language.
 - **Boundary:** do not add a separate `kb check-relations` command; topic relationship viewing belongs under `kb check --relations`.
+
+
+### `kb view`
+
+- **Ability:** generate the user-facing LLM Wiki knowledge portal.
+- **Output:** `interfaces/html/browse.html`.
+- **Primary input:** reviewed or draft Markdown pages under `wiki/`, including WikiLinks and image references.
+- **Allows LLM:** no hidden call. It only renders existing knowledge pages.
+- **Boundary:** do not show low-level task status, JSON, agent handoff details, or workflow internals here. Those belong to `kb check`.
+
+### `kb review`
+
+- **Ability:** reserved command for the future literature-review writing workflow.
+- **Current behavior:** prints a placeholder and writes no files.
+- **Boundary:** do not silently synthesize a review article until the review workflow has an explicit schema, inputs, outputs, and human-review gates.
 
 ### `kb shell`
 

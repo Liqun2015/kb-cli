@@ -12,17 +12,21 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 - index source materials and generated evidence;
 - create paper/topic scaffolds;
 - generate Manager/Worker/Human Review guides and checklists;
-- generate `kb check` and `kb check --wiki` as human-facing review and reading entrances.
+- generate `kb check` for system/task inspection and `kb view` for the reader-facing knowledge portal.
 
 For fewer than 200 papers, `kb-cli` prepares a Karpathy-style LLM Wiki workflow. LLM Workers may process paper stubs and topic scaffolds directly in bounded batches. When the corpus reaches 200 papers or more, the workspace should be routed to a RAG-assisted workflow before topic narrative work.
 
 ## Current Version
 
-Current version: `v0.7.43`
+Current version: `v0.7.44`
+
+### v0.7.44
+
+`v0.7.44` restores `kb view` as the user-facing LLM Wiki knowledge portal while keeping `kb check` as the system inspection console. Use `kb view` to generate `interfaces/html/browse.html`; use `kb check` and `kb check --relations` for workflow status, task scenes, and relationship checks. `kb review` is registered as a safe placeholder for the future literature-review writing workflow.
 
 ### v0.7.43
 
-`v0.7.43` makes `kb check` the only system inspection command and removes the old inspection command from the active CLI. Use `kb check`, `kb check --relations`, and `kb check --wiki` for dashboard, relationship-graph, and Wiki-reader inspection outputs. The shell whitelist, help text, generated handoff guidance, and documentation now point to `check`.
+`v0.7.43` makes `kb check` the only system inspection command and removes the old inspection command from the active CLI. Use `kb check` and `kb check --relations` for dashboard and relationship-graph inspection outputs.
 
 ### v0.7.42
 

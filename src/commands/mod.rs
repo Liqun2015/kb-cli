@@ -26,9 +26,11 @@ pub mod refs;
 pub mod refs_graph;
 pub mod refs_index;
 pub mod repl;
+pub mod review;
 pub mod sync_wiki;
 pub mod task;
 pub mod tasks;
 pub mod topic;
+pub mod view;
 
 pub mod workflow;

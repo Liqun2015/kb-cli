@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.7.44
+
+`v0.7.44` separates the reader-facing knowledge portal from the system check console.
+
+### Added
+
+- Added `kb view` as the user-facing LLM Wiki knowledge portal command. It generates `interfaces/html/browse.html` from `wiki/` pages and hides low-level task status, JSON, and agent handoff details.
+- Added `kb review` as a safe placeholder for the future literature-review writing workflow.
+
+### Changed
+
+- `kb check` is now reserved for system status, relationship checks, task-scene inspection, and Manager/Human Review dashboards.
+- `kb check --wiki` is no longer a public workflow; the reader-facing path is `kb view`.
+- Updated shell help, workflow guidance, task source commands, and documentation from `kb check --wiki` / `wiki.html` to `kb view` / `browse.html`.
+
 ## v0.7.43
 
 `v0.7.43` makes `kb check` the only system inspection command.
@@ -9,7 +24,7 @@
 - Renamed the active CLI subcommand from `view` to `check`; no `view` compatibility alias is kept.
 - Moved the implementation module from `src/commands/view.rs` to `src/commands/check.rs`.
 - Updated shell command whitelist/help, generated task/handoff guidance, docs, and README examples to `kb check`.
-- Preserved output artifact paths such as `interfaces/html/index.html`, `wiki.html`, `relationship_viewer.html`, and `relationship_data.json`.
+- Preserved system check artifact paths such as `interfaces/html/index.html`, `relationship_viewer.html`, and `relationship_data.json`; the reader-facing page now belongs to `kb view` as `browse.html`.
 
 ## v0.7.42
 

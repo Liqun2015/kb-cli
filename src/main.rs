@@ -107,6 +107,16 @@ enum Commands {
         about = "Generate static local HTML check dashboards for LLM Wiki system status"
     )]
     Check(commands::check::CheckArgs),
+    #[command(
+        name = "view",
+        about = "Generate a reader-facing LLM Wiki knowledge portal"
+    )]
+    View(commands::view::ViewArgs),
+    #[command(
+        name = "review",
+        about = "Reserved entry for the future literature-review writing workflow"
+    )]
+    Review(commands::review::ReviewArgs),
     #[command(about = "Sync wiki page source front matter back into processing/manifest.json")]
     SyncWiki(commands::sync_wiki::SyncWikiArgs),
     #[command(about = "Run static wiki health checks for links, orphans, and source front matter")]
@@ -177,6 +187,8 @@ fn main() -> anyhow::Result<()> {
         Some(Commands::AuditWiki(args)) => commands::audit_wiki::execute(cli.wiki.as_deref(), args),
         Some(Commands::Topic(args)) => commands::topic::execute(cli.wiki.as_deref(), args),
         Some(Commands::Check(args)) => commands::check::execute(cli.wiki.as_deref(), args),
+        Some(Commands::View(args)) => commands::view::execute(cli.wiki.as_deref(), args),
+        Some(Commands::Review(args)) => commands::review::execute(cli.wiki.as_deref(), args),
         Some(Commands::SyncWiki(args)) => commands::sync_wiki::execute(cli.wiki.as_deref(), args),
         Some(Commands::LintStatic(args)) => {
             commands::lint_static::execute(cli.wiki.as_deref(), args)
@@ -252,7 +264,11 @@ fn main() -> anyhow::Result<()> {
             println!(
                 "  topic handoff <topic> [--agent AGENT|--all-agents] [--json] [--dry-run] [--force]  Generate topic-local generic/agent-adapter handoff files"
             );
-            println!("  check [--wiki|--relations] [--topic TOPIC] [--data-only] [--no-open]  Generate system check dashboard, Wiki reader, or relationship HTML viewers");
+            println!("  check [--relations] [--topic TOPIC] [--data-only] [--no-open]  Generate system check dashboard or relationship HTML viewers");
+            println!("  view [--no-open] [--dry-run]  Generate user-facing knowledge portal at interfaces/html/browse.html");
+            println!(
+                "  review [--dry-run]  Reserved for future literature-review writing workflow"
+            );
             println!(
                 "  shell                         Enter deterministic interactive command shell"
             );

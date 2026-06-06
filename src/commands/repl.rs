@@ -150,6 +150,8 @@ fn is_known_batch_command(command: &str) -> bool {
             | "audit-wiki"
             | "topic"
             | "check"
+            | "view"
+            | "review"
             | "sync-wiki"
             | "lint-static"
             | "status"
@@ -194,6 +196,9 @@ fn print_help() {
     println!("  health --dry-run");
     println!("  audit-wiki --dry-run");
     println!("  check --dry-run");
+    println!("  check --relations --dry-run");
+    println!("  view --dry-run");
+    println!("  review --dry-run");
     println!("  topic init <topic>");
     println!("  topic list");
     println!("  topic status <topic>");
