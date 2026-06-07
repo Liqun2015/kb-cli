@@ -109,7 +109,7 @@ enum Commands {
     Check(commands::check::CheckArgs),
     #[command(
         name = "view",
-        about = "Generate a reader-facing LLM Wiki knowledge portal"
+        about = "Generate a reader-facing research issue browser"
     )]
     View(commands::view::ViewArgs),
     #[command(
@@ -265,7 +265,7 @@ fn main() -> anyhow::Result<()> {
                 "  topic handoff <topic> [--agent AGENT|--all-agents] [--json] [--dry-run] [--force]  Generate topic-local generic/agent-adapter handoff files"
             );
             println!("  check [--relations] [--topic TOPIC] [--data-only] [--no-open]  Generate system check dashboard or relationship HTML viewers");
-            println!("  view [--no-open] [--dry-run]  Generate user-facing knowledge portal at interfaces/html/browse.html");
+            println!("  view [--no-open] [--dry-run]  Generate research issue browser at interfaces/html/browse.html");
             println!(
                 "  review [--dry-run]  Reserved for future literature-review writing workflow"
             );

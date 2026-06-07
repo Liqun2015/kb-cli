@@ -12,17 +12,25 @@ It is designed for researchers, developers, and human/AI collaborative workflows
 - index source materials and generated evidence;
 - create paper/topic scaffolds;
 - generate Manager/Worker/Human Review guides and checklists;
-- generate `kb check` for system/task inspection and `kb view` for the reader-facing knowledge portal.
+- generate `kb check` for system/task inspection and `kb view` for the reader-facing research issue browser.
 
 For fewer than 200 papers, `kb-cli` prepares a Karpathy-style LLM Wiki workflow. LLM Workers may process paper stubs and topic scaffolds directly in bounded batches. When the corpus reaches 200 papers or more, the workspace should be routed to a RAG-assisted workflow before topic narrative work.
 
 ## Current Version
 
-Current version: `v0.7.44`
+Current version: `v0.7.47` refines `kb view` into a reader-facing research issue browser. The generated `interfaces/html/browse.html` now focuses on scientific questions, topic branches, representative papers, and paper-to-paper inheritance/evolution relations. Technical workspace structure, JSON/task status, agent handoff, and LLM Wiki usage mechanics remain in `kb check`.
+
+### v0.7.46
+
+`v0.7.46` refocused `kb view` on literature-first browsing. The generated `interfaces/html/browse.html` now opens with paper-centered content: literature totals, topic-linked papers, representative/importance hints, paper cards, source-file links when available, and paper-linked notes. Detailed LLM Wiki structure, command-boundary explanations, workflow artifacts, JSON/task/agent-handoff guidance, and usage instructions belong in `kb check`, which now includes a dedicated `Wiki Structure & Usage` section.
+
+### v0.7.45
+
+`v0.7.45` fixes a Clap argument conflict that could panic when running `kb --wiki <path> check`. The hidden legacy `check --wiki` flag was removed because it conflicted with the global `--wiki <PATH>` workspace option. The command boundary remains: `kb check` is for system/task inspection, and `kb view` is for the reader-facing research issue browser.
 
 ### v0.7.44
 
-`v0.7.44` restores `kb view` as the user-facing LLM Wiki knowledge portal while keeping `kb check` as the system inspection console. Use `kb view` to generate `interfaces/html/browse.html`; use `kb check` and `kb check --relations` for workflow status, task scenes, and relationship checks. `kb review` is registered as a safe placeholder for the future literature-review writing workflow.
+`v0.7.44` restores `kb view` as the reader-facing research issue browser while keeping `kb check` as the system inspection console. Use `kb view` to generate `interfaces/html/browse.html`; use `kb check` and `kb check --relations` for workflow status, task scenes, and relationship checks. `kb review` is registered as a safe placeholder for the future literature-review writing workflow.
 
 ### v0.7.43
 

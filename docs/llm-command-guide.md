@@ -333,7 +333,7 @@ Worker LLMs should not invent new relation types unless the Manager LLM explicit
 
 `kb check` is a static display command. It may render existing Markdown/JSON outputs into `interfaces/html/index.html`, but it must not call an LLM, execute shell commands from the browser, or modify source/wiki files. The **About launching LLM** panel only provides copyable external-agent commands/prompts; the `kb-check>` box is display navigation only.
 
-`kb view` is the user-facing knowledge portal. It renders `interfaces/html/browse.html` from `wiki/` and should not be used as a task/status dashboard. Use it when the user wants to read the knowledge base rather than inspect the worksite.
+`kb view` is the reader-facing research issue browser. It renders `interfaces/html/browse.html` from topic scope, topic literature, topic relation records, paper records, and paper-linked notes. Use it when the user wants to understand research issues and how the literature evolves, rather than inspect the worksite.
 
 `kb review` is only a reserved placeholder for the future review-writing workflow. Do not treat it as a working synthesis command yet.
 

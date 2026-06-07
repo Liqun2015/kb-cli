@@ -238,6 +238,12 @@ The dashboard also renders:
 The raw JSON / Mermaid / DOT artifacts remain available in collapsed `<details>` blocks for debugging and third-party visualizers.
 
 
-## knowledge portal
+## Literature browser boundary
 
-`kb view` generates `interfaces/html/browse.html`, a human-readable Wiki surface for pages under `wiki/`. It is intended for topic-oriented reading rather than inspecting low-level task, JSON, and interface artifacts.
+`kb view` generates `interfaces/html/browse.html`, a research-issue-centered browsing page. It is intended for entering the knowledge base through research issues, topic branches, representative papers, and paper-to-paper inheritance/evolution relations rather than inspecting low-level task, JSON, and interface artifacts.
+
+## Wiki structure and usage guidance
+
+`kb check` is the correct place for LLM Wiki structure, command-boundary explanations, workflow artifacts, JSON/task/agent-handoff guidance, and maintainer usage instructions. The regular check dashboard includes a `Wiki Structure & Usage` section for this purpose.
+
+`kb view` should stay focused on reader-facing scientific content: research issues, representative papers, and literature inheritance/evolution relations.

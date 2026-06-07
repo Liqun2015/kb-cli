@@ -22,7 +22,7 @@ The guiding rule is simple:
 | Health / reporting | `health` | No LLM | Summarize relationship-network completeness, review backlog, and pipeline health. |
 | Proof audit | `audit-wiki` | Explicit LLM handoff | Check whether the folder has become a reviewable LLM Wiki and write an LLM audit prompt. |
 | System check | `check` | No LLM | Generate local read-only HTML check dashboards from Markdown/JSON outputs. |
-| User knowledge portal | `view` | No LLM | Generate the reader-facing LLM Wiki portal from `wiki/` pages. |
+| User research issue browser | `view` | No LLM | Generate the research-issue-centered browser from papers, topic literature, and paper-linked notes. |
 | Review writing | `review` | Reserved | Reserved entry for the future literature-review writing workflow. |
 | Interactive shell | `shell` | No hidden LLM | Deterministic interactive command shell; not a chat interface. |
 | Model configuration | `list-models`, `show-model`, `add-model`, `switch-model`, `delete-model`, `validate-model` | Configuration only | Manage model configuration without turning deterministic commands into implicit LLM calls. |
@@ -305,10 +305,10 @@ kb --wiki <A> batch paper-profile --topic <topic> --limit 5
 
 ### `kb view`
 
-- **Ability:** generate the user-facing LLM Wiki knowledge portal.
+- **Ability:** generate the reader-facing research issue browser.
 - **Output:** `interfaces/html/browse.html`.
-- **Primary input:** reviewed or draft Markdown pages under `wiki/`, including WikiLinks and image references.
-- **Allows LLM:** no hidden call. It only renders existing knowledge pages.
+- **Primary input:** ``topics/<topic>/scope.md`, `topics/<topic>/literature.md`, `topics/<topic>/relations/`, topic importance reports, `processing/manifest.json`, `raw/papers/`, and paper-linked Markdown notes under `wiki/`.
+- **Allows LLM:** no hidden call. It only renders existing research-issue, paper, and topic relation records.
 - **Boundary:** do not show low-level task status, JSON, agent handoff details, or workflow internals here. Those belong to `kb check`.
 
 ### `kb review`

@@ -38,9 +38,6 @@ pub struct CheckArgs {
     )]
     pub relations: bool,
 
-    #[arg(long, hide = true, help = "Legacy option moved to `kb view`.")]
-    pub wiki: bool,
-
     #[arg(
         long,
         value_name = "TOPIC",
@@ -94,10 +91,6 @@ pub fn execute(custom_kb: Option<&Path>, args: &CheckArgs) -> Result<()> {
 
     if args.relations {
         return execute_relationship_check(&kb_path, args);
-    }
-
-    if args.wiki {
-        return Err(anyhow!("`kb check --wiki` has moved to `kb view`. `kb check` is now reserved for system status and task-scene inspection."));
     }
 
     if args.topic.is_some() {
@@ -176,6 +169,72 @@ struct WikiPageSource {
     folder: String,
     content: String,
     summary: String,
+}
+
+#[derive(Debug, Clone)]
+struct LiteratureCard {
+    id: String,
+    title: String,
+    path: String,
+    kind: String,
+    status: String,
+    wiki_pages: Vec<String>,
+    topics: Vec<String>,
+    roles: Vec<String>,
+    importance: Vec<String>,
+    summary: String,
+}
+
+impl LiteratureCard {
+    fn new(path: String) -> Self {
+        let title = clean_literature_title(&label_from_pathish(&path));
+        let id_seed = if path.trim().is_empty() {
+            title.clone()
+        } else {
+            path.clone()
+        };
+        Self {
+            id: format!("paper-{}", slugify(&id_seed)),
+            title,
+            path,
+            kind: "paper".to_string(),
+            status: "indexed".to_string(),
+            wiki_pages: Vec::new(),
+            topics: Vec::new(),
+            roles: Vec::new(),
+            importance: Vec::new(),
+            summary: "No paper note has been linked yet.".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+struct TopicIssue {
+    id: String,
+    slug: String,
+    title: String,
+    research_question: String,
+    papers: Vec<TopicIssuePaper>,
+    relations: Vec<EvolutionRelation>,
+}
+
+#[derive(Debug, Clone)]
+struct TopicIssuePaper {
+    title: String,
+    path: String,
+    role: String,
+    importance: String,
+}
+
+#[derive(Debug, Clone)]
+struct EvolutionRelation {
+    source: String,
+    relation_type: String,
+    relation_label: String,
+    target: String,
+    status: String,
+    evidence: String,
+    needs_human_review: bool,
 }
 
 #[derive(Debug, Serialize)]
@@ -1390,6 +1449,13 @@ fn build_sections(kb_path: &Path) -> Result<Vec<CheckSection>> {
     });
 
     sections.push(CheckSection {
+        id: "wiki-structure-usage".to_string(),
+        title: "Wiki Structure & Usage".to_string(),
+        subtitle: "Technical workspace structure and command boundary for maintainers".to_string(),
+        html: render_wiki_structure_usage(kb_path),
+    });
+
+    sections.push(CheckSection {
         id: "wiki".to_string(),
         title: "Wiki".to_string(),
         subtitle: "Wiki home or project README".to_string(),
@@ -1467,6 +1533,24 @@ fn build_sections(kb_path: &Path) -> Result<Vec<CheckSection>> {
     });
 
     Ok(sections)
+}
+
+fn render_wiki_structure_usage(kb_path: &Path) -> String {
+    let browse_path = kb_path.join("interfaces/html/browse.html");
+    let check_path = kb_path.join("interfaces/html/index.html");
+    let relation_path = kb_path.join("interfaces/html/relationship_viewer.html");
+    format!(
+        r#"<div class="suggestion-box"><strong>Command boundary:</strong><br><code>kb view</code> is the reader-facing research issue portal. It should emphasize scientific questions, representative papers, and literature inheritance/evolution relations.<br><code>kb check</code> is the place for workspace structure, generated artifacts, task state, JSON, agent handoff, and technical usage instructions.</div>
+        <table><thead><tr><th>Purpose</th><th>Command</th><th>Generated page</th></tr></thead><tbody>
+        <tr><td>Reader-facing research issue browsing</td><td><code>kb view</code></td><td><code>{}</code></td></tr>
+        <tr><td>System and workflow inspection</td><td><code>kb check</code></td><td><code>{}</code></td></tr>
+        <tr><td>Relationship graph inspection</td><td><code>kb check --relations</code></td><td><code>{}</code></td></tr>
+        </tbody></table>
+        <div class="highlight"><strong>Workspace layers:</strong> <code>raw/</code> stores source literature; <code>processing/</code> stores deterministic indexes and extracted artifacts; <code>topics/</code> stores topic-local relationship workspaces; <code>wiki/</code> stores accepted reader-facing Markdown notes; <code>LLM/</code> stores Manager/Worker/Human Review task material; <code>interfaces/</code> stores generated browser pages only.</div>"#,
+        html_escape(&relative_path_string(kb_path, &browse_path)),
+        html_escape(&relative_path_string(kb_path, &check_path)),
+        html_escape(&relative_path_string(kb_path, &relation_path)),
+    )
 }
 
 fn render_tasks_dashboard(kb_path: &Path) -> Result<String> {
@@ -1817,6 +1901,27 @@ pub fn count_user_knowledge_pages(kb_path: &Path) -> Result<usize> {
     Ok(collect_wiki_page_sources(kb_path)?.len())
 }
 
+pub fn count_user_literature_cards(kb_path: &Path) -> Result<usize> {
+    let pages = collect_wiki_page_sources(kb_path)?;
+    Ok(collect_literature_cards(kb_path, &pages)?.len())
+}
+
+pub fn count_user_research_issues(kb_path: &Path) -> Result<usize> {
+    Ok(collect_topic_names(kb_path)?.len())
+}
+
+pub fn count_user_evolution_links(kb_path: &Path) -> Result<usize> {
+    let topics_dir = kb_path.join("topics");
+    if !topics_dir.exists() {
+        return Ok(0);
+    }
+    let mut count = 0usize;
+    for topic_root in sorted_topic_dirs(&topics_dir)? {
+        count += collect_topic_evolution_relations(&topic_root)?.len();
+    }
+    Ok(count)
+}
+
 fn collect_wiki_page_sources(kb_path: &Path) -> Result<Vec<WikiPageSource>> {
     let wiki_root = kb_path.join("wiki");
     if !wiki_root.exists() {
@@ -1880,90 +1985,947 @@ fn render_wiki_reader_from_pages(
         .file_name()
         .and_then(|name| name.to_str())
         .filter(|name| !name.trim().is_empty())
-        .unwrap_or("LLM Wiki");
+        .unwrap_or("Knowledge Base");
     let kb_name = html_escape(kb_name_raw);
-    let link_index = build_wiki_link_index(pages);
+    let link_index = build_reader_note_link_index(pages);
+    let literature = collect_literature_cards(kb_path, pages)?;
+    let topic_issues = collect_topic_issues(kb_path, &literature)?;
+    let issue_count = topic_issues.len();
+    let evolution_count: usize = topic_issues.iter().map(|issue| issue.relations.len()).sum();
+    let linked_paper_count = literature
+        .iter()
+        .filter(|paper| !paper.wiki_pages.is_empty())
+        .count();
+    let topic_linked_count = literature
+        .iter()
+        .filter(|paper| !paper.topics.is_empty())
+        .count();
 
-    let mut folder_map: BTreeMap<String, Vec<usize>> = BTreeMap::new();
-    for (idx, page) in pages.iter().enumerate() {
-        folder_map.entry(page.folder.clone()).or_default().push(idx);
-    }
-
-    let mut sidebar = String::new();
-    if pages.is_empty() {
-        sidebar.push_str("<p class=\"wiki-empty-small\">No wiki pages yet.</p>");
-    } else {
-        for (folder, indexes) in &folder_map {
-            sidebar.push_str(&format!(
-                "<details class=\"wiki-folder\" open><summary>{}</summary>",
-                html_escape(folder)
-            ));
-            for idx in indexes {
-                let page = &pages[*idx];
-                sidebar.push_str(&format!(
-                    "<a class=\"wiki-nav-link\" href=\"#{}\" data-page=\"{}\"><span>{}</span><small>{}</small></a>",
-                    html_escape(&page.id),
-                    html_escape(&page.id),
-                    html_escape(&page.title),
-                    html_escape(&page.rel_path)
-                ));
-            }
-            sidebar.push_str("</details>");
-        }
-    }
-
-    let mut cards = String::new();
-    if pages.is_empty() {
-        cards.push_str("<article class=\"wiki-empty\"><h2>还没有可阅读的 Wiki 页面</h2><p>请先运行 <code>kb build-wiki</code> 或由 Worker LLM 在 <code>wiki/</code> 下生成 Markdown 页面。这里将显示围绕主题组织的知识页、超链接和图片。</p></article>");
-    } else {
-        for page in pages {
-            let body = markdown_to_wiki_html(
-                &page.content,
-                kb_path,
-                output_root,
-                &page.abs_path,
-                &link_index,
-            );
-            cards.push_str(&format!(
-                "<article class=\"wiki-page\" id=\"{}\" data-title=\"{}\" data-path=\"{}\"><div class=\"wiki-page-head\"><p class=\"wiki-page-path\">{}</p><h2>{}</h2><p class=\"wiki-page-summary\">{}</p></div><div class=\"wiki-page-body\">{}</div></article>",
-                html_escape(&page.id),
-                html_escape(&page.title.to_lowercase()),
-                html_escape(&page.rel_path.to_lowercase()),
-                html_escape(&page.rel_path),
-                html_escape(&page.title),
-                html_escape(&page.summary),
-                body
-            ));
-        }
-    }
+    let sidebar = render_research_issue_sidebar(&topic_issues, &literature);
+    let issue_sections = render_research_issue_sections(&topic_issues);
+    let cards = render_literature_cards(kb_path, output_root, &literature, pages, &link_index);
+    let wiki_note_section = render_related_wiki_notes(kb_path, output_root, pages, &link_index);
 
     let mut html = String::new();
     html.push_str("<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
-    html.push_str(&format!("<title>{} Knowledge Portal</title>", kb_name));
+    html.push_str(&format!(
+        "<title>{} Research Issue Browser</title>",
+        kb_name
+    ));
     html.push_str("<style>");
     html.push_str(WIKI_READER_CSS);
     html.push_str("</style></head><body>");
     html.push_str("<div class=\"wiki-shell\">");
     html.push_str("<aside class=\"wiki-reader-sidebar\"><div class=\"wiki-brand\"><strong>");
     html.push_str(&kb_name);
-    html.push_str("</strong><span>Knowledge Portal</span></div><input id=\"wikiSearch\" class=\"wiki-search\" placeholder=\"搜索页面、标题、路径…\"><nav class=\"wiki-nav\">");
+    html.push_str("</strong><span>Research Issue Browser</span></div><input id=\"wikiSearch\" class=\"wiki-search\" placeholder=\"搜索议题、文献、关系…\"><nav class=\"wiki-nav\">");
     html.push_str(&sidebar);
-    html.push_str("</nav><div class=\"wiki-side-note\">This page renders <code>wiki/</code> as a reader-facing knowledge portal. It hides low-level task status, JSON, and agent handoff details.</div></aside>");
-    html.push_str("<main class=\"wiki-reader-main\"><header class=\"wiki-reader-header\"><div><p class=\"eyebrow\">LLM Wiki knowledge portal</p><h1>");
+    html.push_str("</nav></aside>");
+    html.push_str("<main class=\"wiki-reader-main\"><header class=\"wiki-reader-header\"><div><p class=\"eyebrow\">Research issue browser</p><h1>");
     html.push_str(&kb_name);
-    html.push_str("</h1><p>围绕主题阅读知识页、WikiLinks、图片与文献页面；底层任务、JSON 和审查面板仍在 <a href=\"index.html\">kb check dashboard</a> 中。</p></div><div class=\"wiki-meta\"><span>");
-    html.push_str(&format!("{} pages", pages.len()));
+    html.push_str("</h1><p>从科研议题进入知识库，重点查看议题中的代表性文献，以及这些文献之间的方法继承、问题推动、扩展改进、支持或竞争关系。</p></div><div class=\"wiki-meta\"><span>");
+    html.push_str(&format!("{} issues", issue_count));
+    html.push_str("</span><span>");
+    html.push_str(&format!("{} evolution links", evolution_count));
+    html.push_str("</span><span>");
+    html.push_str(&format!("{} papers", literature.len()));
+    html.push_str("</span><span>");
+    html.push_str(&format!("{} topic-linked", topic_linked_count));
+    html.push_str("</span><span>");
+    html.push_str(&format!("{} paper notes", linked_paper_count));
     html.push_str("</span><span>");
     html.push_str(&generated_at);
     html.push_str("</span><span>");
     html.push_str(&kb_display);
     html.push_str("</span></div></header><section class=\"wiki-page-list\">");
+    html.push_str(&render_research_issue_overview(
+        &literature,
+        pages.len(),
+        &topic_issues,
+    ));
+    html.push_str(&issue_sections);
+    html.push_str("<section class=\"literature-section\"><h2>文献卡片</h2><p class=\"section-lead\">这些卡片是议题关系的文献入口。优先阅读已出现在议题关系或代表性线索中的论文。</p>");
     html.push_str(&cards);
+    html.push_str("</section>");
+    html.push_str(&wiki_note_section);
     html.push_str("</section></main></div>");
     html.push_str("<script>");
     html.push_str(WIKI_READER_JS);
     html.push_str("</script></body></html>");
     Ok(html)
+}
+
+fn collect_topic_issues(kb_path: &Path, literature: &[LiteratureCard]) -> Result<Vec<TopicIssue>> {
+    let topics_dir = kb_path.join("topics");
+    if !topics_dir.exists() {
+        return Ok(Vec::new());
+    }
+    let mut issues = Vec::new();
+    for topic_root in sorted_topic_dirs(&topics_dir)? {
+        let slug = topic_root
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or("unknown-topic")
+            .to_string();
+        let title = read_topic_title(&topic_root).unwrap_or_else(|| slug.clone());
+        let research_question = read_topic_research_question(&topic_root).unwrap_or_else(|| {
+            "该议题尚未填写明确研究问题；可先从下方文献关系与代表性论文进入。".to_string()
+        });
+        let mut papers = literature
+            .iter()
+            .filter(|paper| {
+                paper
+                    .topics
+                    .iter()
+                    .any(|topic| topic == &title || topic == &slug)
+            })
+            .map(|paper| TopicIssuePaper {
+                title: paper.title.clone(),
+                path: paper.path.clone(),
+                role: extract_topic_value(&paper.roles, &title).unwrap_or_else(|| {
+                    extract_topic_value(&paper.roles, &slug)
+                        .unwrap_or_else(|| "topic member".to_string())
+                }),
+                importance: extract_topic_value(&paper.importance, &title).unwrap_or_else(|| {
+                    extract_topic_value(&paper.importance, &slug).unwrap_or_default()
+                }),
+            })
+            .collect::<Vec<_>>();
+        if papers.is_empty() {
+            papers = read_topic_literature_rows(&topic_root)?;
+        }
+        dedupe_topic_issue_papers(&mut papers);
+        let relations = collect_topic_evolution_relations(&topic_root)?;
+        issues.push(TopicIssue {
+            id: format!("issue-{}", slugify(&slug)),
+            slug,
+            title,
+            research_question,
+            papers,
+            relations,
+        });
+    }
+    issues.sort_by(|a, b| {
+        b.relations
+            .len()
+            .cmp(&a.relations.len())
+            .then_with(|| b.papers.len().cmp(&a.papers.len()))
+            .then_with(|| {
+                a.title
+                    .to_ascii_lowercase()
+                    .cmp(&b.title.to_ascii_lowercase())
+            })
+    });
+    Ok(issues)
+}
+
+fn read_topic_research_question(topic_root: &Path) -> Option<String> {
+    let content = fs::read_to_string(topic_root.join("scope.md")).ok()?;
+    extract_markdown_section(&content, "Research question")
+        .or_else(|| extract_markdown_section(&content, "科研问题"))
+        .map(|section| {
+            section
+                .lines()
+                .map(|line| line.trim().trim_start_matches('-').trim())
+                .filter(|line| !line.is_empty())
+                .filter(|line| !line.to_ascii_lowercase().contains("todo"))
+                .collect::<Vec<_>>()
+                .join(" ")
+        })
+        .filter(|value| !value.trim().is_empty())
+}
+
+fn extract_markdown_section(content: &str, heading: &str) -> Option<String> {
+    let mut capture = false;
+    let mut lines = Vec::new();
+    let heading_lower = heading.to_ascii_lowercase();
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if trimmed.starts_with("## ") {
+            let current = trimmed.trim_start_matches('#').trim().to_ascii_lowercase();
+            if capture {
+                break;
+            }
+            capture = current == heading_lower;
+            continue;
+        }
+        if capture {
+            lines.push(line.to_string());
+        }
+    }
+    let value = lines.join("\n").trim().to_string();
+    if value.is_empty() {
+        None
+    } else {
+        Some(value)
+    }
+}
+
+fn read_topic_literature_rows(topic_root: &Path) -> Result<Vec<TopicIssuePaper>> {
+    let path = topic_root.join("literature.md");
+    if !path.exists() {
+        return Ok(Vec::new());
+    }
+    let content = fs::read_to_string(path).unwrap_or_default();
+    let mut papers = Vec::new();
+    for line in content.lines() {
+        let cells = markdown_table_cells(line);
+        if cells.len() < 2 || is_markdown_header_row(&cells) || is_table_separator_row(&cells) {
+            continue;
+        }
+        let paper = cells[0].trim();
+        if !is_reader_real_value(paper) {
+            continue;
+        }
+        papers.push(TopicIssuePaper {
+            title: clean_literature_title(&label_from_pathish(paper)),
+            path: paper.to_string(),
+            role: cells
+                .get(1)
+                .cloned()
+                .unwrap_or_else(|| "topic member".to_string()),
+            importance: String::new(),
+        });
+    }
+    Ok(papers)
+}
+
+fn collect_topic_evolution_relations(topic_root: &Path) -> Result<Vec<EvolutionRelation>> {
+    let relation_dir = topic_root.join("relations");
+    if !relation_dir.exists() {
+        return Ok(Vec::new());
+    }
+    let mut relations = Vec::new();
+    let mut files = collect_markdown_files(&relation_dir);
+    files.sort();
+    for file in files {
+        let content = fs::read_to_string(file).unwrap_or_default();
+        for line in content.lines() {
+            let cells = markdown_table_cells(line);
+            if cells.len() < 3 || is_markdown_header_row(&cells) || is_table_separator_row(&cells) {
+                continue;
+            }
+            let source = cells[0].trim();
+            let relation_type = cells.get(1).map(|s| s.trim()).unwrap_or("related_to");
+            let target = cells.get(2).map(|s| s.trim()).unwrap_or_default();
+            if !is_reader_real_value(source)
+                || !is_reader_real_value(target)
+                || !is_reader_real_value(relation_type)
+            {
+                continue;
+            }
+            let status = cells
+                .get(3)
+                .map(|value| value.trim().to_string())
+                .filter(|value| !value.is_empty())
+                .unwrap_or_else(|| "candidate".to_string());
+            let evidence = cells
+                .get(4)
+                .map(|value| value.trim().to_string())
+                .filter(|value| is_reader_real_value(value))
+                .unwrap_or_else(|| "证据待补充".to_string());
+            let needs_human_review = cells
+                .get(5)
+                .map(|value| parse_reader_bool(value))
+                .unwrap_or_else(|| !matches!(status.as_str(), "confirmed" | "accepted"));
+            relations.push(EvolutionRelation {
+                source: clean_literature_title(&label_from_pathish(source)),
+                relation_type: relation_type.to_string(),
+                relation_label: reader_relation_label(relation_type).to_string(),
+                target: clean_literature_title(&label_from_pathish(target)),
+                status,
+                evidence,
+                needs_human_review,
+            });
+        }
+    }
+    dedupe_evolution_relations(&mut relations);
+    relations.sort_by(|a, b| {
+        relation_status_rank(&a.status)
+            .cmp(&relation_status_rank(&b.status))
+            .then_with(|| a.source.cmp(&b.source))
+            .then_with(|| a.target.cmp(&b.target))
+    });
+    Ok(relations)
+}
+
+fn extract_topic_value(values: &[String], topic: &str) -> Option<String> {
+    let topic_lower = topic.to_ascii_lowercase();
+    values.iter().find_map(|value| {
+        let mut parts = value.splitn(2, ':');
+        let left = parts.next().unwrap_or("").trim();
+        let right = parts.next().unwrap_or("").trim();
+        if left.to_ascii_lowercase() == topic_lower && !right.is_empty() {
+            Some(right.to_string())
+        } else {
+            None
+        }
+    })
+}
+
+fn is_reader_real_value(value: &str) -> bool {
+    let trimmed = value.trim().trim_matches('`');
+    if trimmed.is_empty() {
+        return false;
+    }
+    let lower = trimmed.to_ascii_lowercase();
+    !matches!(
+        lower.as_str(),
+        "todo"
+            | "tbd"
+            | "none"
+            | "_none_"
+            | "n/a"
+            | "na"
+            | "null"
+            | "paper"
+            | "source"
+            | "target"
+            | "relation_type"
+    )
+}
+
+fn parse_reader_bool(value: &str) -> bool {
+    matches!(
+        value.trim().to_ascii_lowercase().as_str(),
+        "true" | "yes" | "y" | "1" | "needs_human" | "needs_human_review"
+    )
+}
+
+fn relation_status_rank(status: &str) -> usize {
+    match status.trim().to_ascii_lowercase().as_str() {
+        "confirmed" | "accepted" => 0,
+        "candidate" => 1,
+        "ambiguous" => 2,
+        "needs_human" | "needs_human_review" => 3,
+        "rejected" => 4,
+        _ => 5,
+    }
+}
+
+fn reader_relation_label(relation_type: &str) -> &'static str {
+    match relation_type.trim().to_ascii_lowercase().as_str() {
+        "cites" => "引用/承接",
+        "same_topic" => "同一议题",
+        "uses_method" => "方法继承",
+        "improves" => "改进",
+        "supports" => "支持/验证",
+        "contradicts" => "竞争/反例",
+        "causal_or_motivates" => "问题推动",
+        "extends" => "扩展",
+        "background_for" => "理论背景",
+        "related_to" => "相关",
+        "unknown" => "关系待判定",
+        _ => "学术关联",
+    }
+}
+
+fn dedupe_topic_issue_papers(papers: &mut Vec<TopicIssuePaper>) {
+    let mut seen = BTreeSet::new();
+    papers.retain(|paper| {
+        let key = if paper.path.trim().is_empty() {
+            paper.title.to_ascii_lowercase()
+        } else {
+            paper.path.to_ascii_lowercase()
+        };
+        if key.is_empty() || seen.contains(&key) {
+            false
+        } else {
+            seen.insert(key);
+            true
+        }
+    });
+}
+
+fn dedupe_evolution_relations(relations: &mut Vec<EvolutionRelation>) {
+    let mut seen = BTreeSet::new();
+    relations.retain(|relation| {
+        let key = format!(
+            "{}|{}|{}",
+            relation.source.to_ascii_lowercase(),
+            relation.relation_type.to_ascii_lowercase(),
+            relation.target.to_ascii_lowercase()
+        );
+        if seen.contains(&key) {
+            false
+        } else {
+            seen.insert(key);
+            true
+        }
+    });
+}
+
+fn render_research_issue_sidebar(issues: &[TopicIssue], literature: &[LiteratureCard]) -> String {
+    let mut out = String::new();
+    out.push_str("<details class=\"wiki-folder\" open><summary>科研议题</summary>");
+    if issues.is_empty() {
+        out.push_str("<p class=\"wiki-empty-small\">No research issues found yet.</p>");
+    } else {
+        for issue in issues {
+            out.push_str(&format!(
+                "<a class=\"wiki-nav-link\" href=\"#{}\" data-page=\"{}\"><span>{}</span><small>{} papers · {} links</small></a>",
+                html_escape(&issue.id),
+                html_escape(&issue.id),
+                html_escape(&issue.title),
+                issue.papers.len(),
+                issue.relations.len()
+            ));
+        }
+    }
+    out.push_str("</details>");
+    out.push_str("<details class=\"wiki-folder\" open><summary>代表性文献</summary>");
+    if literature.is_empty() {
+        out.push_str("<p class=\"wiki-empty-small\">No papers found yet.</p>");
+    } else {
+        for paper in literature.iter().take(24) {
+            out.push_str(&format!(
+                "<a class=\"wiki-nav-link\" href=\"#{}\" data-page=\"{}\"><span>{}</span><small>{}</small></a>",
+                html_escape(&paper.id),
+                html_escape(&paper.id),
+                html_escape(&paper.title),
+                html_escape(&paper.path)
+            ));
+        }
+    }
+    out.push_str("</details>");
+    out
+}
+
+fn render_research_issue_overview(
+    literature: &[LiteratureCard],
+    wiki_page_count: usize,
+    issues: &[TopicIssue],
+) -> String {
+    let issue_count = issues.len();
+    let evolution_count: usize = issues.iter().map(|issue| issue.relations.len()).sum();
+    let confirmed_count: usize = issues
+        .iter()
+        .flat_map(|issue| issue.relations.iter())
+        .filter(|relation| matches!(relation.status.as_str(), "confirmed" | "accepted"))
+        .count();
+    let needs_review_count: usize = issues
+        .iter()
+        .flat_map(|issue| issue.relations.iter())
+        .filter(|relation| relation.needs_human_review)
+        .count();
+    format!(
+        "<article class=\"wiki-page literature-overview\" id=\"research-issue-overview\" data-title=\"research issue overview\" data-path=\"overview\"><div class=\"wiki-page-head\"><p class=\"wiki-page-path\">Research issue portal</p><h2>科研议题总览</h2><p class=\"wiki-page-summary\">从问题出发阅读文献：每个议题下面汇总代表性论文，并展示论文之间的传承、扩展、改进、验证或竞争关系。</p></div><div class=\"metric-grid reader-metrics\"><div class=\"metric\"><strong>{}</strong>科研议题</div><div class=\"metric\"><strong>{}</strong>文献</div><div class=\"metric\"><strong>{}</strong>传承/演变线索</div><div class=\"metric\"><strong>{}</strong>已确认线索</div><div class=\"metric\"><strong>{}</strong>待确认线索</div><div class=\"metric\"><strong>{}</strong>相关阅读笔记</div></div></article>",
+        issue_count,
+        literature.len(),
+        evolution_count,
+        confirmed_count,
+        needs_review_count,
+        wiki_page_count
+    )
+}
+
+fn render_research_issue_sections(issues: &[TopicIssue]) -> String {
+    if issues.is_empty() {
+        return "<article class=\"wiki-empty\"><h2>还没有科研议题</h2><p>请先运行 <code>kb create --wiki &lt;knowledgebase&gt; --from &lt;literature-folder&gt; --about &lt;topic&gt;</code>，或在 <code>topics/&lt;topic&gt;/scope.md</code>、<code>literature.md</code>、<code>relations/</code> 中补充议题、文献和关系记录。</p></article>".to_string();
+    }
+    let mut out = String::new();
+    out.push_str(
+        "<section class=\"literature-section research-issues\"><h2>科研议题与文献演变</h2>",
+    );
+    for issue in issues {
+        out.push_str(&format!(
+            "<article class=\"wiki-page topic-literature research-issue-card\" id=\"{}\" data-title=\"{}\" data-path=\"{}\"><div class=\"wiki-page-head\"><p class=\"wiki-page-path\">Research issue · {}</p><h2>{}</h2><p class=\"wiki-page-summary\">{}</p></div>",
+            html_escape(&issue.id),
+            html_escape(&issue.title.to_lowercase()),
+            html_escape(&issue.slug),
+            html_escape(&issue.slug),
+            html_escape(&issue.title),
+            html_escape(&issue.research_question)
+        ));
+        out.push_str("<div class=\"issue-grid\"><section><h3>相关文献</h3>");
+        if issue.papers.is_empty() {
+            out.push_str("<p class=\"empty\">该议题还没有登记文献。</p>");
+        } else {
+            out.push_str("<div class=\"topic-paper-list\">");
+            for paper in issue.papers.iter().take(12) {
+                let mut detail = if paper.importance.trim().is_empty() {
+                    paper.role.clone()
+                } else {
+                    format!("{} · {}", paper.role, paper.importance)
+                };
+                if detail.trim().is_empty() {
+                    detail = paper.path.clone();
+                }
+                out.push_str(&format!(
+                    "<div class=\"paper-mini-link\"><strong>{}</strong><small>{}</small></div>",
+                    html_escape(&paper.title),
+                    html_escape(&detail)
+                ));
+            }
+            out.push_str("</div>");
+        }
+        out.push_str("</section><section><h3>文献传承与演变</h3>");
+        if issue.relations.is_empty() {
+            out.push_str(
+                "<p class=\"empty\">该议题还没有记录论文之间的传承、改进、验证或竞争关系。</p>",
+            );
+        } else {
+            out.push_str("<div class=\"relation-flow\">");
+            for relation in issue.relations.iter().take(18) {
+                let review_badge = if relation.needs_human_review {
+                    "<span class=\"relation-review\">待确认</span>"
+                } else {
+                    ""
+                };
+                out.push_str(&format!(
+                    "<div class=\"evolution-edge\"><div class=\"edge-main\"><strong>{}</strong><span class=\"relation-label\">{}</span><strong>{}</strong>{}</div><p>{}</p><small>{}</small></div>",
+                    html_escape(&relation.source),
+                    html_escape(&relation.relation_label),
+                    html_escape(&relation.target),
+                    review_badge,
+                    html_escape(&relation.evidence),
+                    html_escape(&relation.status)
+                ));
+            }
+            out.push_str("</div>");
+        }
+        out.push_str("</section></div>");
+        out.push_str(&render_recommended_reading_path(issue));
+        out.push_str("</article>");
+    }
+    out.push_str("</section>");
+    out
+}
+
+fn render_recommended_reading_path(issue: &TopicIssue) -> String {
+    if issue.relations.is_empty() {
+        if issue.papers.is_empty() {
+            return String::new();
+        }
+        let items = issue
+            .papers
+            .iter()
+            .take(6)
+            .map(|paper| format!("<li>{}</li>", html_escape(&paper.title)))
+            .collect::<Vec<_>>()
+            .join("");
+        return format!(
+            "<div class=\"reading-path\"><h3>建议阅读路径</h3><ol>{}</ol></div>",
+            items
+        );
+    }
+    let mut steps = Vec::new();
+    let first = &issue.relations[0];
+    steps.push(first.source.clone());
+    for relation in issue.relations.iter().take(8) {
+        if steps
+            .last()
+            .map(|last| last != &relation.source)
+            .unwrap_or(true)
+        {
+            steps.push(relation.source.clone());
+        }
+        steps.push(format!("{}：{}", relation.relation_label, relation.target));
+    }
+    let items = steps
+        .into_iter()
+        .map(|step| format!("<li>{}</li>", html_escape(&step)))
+        .collect::<Vec<_>>()
+        .join("");
+    format!(
+        "<div class=\"reading-path\"><h3>建议阅读路径</h3><ol>{}</ol></div>",
+        items
+    )
+}
+
+fn collect_literature_cards(
+    kb_path: &Path,
+    pages: &[WikiPageSource],
+) -> Result<Vec<LiteratureCard>> {
+    let mut cards: BTreeMap<String, LiteratureCard> = BTreeMap::new();
+    let page_summaries = pages
+        .iter()
+        .map(|page| (page.rel_path.clone(), page.summary.clone()))
+        .collect::<BTreeMap<_, _>>();
+
+    add_manifest_literature(kb_path, &mut cards, &page_summaries)?;
+    add_raw_pdf_literature(kb_path, &mut cards)?;
+    add_topic_literature(kb_path, &mut cards)?;
+    add_topic_importance(kb_path, &mut cards)?;
+
+    let mut values = cards.into_values().collect::<Vec<_>>();
+    for (idx, card) in values.iter_mut().enumerate() {
+        if card.id == "paper-" || card.id.trim().is_empty() {
+            card.id = format!("paper-card-{}", idx + 1);
+        }
+        dedupe_strings(&mut card.wiki_pages);
+        dedupe_strings(&mut card.topics);
+        dedupe_strings(&mut card.roles);
+        dedupe_strings(&mut card.importance);
+    }
+    values.sort_by(|a, b| {
+        b.importance
+            .len()
+            .cmp(&a.importance.len())
+            .then_with(|| b.topics.len().cmp(&a.topics.len()))
+            .then_with(|| b.wiki_pages.len().cmp(&a.wiki_pages.len()))
+            .then_with(|| {
+                a.title
+                    .to_ascii_lowercase()
+                    .cmp(&b.title.to_ascii_lowercase())
+            })
+    });
+    Ok(values)
+}
+
+fn add_manifest_literature(
+    kb_path: &Path,
+    cards: &mut BTreeMap<String, LiteratureCard>,
+    page_summaries: &BTreeMap<String, String>,
+) -> Result<()> {
+    let manifest_path = kb_path.join("processing/manifest.json");
+    if !manifest_path.exists() {
+        return Ok(());
+    }
+    let content = fs::read_to_string(&manifest_path).unwrap_or_default();
+    let Ok(value) = serde_json::from_str::<Value>(&content) else {
+        return Ok(());
+    };
+    let Some(entries) = value.get("entries").and_then(|v| v.as_array()) else {
+        return Ok(());
+    };
+    for entry in entries {
+        let path = json_string(entry, "path").unwrap_or_default();
+        if path.trim().is_empty() {
+            continue;
+        }
+        let kind = json_string(entry, "kind").unwrap_or_else(|| "paper".to_string());
+        let ext = json_string(entry, "extension").unwrap_or_default();
+        if kind != "paper" && !ext.eq_ignore_ascii_case("pdf") {
+            continue;
+        }
+        let status = json_string(entry, "status").unwrap_or_else(|| "raw_registered".to_string());
+        let wiki_pages = entry
+            .get("wiki_pages")
+            .and_then(|v| v.as_array())
+            .map(|items| {
+                items
+                    .iter()
+                    .filter_map(|item| item.as_str().map(|s| s.to_string()))
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        let key = literature_key(&path);
+        let card = cards
+            .entry(key)
+            .or_insert_with(|| LiteratureCard::new(path.clone()));
+        card.kind = kind;
+        card.status = status;
+        card.wiki_pages.extend(wiki_pages.clone());
+        if let Some(summary) = wiki_pages.iter().find_map(|page| page_summaries.get(page)) {
+            card.summary = summary.clone();
+        }
+    }
+    Ok(())
+}
+
+fn add_raw_pdf_literature(
+    kb_path: &Path,
+    cards: &mut BTreeMap<String, LiteratureCard>,
+) -> Result<()> {
+    let raw_dir = kb_path.join("raw");
+    if !raw_dir.exists() {
+        return Ok(());
+    }
+    for entry in WalkDir::new(&raw_dir)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| entry.file_type().is_file())
+    {
+        let path = entry.path();
+        let Some(ext) = path.extension().and_then(|s| s.to_str()) else {
+            continue;
+        };
+        if !ext.eq_ignore_ascii_case("pdf") {
+            continue;
+        }
+        let rel = relative_path_string(kb_path, path);
+        cards
+            .entry(literature_key(&rel))
+            .or_insert_with(|| LiteratureCard::new(rel));
+    }
+    Ok(())
+}
+
+fn add_topic_literature(
+    kb_path: &Path,
+    cards: &mut BTreeMap<String, LiteratureCard>,
+) -> Result<()> {
+    let topics_dir = kb_path.join("topics");
+    if !topics_dir.exists() {
+        return Ok(());
+    }
+    for topic_root in sorted_topic_dirs(&topics_dir)? {
+        let slug = topic_root
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or("unknown-topic")
+            .to_string();
+        let title = read_topic_title(&topic_root).unwrap_or_else(|| slug.clone());
+        let path = topic_root.join("literature.md");
+        if !path.exists() {
+            continue;
+        }
+        let content = fs::read_to_string(path).unwrap_or_default();
+        for line in content.lines() {
+            let cells = markdown_table_cells(line);
+            if cells.len() < 2 || is_markdown_header_row(&cells) || is_table_separator_row(&cells) {
+                continue;
+            }
+            let paper = cells[0].trim();
+            if paper.is_empty() || paper.eq_ignore_ascii_case("todo") {
+                continue;
+            }
+            let role = cells
+                .get(1)
+                .cloned()
+                .unwrap_or_else(|| "topic member".to_string());
+            let key = literature_key(paper);
+            let card = cards
+                .entry(key)
+                .or_insert_with(|| LiteratureCard::new(paper.to_string()));
+            card.topics.push(title.clone());
+            if !role.trim().is_empty() {
+                card.roles.push(format!("{}: {}", title, role.trim()));
+            }
+            if let Some(status) = cells.get(2).filter(|s| !s.trim().is_empty()) {
+                card.status = normalize_relation_status(status);
+            }
+        }
+    }
+    Ok(())
+}
+
+fn add_topic_importance(
+    kb_path: &Path,
+    cards: &mut BTreeMap<String, LiteratureCard>,
+) -> Result<()> {
+    let topics_dir = kb_path.join("topics");
+    if !topics_dir.exists() {
+        return Ok(());
+    }
+    for topic_root in sorted_topic_dirs(&topics_dir)? {
+        let slug = topic_root
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or("unknown-topic")
+            .to_string();
+        let title = read_topic_title(&topic_root).unwrap_or(slug);
+        let importance_dir = topic_root.join("importance");
+        if !importance_dir.exists() {
+            continue;
+        }
+        let mut files = collect_markdown_files(&importance_dir);
+        files.sort();
+        for file in files {
+            let content = fs::read_to_string(file).unwrap_or_default();
+            for line in content.lines() {
+                let cells = markdown_table_cells(line);
+                if cells.len() < 2
+                    || is_markdown_header_row(&cells)
+                    || is_table_separator_row(&cells)
+                {
+                    continue;
+                }
+                let paper = cells[0].trim();
+                if paper.is_empty() || paper.eq_ignore_ascii_case("todo") {
+                    continue;
+                }
+                let importance = cells
+                    .get(1)
+                    .cloned()
+                    .unwrap_or_else(|| "important".to_string());
+                let key = literature_key(paper);
+                let card = cards
+                    .entry(key)
+                    .or_insert_with(|| LiteratureCard::new(paper.to_string()));
+                card.topics.push(title.clone());
+                card.importance
+                    .push(format!("{}: {}", title, importance.trim()));
+            }
+        }
+    }
+    Ok(())
+}
+
+fn sorted_topic_dirs(topics_dir: &Path) -> Result<Vec<PathBuf>> {
+    let mut topics = fs::read_dir(topics_dir)?
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| entry.file_type().map(|t| t.is_dir()).unwrap_or(false))
+        .map(|entry| entry.path())
+        .collect::<Vec<_>>();
+    topics.sort();
+    Ok(topics)
+}
+
+fn collect_topic_names(kb_path: &Path) -> Result<Vec<String>> {
+    let topics_dir = kb_path.join("topics");
+    if !topics_dir.exists() {
+        return Ok(Vec::new());
+    }
+    let mut names = Vec::new();
+    for topic in sorted_topic_dirs(&topics_dir)? {
+        let fallback = topic
+            .file_name()
+            .and_then(|s| s.to_str())
+            .unwrap_or("unknown-topic")
+            .to_string();
+        names.push(read_topic_title(&topic).unwrap_or(fallback));
+    }
+    names.sort();
+    Ok(names)
+}
+
+fn render_literature_cards(
+    kb_path: &Path,
+    output_root: &Path,
+    literature: &[LiteratureCard],
+    pages: &[WikiPageSource],
+    _link_index: &BTreeMap<String, String>,
+) -> String {
+    if literature.is_empty() {
+        return "<article class=\"wiki-empty\"><h2>还没有文献卡片</h2><p>请先运行 <code>kb create --wiki &lt;knowledgebase&gt; --from &lt;literature-folder&gt; --about &lt;topic&gt;</code>，或确认 <code>raw/papers/</code>、<code>processing/manifest.json</code>、<code>topics/&lt;topic&gt;/literature.md</code> 中已有文献记录。</p></article>".to_string();
+    }
+    let page_by_rel = pages
+        .iter()
+        .map(|page| (page.rel_path.clone(), page))
+        .collect::<BTreeMap<_, _>>();
+    let mut out = String::new();
+    for paper in literature {
+        let source_href = kb_path.join(&paper.path);
+        let source_link = if source_href.exists() {
+            let href = relative_url_between(output_root, &source_href);
+            format!("<a href=\"{}\">打开原文</a>", html_escape(&href))
+        } else {
+            String::new()
+        };
+        out.push_str(&format!(
+            "<article class=\"wiki-page paper-card\" id=\"{}\" data-title=\"{}\" data-path=\"{}\"><div class=\"wiki-page-head\"><p class=\"wiki-page-path\">{}</p><h2>{}</h2><p class=\"wiki-page-summary\">{}</p></div>",
+            html_escape(&paper.id),
+            html_escape(&paper.title.to_lowercase()),
+            html_escape(&paper.path.to_lowercase()),
+            html_escape(&paper.path),
+            html_escape(&paper.title),
+            html_escape(&paper.summary),
+        ));
+        out.push_str("<div class=\"paper-meta-row\">");
+        out.push_str(&format!("<span>{}</span>", html_escape(&paper.status)));
+        if !paper.kind.is_empty() {
+            out.push_str(&format!("<span>{}</span>", html_escape(&paper.kind)));
+        }
+        if !source_link.is_empty() {
+            out.push_str(&format!("<span>{}</span>", source_link));
+        }
+        out.push_str("</div>");
+        if !paper.topics.is_empty() {
+            out.push_str("<h3>所属主题</h3><div class=\"paper-tags\">");
+            for topic in &paper.topics {
+                out.push_str(&format!("<span>{}</span>", html_escape(topic)));
+            }
+            out.push_str("</div>");
+        }
+        if !paper.importance.is_empty() {
+            out.push_str("<h3>代表性 / 重要性线索</h3><ul>");
+            for item in &paper.importance {
+                out.push_str(&format!("<li>{}</li>", html_escape(item)));
+            }
+            out.push_str("</ul>");
+        }
+        if !paper.roles.is_empty() {
+            out.push_str("<h3>主题角色</h3><ul>");
+            for role in &paper.roles {
+                out.push_str(&format!("<li>{}</li>", html_escape(role)));
+            }
+            out.push_str("</ul>");
+        }
+        if !paper.wiki_pages.is_empty() {
+            out.push_str("<h3>论文笔记</h3><div class=\"paper-note-links\">");
+            for rel in &paper.wiki_pages {
+                if let Some(page) = page_by_rel.get(rel) {
+                    out.push_str(&format!(
+                        "<a class=\"wiki-xref\" href=\"#note-{}\">{}</a>",
+                        html_escape(&page.id),
+                        html_escape(&page.title)
+                    ));
+                } else {
+                    out.push_str(&format!("<code>{}</code>", html_escape(rel)));
+                }
+            }
+            out.push_str("</div>");
+        }
+        out.push_str("</article>");
+    }
+    out
+}
+
+fn render_related_wiki_notes(
+    kb_path: &Path,
+    output_root: &Path,
+    pages: &[WikiPageSource],
+    link_index: &BTreeMap<String, String>,
+) -> String {
+    if pages.is_empty() {
+        return "".to_string();
+    }
+    let mut out = String::new();
+    out.push_str("<section class=\"literature-section related-notes\"><h2>相关阅读笔记</h2>");
+    for page in pages {
+        let body = markdown_to_wiki_html(
+            &page.content,
+            kb_path,
+            output_root,
+            &page.abs_path,
+            link_index,
+        );
+        out.push_str(&format!(
+            "<article class=\"wiki-page wiki-note-card\" id=\"note-{}\" data-title=\"{}\" data-path=\"{}\"><div class=\"wiki-page-head\"><p class=\"wiki-page-path\">{}</p><h2>{}</h2><p class=\"wiki-page-summary\">{}</p></div><div class=\"wiki-page-body\">{}</div></article>",
+            html_escape(&page.id),
+            html_escape(&page.title.to_lowercase()),
+            html_escape(&page.rel_path.to_lowercase()),
+            html_escape(&page.rel_path),
+            html_escape(&page.title),
+            html_escape(&page.summary),
+            body
+        ));
+    }
+    out.push_str("</section>");
+    out
+}
+
+fn literature_key(path: &str) -> String {
+    path.trim()
+        .replace('\\', "/")
+        .trim_start_matches("./")
+        .to_ascii_lowercase()
+}
+
+fn clean_literature_title(raw: &str) -> String {
+    raw.replace('_', " ").replace('-', " ").trim().to_string()
+}
+
+fn dedupe_strings(items: &mut Vec<String>) {
+    let mut seen = BTreeSet::new();
+    items.retain(|item| {
+        let key = item.trim().to_ascii_lowercase();
+        if key.is_empty() || seen.contains(&key) {
+            false
+        } else {
+            seen.insert(key);
+            true
+        }
+    });
+}
+
+fn build_reader_note_link_index(pages: &[WikiPageSource]) -> BTreeMap<String, String> {
+    build_wiki_link_index(pages)
+        .into_iter()
+        .map(|(key, value)| (key, format!("note-{}", value)))
+        .collect()
 }
 
 fn build_wiki_link_index(pages: &[WikiPageSource]) -> BTreeMap<String, String> {
@@ -2613,6 +3575,29 @@ a:hover { text-decoration: underline; }
 .wiki-table-wrap th, .wiki-table-wrap td { border-bottom: 1px solid #edf2f7; padding: 0.6rem 0.7rem; text-align: left; vertical-align: top; }
 .wiki-table-wrap th { background: #f7fafc; color: #2d3748; }
 .wiki-empty { background: white; border: 1px dashed #cbd5e0; border-radius: 14px; padding: 2rem; }
+.literature-section { max-width: 1040px; margin: 1.1rem auto; }
+.literature-section > h2 { color: #1a365d; margin: 1.5rem 0 0.7rem; }
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; }
+.metric { background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 0.85rem; color: #4a5568; }
+.metric strong { display: block; color: #2b6cb0; font-size: 1.45rem; margin-bottom: 0.2rem; }
+.paper-meta-row, .paper-tags, .paper-note-links { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.7rem 0; }
+.paper-meta-row span, .paper-tags span { background: #edf2f7; color: #4a5568; border-radius: 999px; padding: 0.22rem 0.6rem; font-size: 0.8rem; }
+.topic-paper-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 0.65rem; }
+.paper-mini-link { display: block; border: 1px solid #e2e8f0; border-radius: 10px; padding: 0.7rem; background: #fbfdff; }
+.paper-mini-link strong, .paper-mini-link small { display: block; overflow-wrap: anywhere; }
+.paper-mini-link small { color: #718096; margin-top: 0.25rem; }
+.section-lead { color: #4a5568; margin-top: -0.3rem; }
+.issue-grid { display: grid; grid-template-columns: minmax(260px, 0.9fr) minmax(320px, 1.1fr); gap: 1rem; align-items: start; }
+.relation-flow { display: flex; flex-direction: column; gap: 0.7rem; }
+.evolution-edge { border: 1px solid #e2e8f0; border-radius: 12px; padding: 0.75rem; background: #fbfdff; }
+.edge-main { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
+.relation-label { background: #ebf8ff; color: #2b6cb0; border: 1px solid #bee3f8; border-radius: 999px; padding: 0.12rem 0.5rem; font-size: 0.82rem; font-weight: 700; }
+.relation-review { background: #fffaf0; color: #744210; border: 1px solid #f6ad55; border-radius: 999px; padding: 0.12rem 0.45rem; font-size: 0.78rem; }
+.evolution-edge p { margin: 0.45rem 0 0.25rem; color: #4a5568; }
+.evolution-edge small { color: #718096; }
+.reading-path { margin-top: 1rem; border-top: 1px solid #edf2f7; padding-top: 0.8rem; }
+.reading-path ol { margin: 0.4rem 0 0; padding-left: 1.3rem; }
+@media (max-width: 1050px) { .issue-grid { grid-template-columns: 1fr; } }
 .hidden-by-search { display: none; }
 @media (max-width: 900px) { .wiki-shell { flex-direction: column; height: auto; overflow: visible; } .wiki-reader-sidebar { width: 100%; height: auto; max-height: none; } .wiki-reader-main { height: auto; padding: 1rem; overflow: visible; } }
 "#;

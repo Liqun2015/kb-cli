@@ -1,23 +1,22 @@
 # `kb view`
 
-`kb view` generates the reader-facing LLM Wiki knowledge portal.
+`kb view` generates the reader-facing **research issue browser**.
 
-It is for users who want to browse what the knowledge base says, not for developers or Manager LLMs checking the worksite internals.
+It is for users who want to understand the knowledge base through scientific questions and the way papers inherit, extend, verify, improve, or compete with one another. It is not for maintainers checking workspace internals.
 
-## Purpose
+## What the page should show
 
-Use `kb view` to open the knowledge layer from a reader's perspective:
+`interfaces/html/browse.html` should focus on:
 
-- research directions;
-- topic branches;
-- core knowledge points;
-- representative papers;
-- paper cards and Wiki pages;
-- WikiLinks;
-- images referenced by the Wiki;
-- recommended reading paths as they are written into the Wiki.
+- research issues and topic branches;
+- the central question for each topic when available;
+- representative papers under each issue;
+- paper-to-paper inheritance and evolution links;
+- relation labels such as method inheritance, extension, improvement, support, contradiction, and background;
+- recommended reading paths derived from topic literature and relation records;
+- paper cards and paper-linked notes when useful for reading.
 
-It should not display low-level system details such as JSON, task state, agent handoff files, or workflow status. Those belong to `kb check`.
+It should not explain the detailed LLM Wiki workflow, directory structure, JSON artifacts, task state, agent handoff, or Manager/Worker usage. Those belong to `kb check`.
 
 ## Command
 
@@ -43,12 +42,10 @@ kb --wiki <workspace> view --no-open
 interfaces/html/browse.html
 ```
 
-The generated HTML is an interface artifact. The source of truth remains the Markdown files under `wiki/`.
-
 ## Boundary with `kb check`
 
 ```text
-kb check   inspect the system worksite, task scene, refs graph, relationship candidates, JSON, and handoff state
-kb view    browse the user-facing knowledge portal
-kb review  reserved for the future literature-review writing workflow
+kb view   browse research issues and literature inheritance/evolution relations
+kb check  inspect system/workflow state, workspace structure, JSON, relation candidates, task status, and agent handoff
+kb review reserved for the future literature-review writing workflow
 ```

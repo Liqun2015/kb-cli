@@ -739,7 +739,7 @@ kb create --wiki <workspace> --from <literature-folder> --about "{topic}"
 4. Open `LLM/tasks/index.md`.
 5. Open `LLM/tasks/openclaw_manager_create_and_maintain.md`.
 6. Open `interfaces/html/index.html` for the control console.
-7. Open `interfaces/html/browse.html` for the knowledge portal.
+7. Open `interfaces/html/browse.html` for the research issue browser.
 8. Assign the first Worker batch for paper key-info extraction.
 9. Ask Human Review to choose or approve anchor papers before finalizing the topic story.
 
@@ -966,7 +966,7 @@ Use OpenClaw as the Manager LLM to establish and maintain this topic library.
 
 1. Confirm the workspace was created by `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"`.
 2. Confirm `processing/workflow_status.json` reports `< {threshold}` papers.
-3. Use `kb check` as the control console and `kb view` as the user-facing knowledge portal.
+3. Use `kb check` as the control console and `kb view` as the reader-facing research issue browser.
 4. Assign Worker LLM tasks for paper key-info extraction.
 5. Assign Worker LLM tasks for topic narrative drafting after enough paper profiles exist.
 6. Route anchor-paper choices, confirmed relation edges, and final topic narrative claims to Human Review.
@@ -1142,7 +1142,7 @@ kb create --wiki <workspace> --from <literature-folder> --about "{topic}"
 4. Open `LLM/tasks/index.md`.
 5. Open `LLM/tasks/claude_code_manager_create_and_maintain.md`.
 6. Open `interfaces/html/index.html` for the control console.
-7. Open `interfaces/html/browse.html` for the knowledge portal.
+7. Open `interfaces/html/browse.html` for the research issue browser.
 8. Create the first paper-profile Worker batch.
 9. Ask Human Review to choose or approve anchor papers before finalizing the topic story.
 
@@ -1372,7 +1372,7 @@ Use Claude Code as the Manager LLM to establish and maintain this topic library.
 
 1. Confirm the workspace was created by `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"`.
 2. Confirm `processing/workflow_status.json` reports `< {threshold}` papers for direct small-corpus work.
-3. Use `kb check` as the control console and `kb view` as the user-facing knowledge portal.
+3. Use `kb check` as the control console and `kb view` as the reader-facing research issue browser.
 4. Use `kb task list` to recover task state after restart.
 5. Use `kb batch paper-profile --topic "{topic}" --limit 5 --assignee claude-code-manager` to create bounded paper-profile Worker batches.
 6. Use `kb prompt paper-profile --task <batch-id> --topic "{topic}"` to produce standard Worker prompts.
@@ -1613,7 +1613,7 @@ kb create --wiki <workspace> --from <literature-folder> --about "{topic}"
 4. Open `LLM/tasks/index.md`.
 5. Open `LLM/tasks/codex_manager_create_and_maintain.md`.
 6. Open `interfaces/html/index.html` for the control console.
-7. Open `interfaces/html/browse.html` for the knowledge portal.
+7. Open `interfaces/html/browse.html` for the research issue browser.
 8. Create the first paper-profile Worker batch.
 9. Ask Human Review to choose or approve anchor papers before finalizing the topic story.
 
@@ -1900,7 +1900,7 @@ Use Codex as the Manager LLM to establish and maintain this topic library.
 
 1. Confirm the workspace was created by `kb create --wiki <workspace> --from <literature-folder> --about "{topic}"`.
 2. Confirm `processing/workflow_status.json` reports `< {threshold}` papers for direct small-corpus work.
-3. Use `kb check` as the control console and `kb view` as the user-facing knowledge portal.
+3. Use `kb check` as the control console and `kb view` as the reader-facing research issue browser.
 4. Use `kb task list` to recover task state after restart.
 5. Use `kb batch paper-profile --topic "{topic}" --limit 5 --assignee codex-manager` to create bounded paper-profile Worker batches.
 6. Use `kb prompt paper-profile --task <batch-id> --topic "{topic}"` to produce standard Worker prompts.

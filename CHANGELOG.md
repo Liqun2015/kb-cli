@@ -1,12 +1,33 @@
+# v0.7.47
+
+- Refined `kb view` from a paper-list literature browser into a reader-facing research issue browser.
+- `kb view` now focuses on scientific issues, representative papers, and literature inheritance/evolution links under each topic.
+- `kb check` remains the place for technical workspace inspection, database/file structure, JSON/task status, LLM handoff, and usage mechanics.
+
 # Changelog
+
+
+## v0.7.46
+
+- Refocused `kb view` as a literature-first reader page rather than a general LLM Wiki explanation page.
+- `interfaces/html/browse.html` now emphasizes paper cards, topic-paper membership, representative/importance hints, source-file links, and paper-linked notes.
+- Moved command-boundary and workspace-structure guidance into `kb check` through a `Wiki Structure & Usage` dashboard section.
+- Updated `kb view --dry-run` output to report literature cards and related wiki notes separately.
+
+## v0.7.45
+
+- Fixed a Clap runtime panic when running `kb --wiki <path> check`.
+- Removed the hidden `check --wiki` boolean flag because it conflicted with the global `--wiki <PATH>` argument.
+- Kept the intended command boundary: `kb check` is the system/status dashboard, and `kb view` is the reader-facing research issue browser.
+- Fixed duplicate browser-open call in the regular `kb check` dashboard path.
 
 ## v0.7.44
 
-`v0.7.44` separates the reader-facing knowledge portal from the system check console.
+`v0.7.44` separates the reader-facing research issue browser from the system check console.
 
 ### Added
 
-- Added `kb view` as the user-facing LLM Wiki knowledge portal command. It generates `interfaces/html/browse.html` from `wiki/` pages and hides low-level task status, JSON, and agent handoff details.
+- Added `kb view` as the reader-facing research issue browser command. It generates `interfaces/html/browse.html` and separates reader browsing from low-level task status, JSON, and agent handoff details.
 - Added `kb review` as a safe placeholder for the future literature-review writing workflow.
 
 ### Changed

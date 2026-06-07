@@ -17,7 +17,7 @@ pub struct ViewArgs {
 
     #[arg(
         long,
-        help = "Preview the generated user-facing knowledge portal path without writing HTML"
+        help = "Preview the generated reader-facing research issue browser path without writing HTML"
     )]
     pub dry_run: bool,
 
@@ -26,7 +26,7 @@ pub struct ViewArgs {
 
     #[arg(
         long = "no-open",
-        help = "Generate the knowledge portal without opening the browser"
+        help = "Generate the research issue browser without opening the browser"
     )]
     pub no_open: bool,
 
@@ -60,12 +60,18 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
     let output_root = resolve_under_kb(&kb_path, &output_dir);
     let output_path = output_root.join("browse.html");
     let page_count = crate::commands::check::count_user_knowledge_pages(&kb_path)?;
+    let paper_count = crate::commands::check::count_user_literature_cards(&kb_path)?;
+    let issue_count = crate::commands::check::count_user_research_issues(&kb_path)?;
+    let evolution_count = crate::commands::check::count_user_evolution_links(&kb_path)?;
 
     if args.is_dry_run() {
         println!("kb view preview:");
         println!("  knowledge base : {}", kb_path.display());
         println!("  output         : {}", output_path.display());
-        println!("  wiki pages     : {}", page_count);
+        println!("  research issues: {}", issue_count);
+        println!("  evolution links: {}", evolution_count);
+        println!("  literature     : {} papers", paper_count);
+        println!("  wiki notes     : {}", page_count);
         println!("  open browser   : {}", args.should_open());
         println!("  no files written");
         return Ok(());
@@ -75,10 +81,12 @@ pub fn execute(custom_kb: Option<&Path>, args: &ViewArgs) -> Result<()> {
     let html = crate::commands::check::render_user_knowledge_view(&kb_path, &output_root)?;
     fs::write(&output_path, html)?;
 
-    println!("User-facing LLM Wiki knowledge portal generated:");
+    println!("Reader-facing research issue browser generated:");
     println!("  {}", output_path.display());
-    println!("Pages rendered from wiki/: {}", page_count);
-    println!("This page hides low-level task status, JSON, and agent handoff details.");
+    println!("Research issues: {}", issue_count);
+    println!("Evolution links: {}", evolution_count);
+    println!("Literature cards: {}", paper_count);
+    println!("Related wiki notes: {}", page_count);
 
     if args.should_open() {
         open_in_default_browser(&output_path)?;
